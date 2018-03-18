@@ -36,15 +36,20 @@ def print_examples(example_and_counts):
         print("====> Representative (count %d)" % ct)
         print(ex)
         print('-' * 10)
+
+def run(extracted):
+    grouped = exact_grouping(extracted)
+    grouped = filter(grouped)
+    examples = get_examples(grouped)
+    print_examples(examples)
     
 def main(args):
     input_path = args.input_path
     exprs_list = pickle.load(open(input_path, 'rb'))
     for exprs in exprs_list:
-        grouped = exact_grouping(exprs)
-        grouped = filter(grouped)
-        examples = get_examples(grouped)
-        print_examples(examples)
+        print("Extracting common expressions for %s\n\n" % exprs.csv_path)
+        run(exprs)
+        print("<<<<<<<<=======================>>>>>>>>>>\n\n\n")
 
 if __name__ == "__main__":
     argparser = ArgumentParser(description='Basic grouping based on abstract exprs')

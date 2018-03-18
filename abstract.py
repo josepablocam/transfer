@@ -2,11 +2,16 @@
 
 from argparse import ArgumentParser
 import ast
+import _ast
 from astunparse import unparse
 from copy import deepcopy
 import inspect
 import pickle
 from extract import *
+
+def is_ast_lib_node(e):
+    module = inspect.getmodule(e)
+    return module == _ast
 
 class AbstractValue(object):
     def __repr__(self):
@@ -20,8 +25,7 @@ class AbstractValue(object):
 
     def annotate(self):
         str_concrete_val = self.concrete_val
-        module = inspect.getmodule(str_concrete_val)
-        if module and module.__name__ == '_ast':
+        if is_ast_lib_node(str_concrete_val):
             str_concrete_val = unparse(str_concrete_val).strip()
         return ast.Name(id='%s[%s]' % (self.label, str_concrete_val))
 
@@ -143,11 +147,11 @@ def add_abstract(extracted_exprs):
     return extracted_exprs
 
 def concretize(expr):
-    assert isinstance(expr, ast.Module)
+    assert is_ast_lib_node(expr), 'Can only concretize mixes of _ast/Abstract nodes'
     return TraverseMixedAST(lambda node: node.concretize()).visit(deepcopy(expr))
 
 def annotate(expr):
-    assert isinstance(expr, ast.Module)
+    assert is_ast_lib_node(expr), 'Can only concretize mixes of _ast/Abstract nodes'
     return TraverseMixedAST(lambda node: node.annotate()).visit(deepcopy(expr))
 
 
