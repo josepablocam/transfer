@@ -154,6 +154,12 @@ def annotate(expr):
     assert is_ast_lib_node(expr), 'Can only concretize mixes of _ast/Abstract nodes'
     return TraverseMixedAST(lambda node: node.annotate()).visit(deepcopy(expr))
 
+def collect_abstracts(expr):
+    assert is_ast_lib_node(expr), 'Can only concretize mixes of _ast/Abstract nodes'
+    abstracts = []
+    collect_fun = lambda node: abstracts.append(deepcopy(node))
+    TraverseMixedAST(collect_fun).visit(deepcopy(expr))
+    return abstracts
 
 def main(args):
     input_path = args.input_path
