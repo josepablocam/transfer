@@ -72,7 +72,7 @@ class SimpleExprAbstractor(ast.NodeTransformer):
         return copy
 
     def visit_Num(self, node):
-        new_node = ast.Str(s=AbstractNum(node))
+        new_node = ast.Num(n=AbstractNum(node))
         return ast.copy_location(new_node, node)
 
     def visit_Str(self, node):
