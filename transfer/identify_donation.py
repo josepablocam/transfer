@@ -4,10 +4,7 @@ import networkx as nx
 import pickle
 
 from plpy.analyze.graph_builder import draw
-
-
-def to_ast_node(src):
-    return ast.parse(src).body[0]
+from plpy.analyze.dynamic_tracer import to_ast_node
 
 class DonationSlices(object):
     def __init__(self, graph, seed_columns, slices):
@@ -18,71 +15,86 @@ class DonationSlices(object):
     def __iter__(self):
         return iter(self.slices)
 
-class FindExactColumnUse(ast.NodeVisitor):
-    def __init__(self, columns):
-        self.columns = set(columns)
-        self.found = False
-
-    def run(self, node):
-        self.found = False
-        self.visit(node)
-        return self.found
+# will produce false positives for attributes
+class PossibleColumnCollector(ast.NodeVisitor):
+    def __init__(self):
+        self.acc = []
 
     def visit_Str(self, node):
-        if not self.found:
-            self.found = node.s in self.columns
+        self.acc.append(node.s)
 
     def visit_Attribute(self, node):
-        if not self.found:
-            self.found = node.attr in self.columns
+        self.acc.append(node.attr)
+
+    def run(self, tree):
+        self.visit(tree)
+        return set(self.acc)
+
+# TODO: would it be better to compute the columns assigned/used based on the memory locations?
+def columns_assigned_to(src_line):
+    ast_node = to_ast_node(src_line)
+
+    if not isinstance(ast_node, (ast.Assign, ast.AugAssign)):
+        return set([])
+
+    lhs = []
+    if isinstance(ast_node, ast.Assign):
+        lhs.extend(ast_node.targets)
+    else:
+        lhs.extend(ast_node)
+
+    cols_assigned = set([])
+    for node in lhs:
+        cols_assigned.update(PossibleColumnCollector().run(node))
+
+    return cols_assigned
+
+def columns_used(src_line):
+    ast_node = to_ast_node(src_line)
+    # FIXME: we should consider the lhs of augmente assigne as used as well
+    if isinstance(ast_node, (ast.Assign, ast.AugAssign)):
+        ast_node = ast_node.value
+    return PossibleColumnCollector().run(ast_node)
+
+def remove_subgraphs(graphs):
+    # graphs from least to most number of nodes
+    sorted_graphs = sorted(graphs, key=lambda x: len(x.nodes))
+    # take set of nodes as key for each graph
+    keys = [frozenset(g.nodes) for g in sorted_graphs]
+    clean = []
+    for i, graph in enumerate(sorted_graphs):
+        larger_keys = keys[(i + 1):]
+        key = keys[i]
+        # ignore any graph that is a subset of a larger graph
+        # later on in our sorted list of graphs
+        if any(key.issubset(k) for k in larger_keys):
+            continue
+        clean.append(graph)
+    return clean
+
+def show_lines(graph):
+    return sorted(graph.nodes(data=True), key=lambda x: x[1]['lineno'])
+
 
 class ColumnAssignmentExtractor(object):
+    """
+    Extracts slices by:
+        - take as seeds any stmt that assigns to a target column
+        - slice backward from these seeds
+    """
     def __init__(self, graph):
         self.graph = graph
 
-    @staticmethod
-    def is_assignment_to_target_columns(ast_node, target_columns):
-        if not isinstance(ast_node, (ast.Assign, ast.AugAssign)):
-            return False
-
-        lhs = []
-        if isinstance(ast_node, ast.Assign):
-            lhs.extend(ast_node.targets)
-        else:
-            lhs.extend(ast_node)
-
-        if isinstance(target_columns, str):
-            target_columns = [target_columns]
-
-        checker = FindExactColumnUse(target_columns)
-        for lhs_node in lhs:
-            if checker.run(lhs_node):
-                return True
-
-        return False
-
-    @staticmethod
-    def remove_subgraphs(graphs):
-        # graphs from least to most number of nodes
-        sorted_graphs = sorted(graphs, key=lambda x: len(x.nodes))
-        # take set of nodes as key for each graph
-        keys = [frozenset(g.nodes) for g in sorted_graphs]
-        clean = []
-        for i, graph in enumerate(sorted_graphs):
-            larger_keys = keys[(i + 1):]
-            key = keys[i]
-            # ignore any graph that is a subset of a larger graph
-            # later on in our sorted list of graphs
-            if any(key.issubset(k) for k in larger_keys):
-                continue
-            clean.append(graph)
-        return clean
-
     def get_donation_slices(self, target_columns):
         seeds = []
+        if isinstance(target_columns, str):
+            target_columns = [target_columns]
+        target_columns = set(target_columns)
+
         for node_id, node_data in self.graph.nodes.items():
-            ast_node = to_ast_node(node_data['src'])
-            if self.is_assignment_to_target_columns(ast_node, target_columns):
+            # contains target_columns
+            assigns_to = columns_assigned_to(node_data['src'])
+            if any(col in assigns_to for col in target_columns):
                 seeds.append(node_id)
 
         reversed_graph = self.graph.reverse(copy=False)
@@ -96,11 +108,48 @@ class ColumnAssignmentExtractor(object):
             slices.append(_slice)
 
         # keep only the largest slice when there are subslices
-        slices = self.remove_subgraphs(slices)
+        slices = remove_subgraphs(slices)
         return DonationSlices(self.graph, target_columns, slices)
 
-def show_lines(graph):
-    return sorted(graph.nodes(data=True), key=lambda x: x[1]['lineno'])
+
+class ColumnUseExtractor(object):
+    """
+    Extracts slices by:
+        - take as seeds any stmt that uses a target column
+        - slice forward on each seed
+        - identify columns that are assigned to in these slices
+        - uses these columns as seeds to slice backward using the column assignment extractor
+    """
+    def __init__(self, graph):
+        self.graph = graph
+
+    def get_donation_slices(self, target_columns):
+        seeds = []
+        if isinstance(target_columns, str):
+            target_columns = [target_columns]
+        target_columns = set(target_columns)
+
+        for node_id, node_data in self.graph.nodes.items():
+            # contains target_columns
+            assigns_to = columns_used(node_data['src'])
+            if any(col in assigns_to for col in target_columns):
+                seeds.append(node_id)
+
+        # slice forward on the seeds extract columns assigned to
+        cols = set([])
+        for node_id in seeds:
+            # TODO: these slices could presumably grow to the end
+            # of each script
+            # we should likely consider: topological sort and then
+            # remove nodes that are "too far away"
+            slice_nodes = nx.dfs_tree(self.graph, node_id)
+            for child_id in slice_nodes:
+                child_src = self.graph.nodes[child_id]['src']
+                cols.update(columns_assigned_to(child_src))
+
+        helper = ColumnAssignmentExtractor(self.graph)
+        return helper.get_donation_slices(cols)
+
 
 
 def main(args):
