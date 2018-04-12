@@ -5,6 +5,7 @@ import pickle
 
 from plpy.analyze.graph_builder import draw
 from plpy.analyze.dynamic_tracer import to_ast_node
+from plpy.analyze.dynamic_trace_events import ExecLine, MemoryUpdate
 
 class DonationSlices(object):
     def __init__(self, graph, seed_columns, slices):
@@ -32,7 +33,12 @@ class PossibleColumnCollector(ast.NodeVisitor):
 
 # TODO: would it be better to compute the columns assigned/used based on the memory locations?
 def columns_assigned_to(src_line):
-    ast_node = to_ast_node(src_line)
+    try:
+        ast_node = to_ast_node(src_line)
+    except SyntaxError:
+        # not standalone assignment/expressions
+        # FIXME: this is ignoring the fact that we can parse portions of this
+        return set([])
 
     if not isinstance(ast_node, (ast.Assign, ast.AugAssign)):
         return set([])
@@ -40,6 +46,8 @@ def columns_assigned_to(src_line):
     lhs = []
     if isinstance(ast_node, ast.Assign):
         lhs.extend(ast_node.targets)
+    elif isinstance(ast_node, ast.AugAssign):
+        lhs.append(ast_node.target)
     else:
         lhs.extend(ast_node)
 
@@ -50,7 +58,11 @@ def columns_assigned_to(src_line):
     return cols_assigned
 
 def columns_used(src_line):
-    ast_node = to_ast_node(src_line)
+    try:
+        ast_node = to_ast_node(src_line)
+    except SyntaxError:
+        return set([])
+
     # FIXME: we should consider the lhs of augmente assigne as used as well
     if isinstance(ast_node, (ast.Assign, ast.AugAssign)):
         ast_node = ast_node.value
@@ -72,8 +84,20 @@ def remove_subgraphs(graphs):
         clean.append(graph)
     return clean
 
-def show_lines(graph):
-    return sorted(graph.nodes(data=True), key=lambda x: x[1]['lineno'])
+def show_lines(graph, annotate=True):
+    if annotate:
+        nodes = [(node_id, dict(data)) for node_id, data in graph.nodes(data=True)]
+        for node_id, data in nodes:
+            if isinstance(data['event'], ExecLine):
+                data['uses'] = data['event'].uses_mem_locs
+    else:
+        nodes = graph.nodes(data=True)
+    return sorted(nodes, key=lambda x: x[1]['lineno'])
+
+def to_code_block(nodes):
+    if isinstance(nodes, nx.Graph):
+        nodes = show_lines(nodes)
+    return '\n'.join(map(lambda x: x[1]['src'], nodes))
 
 
 class ColumnAssignmentExtractor(object):
@@ -169,7 +193,7 @@ def main(args):
 if __name__ == '__main__':
     parser = ArgumentParser(description='Extract candidate donation slices')
     parser.add_argument('graph_file', type=str, help='File path to pickled networkx graph')
-    parser.add_arugment('output_file', type=str, help='File path to pickle output slices')
+    parser.add_argument('output_file', type=str, help='File path to pickle output slices')
     args = parser.parse_args()
     try:
         main(args)
