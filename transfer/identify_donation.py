@@ -223,11 +223,11 @@ class ColumnDefExtractor(object):
             slices.append(_slice)
 
         # keep only the largest slice when there are subslices
-        slices = remove_subgraphs(slices)
-        return DonationSlices(self.graph, target_columns, slices)
+        return remove_subgraphs(slices)
 
     def run(self, target_columns):
         _slices = self._get_raw_donation_slices(target_columns)
+        _slices =  RepairSliceImplicitUses(self.graph).run(_slices)
         return DonationSlices(self.graph, target_columns, _slices)
 
 
