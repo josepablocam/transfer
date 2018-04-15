@@ -99,6 +99,10 @@ def remove_subgraphs(graphs):
         clean.append(graph)
     return clean
 
+def get_unique_graphs(graphs):
+    unique_graphs = {(frozenset(g.nodes), frozenset(g.edges)):g for g in graphs}
+    return list(unique_graphs.values())
+
 def merge_common_prefixes(graphs):
     # TODO merge graphs that share a common prefix
     pass
@@ -170,7 +174,7 @@ class RepairSliceImplicitUses(object):
                 break
 
             defs_needed = cols_used.intersection(earlier_defs)
-            repair_slices = ColumnDefExtractor(earlier_graph)._get_raw_donation_slices(defs_needed).slices
+            repair_slices = ColumnDefExtractor(earlier_graph)._get_raw_donation_slices(defs_needed)
             if not repair_slices:
                 break
 
@@ -280,6 +284,47 @@ class ColumnUseExtractor(object):
         return DonationSlices(self.graph, target_columns, _slices)
 
 
+def get_all_donations(graph):
+    annotated = annotate_graph(graph)
+    columns_defined = set([col for _, data in annotated.nodes(data=True) for col in data['columns_defined']])
+    columns_used = set([col for _, data in annotated.nodes(data=True) for col in data['columns_used']])
+
+    slices_defined = ColumnDefExtractor(annotated).run(columns_defined)
+    print("%d def slices" % len(slices_defined.slices))
+    slices_used = ColumnUseExtractor(annotated).run(columns_used)
+    print("%s use slices" % len(slices_used.slices))
+    _slices = slices_defined.slices + slices_used.slices
+    _slices = get_unique_graphs(_slices)
+    print("%s unique slices" % len(_slices))
+    _slices = sorted(_slices, key=lambda x: len(to_code_block(x).split('\n')))
+    return _slices
+
+
+def main(args):
+    graph_file = args.input_file
+    slices_file = args.output_file
+
+    with open(graph_file, 'rb') as f:
+        graph = pickle.load(f)
+    donations = get_all_donations(graph)
+
+    with open(slices_file, 'wb') as f:
+        pickle.dump(donations, f)
+
+
+
+if __name__ == '__main__':
+    parser = ArgumentParser(description='Extract candidate donation slices')
+    parser.add_argument('input_file', type=str, help='File path to pickled networkx graph for data dependencies')
+    parser.add_argument('output_file', type=str, help='File path to pickle output slices')
+    args = parser.parse_args()
+    try:
+        main(args)
+    except Exception as err:
+        import pdb
+        pdb.post_mortem()
+
+
 # Main concerns (in order of priority):
 #      - library code that mutates dataframe without info so no dependency established
         # * possible solution: given that we're focusing on pandas methods, we could
@@ -289,34 +334,6 @@ class ColumnUseExtractor(object):
 #       - need to decide what to do about control-flow
 #      - common prefix traces
 #      - no-op assignments that are indistinguishable given memory location info
-
-
-def main(args):
-    raise Exception('nyi')
-    graph_file = args.graph_file
-    slices_file = args.output_file
-    target_columns = args.targets
-
-    with open(graph_file, 'rb') as f:
-        graph = pickle.load(f)
-    # extractor = ColumnDefExtractor(graph)
-    # donations = extractor.get_donation_slices(target_columns)
-
-    with open(slices_file, 'wb') as f:
-        pickle.dump(donations, f)
-
-
-if __name__ == '__main__':
-    parser = ArgumentParser(description='Extract candidate donation slices')
-    parser.add_argument('graph_file', type=str, help='File path to pickled networkx graph')
-    parser.add_argument('output_file', type=str, help='File path to pickle output slices')
-    args = parser.parse_args()
-    try:
-        main(args)
-    except:
-        import pdb
-        pdb.post_mortem()
-
 
 
 
