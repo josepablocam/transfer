@@ -85,7 +85,7 @@ def filter_scripts(input_dir, output_dir=None):
 
 def convert_notebooks(input_dir, output_dir=None):
     if output_dir is None:
-        output_dir = os.path.join(input_dir, output_dir)
+        output_dir = os.path.join(input_dir, 'converted_notebooks/')
 
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
