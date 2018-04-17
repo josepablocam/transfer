@@ -231,7 +231,7 @@ class KaggleCrawler(object):
             scroll_failure_budget -= 1 if not scrolled else 0
             new_links = self._get_new_kernel_links()
             for link in tqdm.tqdm(new_links):
-                # use same browser, to avoid opening a ton of firefox windows
+                # use same browser, to avoid openning a ton of firefox windows
                 try:
                     filename = 'kernel_%d' % ct_downloaded
                     self._download_source_code(download_browser, link, filename)

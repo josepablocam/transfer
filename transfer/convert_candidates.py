@@ -25,16 +25,12 @@ def get_basename(_path, with_ext=True):
     return name
 
 def get_ipython_notebooks(input_dir):
-    pattern = os.path.join(input_dir, '*.[xi]pynb')
+    pattern = os.path.join(input_dir, '*.ipynb')
     return glob.glob(pattern)
 
 def get_py_scripts(input_dir):
     pattern = os.path.join(input_dir, '*.py')
     return glob.glob(pattern)
-
-def convert_notebook_to_script(notebook_path, output_path):
-    command = ['jupyter', 'nbconvert', '--to', 'python', notebook_path, '--output', output_path]
-    subprocess.call(command)
 
 def check_can_parse(script_path):
     try:
@@ -49,6 +45,14 @@ def convert_2_to_3(script_path, output_dir):
     subprocess.call(command)
     new_path = os.path.join(output_dir, get_basename(script_path))
     return new_path
+
+def convert_notebook_to_script(notebook_path, relative_output_path):
+    # the output here is added on from the notebook_path
+    new_name = get_basename(notebook_path, with_ext=False) + '.py'
+    relative_new_path = os.path.join(relative_output_path, new_name)
+    # make it relative to current directory (where executing...)
+    command = ['jupyter', 'nbconvert', '--to', 'python', notebook_path, '--output', relative_new_path, '--output-dir', '.']
+    subprocess.call(command)
 
 def filter_scripts(input_dir, output_dir=None):
     if output_dir is None:
@@ -81,26 +85,22 @@ def filter_scripts(input_dir, output_dir=None):
 
 def convert_notebooks(input_dir, output_dir=None):
     if output_dir is None:
-        output_dir = os.path.join(input_dir, 'converted_notebooks')
+        output_dir = os.path.join(input_dir, output_dir)
 
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
 
     for notebook in get_ipython_notebooks(input_dir):
         log.info('Converting notebook {} to python script'.format(notebook))
-        new_name = get_basename(notebook, with_ext=False) + '.py'
-        new_path = os.path.join(output_dir, new_name)
-        convert_notebook_to_script(notebook, new_path)
+        convert_notebook_to_script(notebook, output_dir)
 
     return output_dir
 
 def filter_candidates(input_dir, parsed_dir, converted_dir):
     # *.py scripts
-    os.path.join(input_dir, parsed_dir)
     filter_scripts(input_dir, parsed_dir)
 
     # *.ipynb -> *.py
-    converted_dir = os.path.join(input_dir, converted_dir)
     convert_notebooks(input_dir, converted_dir)
     # converted_notebooks/*.py -> parsed/*.py
     filter_scripts(converted_dir, parsed_dir)
