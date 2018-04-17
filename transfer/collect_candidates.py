@@ -1,8 +1,12 @@
 # crawl kaggle for a given data set and download all python source
 from argparse import ArgumentParser
-from bs4 import BeautifulSoup
+import logging
+import os
 import re
 from urllib.parse import urljoin
+import time
+
+from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
@@ -10,15 +14,18 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import tqdm
-
-import os
-import sys
-import time
-import traceback
 import wget
+
 
 WINDOW_WIDTH = 1000
 WINDOW_HEIGHT = 500
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s:%(levelname)s:%(message)s",
+)
+log = logging.getLogger(__name__)
+
 
 def parse_source(page_source):
     return BeautifulSoup(page_source, 'html5lib')
@@ -31,7 +38,7 @@ def make_browser():
 
 class KaggleCrawler(object):
     def __init__(self, kernels_url, output_dir, language='Python', sort_by='Most Votes'):
-        self.kernels_url = kernels_url # https://www.kaggle.com/wendykan/lending-club-loan-data/kernels
+        self.kernels_url = kernels_url
         # specify crawl kernel parameters
         self.language = language
         self.sort_by = sort_by
@@ -44,6 +51,7 @@ class KaggleCrawler(object):
         self.browser = make_browser()
         self.browser_references.append(self.browser)
         self.browser.get(self.kernels_url)
+        log.info('Created crawler for {}'.format(kernels_url))
 
     @staticmethod
     def get_base_url():
@@ -109,10 +117,12 @@ class KaggleCrawler(object):
 
     def _select_language(self, lang):
         """ Filter kernels to a given language """
+        log.info('Filtering kernels to {}'.format(lang))
         assert self._select_drop_down('language', lang)
 
     def _sort_by(self, criteria):
         """ Sort kernels by given criteria """
+        log.info('Sorting kernels by {}')
         assert self._select_drop_down('sort', criteria)
 
     def _get_height(self):
@@ -138,7 +148,7 @@ class KaggleCrawler(object):
             wait.until(EC.visibility_of_element_located(kernels_loading_msg))
             wait.until_not(EC.visibility_of_element_located(kernels_loading_msg))
         except TimeoutException:
-            print("Timed out on scroll!")
+            log.warn('Timed out on scroll')
 
     def _infinite_scroll_kernels(self, n_scrolls=None, batch_size=10):
         """
@@ -157,7 +167,7 @@ class KaggleCrawler(object):
             time.sleep(10)
             new_height = self._get_height()
             if current_height == new_height:
-                print("Height unchanged")
+                log.info('Window height unchanged, done scrolling')
                 return False
             curr += 1
         return True
@@ -182,6 +192,7 @@ class KaggleCrawler(object):
         return link
 
     def _download_source_code(self, kernel_browser, kernel_link, filename):
+        log.info('Downloading code for {}'.format(kernel_link))
         kernel_browser.get(kernel_link)
         wget_link = self._get_wget_link(kernel_browser)
         download_result = wget.download(wget_link, out=self.output_dir)
@@ -212,6 +223,7 @@ class KaggleCrawler(object):
         ct_downloaded = 0
 
         sources_file = open(os.path.join(self.output_dir, 'sources.txt'), 'w')
+        log.info('Writing sources for downloaded files to {}'.format(sources_file))
 
         while scroll_failure_budget > 0:
             # scroll to find new links
@@ -227,8 +239,7 @@ class KaggleCrawler(object):
                     sources_file.write('{} = {}\n'.format(filename, link))
                     ct_downloaded += 1
                 except Exception as err:
-                    print("Failed to download %s" % link)
-                    traceback.print_exc()
+                    log.exception('Failed to download {}'.format(link))
                     # keep track of failures to avoid repeating
                     self.failed_links.add(link)
             print("Total Downloaded: %d" % ct_downloaded)
