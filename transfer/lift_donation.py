@@ -15,7 +15,7 @@ def comment_out_nodes(graph, predicate):
     for _, node_data in graph.nodes(data=True):
         node_data['treat_as_comment'] = predicate(node_data)
     return graph
-        
+
 def is_pandas_read(node_data):
     calls = node_data['calls']
     if calls is None:
@@ -48,7 +48,7 @@ def annotate_dataframe_defs(graph):
             df_defs = [d for d in defs if d.type == pd.DataFrame.__name__]
             node_data['dataframe_defs'].update(df_defs)
     return graph
-    
+
 def node_data_in_exec_order(graph):
     return sorted(graph.nodes(data=True), key=lambda x: x[1]['event'].event_id)
 
@@ -63,7 +63,7 @@ def get_free_input_dataframes(graph):
         global_free.update(free)
         defined.update(node_data['dataframe_defs'])
     return free
-    
+
 def get_created_dataframes(graph):
     created = set([])
     for _, node_data in graph.nodes(data=True):
@@ -76,14 +76,14 @@ def get_created_dataframes(graph):
 class CollectUserDefinedCallableNames(ast.NodeVisitor):
     def __init__(self):
         self.names = []
-        
+
     def run(self, tree):
         self.visit(tree)
         return self.names
-        
+
     def visit_ClassDef(self, node):
         self.names.append(node.name)
-    
+
     def visit_FunctionDef(self, node):
         # we ignore things that may be private by convention
         if not node.name.startswith('_'):
@@ -97,28 +97,28 @@ class CollectUserDefinedCallableBodies(ast.NodeVisitor):
         self.name_to_dependencies = defaultdict(lambda: set([]))
         self.inside_callable = []
         self.name_to_complete_code = defaultdict(lambda: [])
-        
+
     def run(self, tree):
         self.visit(tree)
         self._populate_user_def_code()
-        
+
     def visit_Name(self, node):
         if self.inside_callable and node.id in self.names:
             enclosing_name = self.inside_callable[-1]
             self.name_to_dependencies[enclosing_name].append(node.id)
-    
+
     def visit_FunctionDef(self, node):
         self.name_to_body[node.name] = unparse(node)
         self.inside_callable.append(node.name)
         self.generic_visit(node)
         self.inside_callable.pop()
-        
+
     def visit_ClassDef(self, node):
         self.name_to_body[node.name] = unparse(node)
         self.inside_callable.append(node.name)
         self.generic_visit(node)
         self.inside_callable.pop()
-        
+
     def _populate_user_def_code0(self, name):
         # this is recursive for now, for clarity, but Python
         # can hit recursion error pretty easily. shouldn't be an issue
@@ -128,13 +128,13 @@ class CollectUserDefinedCallableBodies(ast.NodeVisitor):
         else:
             code = []
             code.append(self.name_to_body[name])
-    
+
             depends_on = self.name_to_dependencies[name]
             for dep in depends_on:
                 code.extend(self._populate_user_def_code0(dep))
-    
+
             self.name_to_complete_code[name] = code
-            
+
     def _populate_user_def_code(self):
         for name in self.names:
             self._populate_user_def_code0(name)
@@ -163,18 +163,18 @@ def get_user_defined_functions(graph, user_code_map):
     for _, node_data in graph.nodes(data=True):
         names.update([u.name for u in node_data['uses'] if u.type == 'function'])
     return user_code_map.get_code(names)
-    
-def graph_to_code_block(graph):
+
+def graph_to_lines(graph):
     sorted_nodes = node_data_in_exec_order(graph)
     code = []
     for _, node_data in sorted_nodes:
         if not node_data['treat_as_comment']:
             code.append(node_data['src'])
-    return '\n'.join(code)
+    return code
 
 ### the donated function class ###
 class DonatedFunction(object):
-    def __init__(self, name, formal_arg_vars, return_var, cleaning_code, context_code=''):
+    def __init__(self, name, formal_arg_vars, return_var, cleaning_code, context_code=None):
         self.name = name
         self.formal_arg_vars = formal_arg_vars
         self.return_var = return_var
@@ -184,39 +184,55 @@ class DonatedFunction(object):
         self.code = None
         # executable function
         self._obj = None
-    
+
+    # FIXME: this is nasty nasty
     def get_source(self):
         if self.code is None:
-            formal_args_str = ','.join([a.name for a in self.formal_arg_vars])
-            # TODO: only add context code if we need it
-            # TODO: this currently fucks up because the indent is not going to be correct
-            src = f"""
+
+            context_code_str = '# no additional context code'
+            if self.context_code:
+                context_code_str = f'#additional context code from user definitions'
+                for _def in self.context_code:
+                    context_code_str += textwrap.dedent(_def)
+            context_code_str = textwrap.indent(context_code_str, '\t')
+
+            template = """
             # cleaning function extracted from user traces
-            def {self.name}({formal_args_str}):
-                # context code: user definitions for called functions/classes
-                {self.context_code}
-                # core cleaning code
-                {self.cleaning_code}
-                return {self.return_var.name}
+            def {name}({formal_args_str}):
+            {context_code_str}
+            \t# core cleaning code
+            {core_code_str}
             """
-            src = textwrap.dedent(src)
+            template = textwrap.dedent(template)
+            formal_args_str = ','.join([a.name for a in self.formal_arg_vars])
+            core_code = self.cleaning_code + ['return {}'.format(self.return_var.name)]
+            core_code_str = '\n'.join(core_code)
+            core_code_str = textwrap.indent(core_code_str, '\t')
+            # add in return
+
+            src = template.format(
+                name=self.name,
+                formal_args_str=formal_args_str,
+                context_code_str=context_code_str,
+                core_code_str=core_code_str
+            )
             self.src = src
         return src
 
-    def _get_code_obj(self):
+    def _get_func_obj(self):
         if self._obj is None:
             code = self.get_source()
             _globals = {}
             exec(code, _globals)
             self._obj = _globals[self.name]
-        return self._obj.__code__
-        
+        return self._obj
+
     def __call__(self, *args):
-        fun_code = self._get_code_obj()
-        return fun_code(*args)
+        func = self._get_func_obj()
+        return func(*args)
 
 
-def lift_graph_to_functions(graph, script_src):
+def lift_graph_to_functions(name, graph, script_src):
     # create copy before we annotate/modify
     graph = graph.to_directed()
 
@@ -226,7 +242,7 @@ def lift_graph_to_functions(graph, script_src):
     # annotate with uses/defs for dataframes
     graph = annotate_dataframe_uses(graph)
     graph = annotate_dataframe_defs(graph)
-    
+
     # free dataframe variables become arguments for the function
     formal_args = get_free_input_dataframes(graph)
     # dataframe variables created or the original input
@@ -238,11 +254,10 @@ def lift_graph_to_functions(graph, script_src):
     # we need to add user code for functions that may get executed but we don't directly trace
     tree = ast.parse(script_src)
     user_code_map = build_user_code_map(tree)
-    
+
     additional_code = get_user_defined_functions(graph, user_code_map)
-    additional_code = '\n'.join(additional_code)
     # collect code block and ignore comment nodes
-    cleaning_code = graph_to_code_block(graph)
+    cleaning_code = graph_to_lines(graph)
 
     # since there are multiple possible return types, we lift into multiple functions
     funcs = []
