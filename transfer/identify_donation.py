@@ -10,6 +10,7 @@ from plpy.analyze.dynamic_trace_events import ExecLine, MemoryUpdate
 
 
 # will produce false positives for attributes that match a column name
+# TODO: we can fix this using the type information we collect for defs/uses
 class PossibleColumnCollector(ast.NodeVisitor):
     def __init__(self):
         self.acc = []
@@ -25,9 +26,9 @@ class PossibleColumnCollector(ast.NodeVisitor):
         return set(self.acc)
 
 # TODO: would it be better to compute the columns assigned/used based on the memory locations?
-def columns_assigned_to_line(src_line):
+def columns_assigned_to(node_data):
     try:
-        ast_node = to_ast_node(src_line)
+        ast_node = to_ast_node(node_data['src'])
     except SyntaxError:
         # not standalone assignment/expressions
         # FIXME: this is ignoring the fact that we can parse portions of this
@@ -50,9 +51,9 @@ def columns_assigned_to_line(src_line):
 
     return cols_assigned
 
-def columns_used_line(src_line):
+def columns_used(node_data):
     try:
-        ast_node = to_ast_node(src_line)
+        ast_node = to_ast_node(node_data['src'])
     except SyntaxError:
         return set([])
 
@@ -62,14 +63,14 @@ def columns_used_line(src_line):
     return PossibleColumnCollector().run(ast_node)
 
 def annotate_graph(graph):
-    for node_id, data in graph.nodes(data=True):
-        if data.get('annotator') == __file__:
+    for node_id, node_data in graph.nodes(data=True):
+        if node_data.get('annotator') == __file__:
             return graph
-        defs = columns_assigned_to_line(data['src'])
-        used = columns_used_line(data['src'])
-        data['columns_defined'] = defs
-        data['columns_used'] = used
-        data['annotator'] = __file__
+        col_defs = columns_assigned_to(node_data)
+        col_used = columns_used(node_data)
+        node_data['columns_defined'] = col_defs
+        node_data['columns_used'] = col_used
+        node_data['annotator'] = __file__
     return graph
 
 def remove_subgraphs(graphs):
@@ -104,7 +105,7 @@ def show_lines(graph, annotate=True):
         nodes = [(node_id, dict(data)) for node_id, data in graph.nodes(data=True)]
         for node_id, data in nodes:
             if isinstance(data['event'], ExecLine):
-                data['uses'] = data['event'].uses_mem_locs
+                data['uses'] = data['event'].uses
     else:
         nodes = graph.nodes(data=True)
     return sorted(nodes, key=lambda x: x[1]['lineno'])
