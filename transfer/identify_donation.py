@@ -8,19 +8,8 @@ from plpy.analyze.graph_builder import draw
 from plpy.analyze.dynamic_tracer import to_ast_node
 from plpy.analyze.dynamic_trace_events import ExecLine, MemoryUpdate
 
-class DonationSlices(object):
-    def __init__(self, graph, seed_columns, slices):
-        self.graph = graph
-        self.seed_columns = seed_columns
-        self.slices = slices
 
-    def __iter__(self):
-        return iter(self.slices)
-
-    def __getitem__(self, ix):
-        return self.slices[ix]
-
-# will produce false positives for attributes
+# will produce false positives for attributes that match a column name
 class PossibleColumnCollector(ast.NodeVisitor):
     def __init__(self):
         self.acc = []
@@ -231,8 +220,9 @@ class ColumnDefExtractor(object):
 
     def run(self, target_columns):
         _slices = self._get_raw_donation_slices(target_columns)
-        _slices =  RepairSliceImplicitUses(self.graph).run(_slices)
-        return DonationSlices(self.graph, target_columns, _slices)
+        _slices = RepairSliceImplicitUses(self.graph).run(_slices)
+        # convert from subgraph view to directed graph
+        return [s.to_directed() for s in _slices]
 
 
 
@@ -280,8 +270,9 @@ class ColumnUseExtractor(object):
 
     def run(self, target_columns):
         _slices = self._get_raw_donation_slices(target_columns)
-        _slices =  RepairSliceImplicitUses(self.graph).run(_slices)
-        return DonationSlices(self.graph, target_columns, _slices)
+        _slices = RepairSliceImplicitUses(self.graph).run(_slices)
+        # convert from subgraph view to directed graph
+        return [s.to_directed() for s in _slices]
 
 
 def get_all_donations(graph):
@@ -290,14 +281,15 @@ def get_all_donations(graph):
     columns_used = set([col for _, data in annotated.nodes(data=True) for col in data['columns_used']])
 
     slices_defined = ColumnDefExtractor(annotated).run(columns_defined)
-    print("%d def slices" % len(slices_defined.slices))
+    print("{} def slices".format(len(slices_defined)))
     slices_used = ColumnUseExtractor(annotated).run(columns_used)
-    print("%s use slices" % len(slices_used.slices))
-    _slices = slices_defined.slices + slices_used.slices
+    print("{} use slices".format(len(slices_used)))
+    _slices = slices_defined + slices_used
     _slices = get_unique_graphs(_slices)
-    print("%s unique slices" % len(_slices))
-    _slices = sorted(_slices, key=lambda x: len(to_code_block(x).split('\n')))
-    return _slices
+    print("{} unique slices".format(len(_slices)))
+    loc = lambda g: len(g.nodes)
+    return sorted(_slices, key=loc)
+
 
 
 def main(args):
