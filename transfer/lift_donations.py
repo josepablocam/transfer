@@ -186,11 +186,11 @@ def build_user_code_map(tree):
     code_map.run(tree)
     return code_map
 
-# TODO: we should make this so that it can also consider class, currently just function
-def get_user_defined_functions(graph, user_code_map):
+def get_user_defined_callables(graph, user_code_map):
     names = set([])
     for _, node_data in graph.nodes(data=True):
-        names.update([u.name for u in node_data['uses'] if u.type == 'function'])
+        # type == 'type' should pick up user defined classes
+        names.update([u.name for u in node_data['uses'] if u.type == 'function' or u.type == 'type'])
     return user_code_map.get_code(names)
 
 def graph_to_lines(graph):
@@ -318,8 +318,8 @@ def lift_to_functions(graphs, script_src, name_format=None, name_counter=None):
         possible_returns = {v.id:v for v in possible_returns.values()}
         possible_returns = possible_returns.values()
 
-        # add in additional user code needed for execution (context), such as user function defs
-        context_code = get_user_defined_functions(graph, user_code_map)
+        # add in additional user code needed for execution (context), such as user function/class defs
+        context_code = get_user_defined_callables(graph, user_code_map)
         # convert graph to lines of code
         cleaning_code = graph_to_lines(graph)
 
