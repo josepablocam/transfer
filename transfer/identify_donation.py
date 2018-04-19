@@ -314,7 +314,7 @@ def main(args):
 
     with open(graph_file, 'rb') as f:
         graph = pickle.load(f)
-    donations = get_all_donations(graph)
+    donations = get_all_donations(graph,)
 
     with open(slices_file, 'wb') as f:
         pickle.dump(donations, f)
