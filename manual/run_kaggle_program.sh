@@ -11,5 +11,5 @@ echo "Running script $1"
     echo 'Identify donations';
     python -m transfer.identify_donations generated/$1_graph.pkl generated/$1_donations.pkl;
     echo 'Lift donations';
-    python -m transfer.lift_donations generated/$1_donations.pkl generated/$1_functions.pkl
+    python -m transfer.lift_donations generated/$1_donations.pkl $1.py generated/$1_functions.pkl
 )
