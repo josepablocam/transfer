@@ -1,5 +1,7 @@
+from argparse import ArgumentParser
 import ast
 from collections import defaultdict
+import pickle
 import textwrap
 
 from astunparse import unparse
@@ -53,11 +55,16 @@ def node_data_in_exec_order(graph):
     return sorted(graph.nodes(data=True), key=lambda x: x[1]['event'].event_id)
 
 def get_free_input_dataframes(graph):
+    # FIXME: we also should not consider as free dataframes that are defined
+    # as a result of existing dataframes....e.g. df[col] will be 'undefined'
+    # even if df and col are defined, since there is no explicit def of df[col]
+    #
     global_free = set([])
     defined = set([])
     sorted_by_exec = node_data_in_exec_order(graph)
     for _, node_data in sorted_by_exec:
         free = [var for var in node_data['dataframe_uses'] if not var in defined]
+        # TODO: also remove any free that can be derived from existing defs
         global_free.update(free)
         defined.update(node_data['dataframe_defs'])
     return global_free
@@ -245,42 +252,91 @@ class DonatedFunction(object):
         return func(*args)
 
 
-def lift_graph_to_functions(name, graph, script_src):
-    # create copy before we annotate/modify
-    graph = graph.to_directed()
-
-    # Graph annotation
-    # we remove reads and create free (dataframe) variables as a result
-    graph = comment_out_nodes(graph, is_pandas_read)
-    # annotate with uses/defs for dataframes
-    graph = annotate_dataframe_uses(graph)
-    graph = annotate_dataframe_defs(graph)
-
-    # free dataframe variables become arguments for the function
-    formal_args = get_free_input_dataframes(graph)
-    # dataframe variables created or the original input
-    # FIXME: we also want returns that don't waste compute
-    # i.e. if we decide to return X, we should not include computation
-    # after that (maybe just comment it out?)
-    # can always return the original input data frame
-    possible_returns = {d.name:d for d in formal_args}
-    possible_returns.update(get_created_dataframes(graph))
-    possible_returns = possible_returns.values()
-
+def lift_to_functions(graphs, script_src, name_format=None, name_counter=None):
     # we need to add user code for functions that may get executed but we don't directly trace
     tree = ast.parse(script_src)
     user_code_map = build_user_code_map(tree)
 
-    additional_code = get_user_defined_functions(graph, user_code_map)
-    # collect code block and ignore comment nodes
-    cleaning_code = graph_to_lines(graph)
+    if isinstance(graphs, nx.DiGraph):
+        graphs = [graphs]
 
-    # since there are multiple possible return types, we lift into multiple functions
-    funcs = []
-    for _return in possible_returns:
-        f = DonatedFunction(graph, name, formal_args, _return, cleaning_code, additional_code)
-        funcs.append(f)
-    return funcs
+    if name_format is None:
+        name_format = 'cleaning_function_%d'
+
+    if name_counter is None:
+        name_counter = 0
+
+    functions = []
+
+    for graph in graphs:
+        # create copy before we annotate/modify
+        graph = graph.to_directed()
+
+        # Graph annotation
+        # we remove reads and create free (dataframe) variables as a result
+        graph = comment_out_nodes(graph, is_pandas_read)
+        # annotate with uses/defs for dataframes
+        graph = annotate_dataframe_uses(graph)
+        graph = annotate_dataframe_defs(graph)
+
+        # free dataframe variables become arguments for the function
+        formal_args = get_free_input_dataframes(graph)
+        # dataframe variables created or the original input
+        # FIXME: we also want returns that don't waste compute
+        # i.e. if we decide to return X, we should not include computation
+        # after that (maybe just comment it out?)
+        # can always return the original input data frame
+        possible_returns = {d.name:d for d in formal_args}
+        possible_returns.update(get_created_dataframes(graph))
+        # we can also remove any references to the same object with different names
+        possible_returns = {v.id:v for v in possible_returns.values()}
+        # and we can then just keep the names
+        possible_returns = possible_returns.values()
+
+        additional_code = get_user_defined_functions(graph, user_code_map)
+        # collect code block and ignore comment nodes
+        cleaning_code = graph_to_lines(graph)
+
+        # since there are multiple possible return types, we lift into multiple functions
+        for _return in possible_returns:
+            func_name = name_format % name_counter
+            f = DonatedFunction(graph, func_name, formal_args, _return, cleaning_code, additional_code)
+            functions.append(f)
+
+    return functions
+
+def main(args):
+    graph_file = args.graph_file
+    src_file = args.src_file
+    output_file = args.output_file
+    name_format = args.name_format
+    name_counter = args.name_counter
+
+    with open(graph_file, 'rb') as f:
+        graphs = pickle.load(f)
+
+    with open(src_file, 'r') as f:
+        script_src = f.read()
+
+    functions = lift_to_functions(graphs, script_src, name_format=name_format, name_counter=name_counter)
+    print('Collected {} functions'.format(len(functions)))
+
+    with open(output_file, 'wb') as f:
+        pickle.dump(functions, f)
+
+if __name__ == '__main__':
+    parser = ArgumentParser(description='Lift collection of donation graphs to functions')
+    parser.add_argument('graph_file', type=str, help='Path to pickled donation graphs')
+    parser.add_argument('src_file', type=str, help='Path to original user script to collect additional defs')
+    parser.add_argument('output_file', type=str, help='Path to store pickled functions')
+    parser.add_argument('-n', '--name_format', type=str, help='String formatting for function name', default='cleaning_func_%d')
+    parser.add_argument('-c', '--name_counter', type=int, help='Initialize function counter for naming', default=0)
+    args = parser.parse_args()
+    try:
+        main(args)
+    except Exception as err:
+        import pdb
+        pdb.post_mortem()
 
 
 # TODOS:
