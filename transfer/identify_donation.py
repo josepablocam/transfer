@@ -198,10 +198,6 @@ class ColumnDefExtractor(object):
         self.col_to_node_ids = col_to_node_ids
 
     def _get_raw_donation_slices(self, target_columns):
-        if isinstance(target_columns, str):
-            target_columns = [target_columns]
-        target_columns = set(target_columns)
-
         seeds = []
         for col in target_columns:
             seeds.extend(self.col_to_node_ids[col])
@@ -220,11 +216,18 @@ class ColumnDefExtractor(object):
         return remove_subgraphs(slices)
 
     def run(self, target_columns):
+        if isinstance(target_columns, str):
+            target_columns = [target_columns]
+        target_columns = set(target_columns)
+
         _slices = self._get_raw_donation_slices(target_columns)
         _slices = RepairSliceImplicitUses(self.graph).run(_slices)
         # convert from subgraph view to directed graph
-        return [s.to_directed() for s in _slices]
-
+        _slices = [s.to_directed() for s in _slices]
+        for s in _slices:
+            s.graph['seed_columns'] = target_columns
+            s.graph['seed_approach'] = 'def'
+        return _slices
 
 
 class ColumnUseExtractor(object):
@@ -246,10 +249,6 @@ class ColumnUseExtractor(object):
         self.col_to_node_ids = col_to_node_ids
 
     def _get_raw_donation_slices(self, target_columns):
-        if isinstance(target_columns, str):
-            target_columns = [target_columns]
-        target_columns = set(target_columns)
-
         seeds = []
         for col in target_columns:
             seeds.extend(self.col_to_node_ids[col])
@@ -270,27 +269,43 @@ class ColumnUseExtractor(object):
         return backward_helper._get_raw_donation_slices(cols_assigned_to)
 
     def run(self, target_columns):
+        if isinstance(target_columns, str):
+            target_columns = [target_columns]
+        target_columns = set(target_columns)
+
         _slices = self._get_raw_donation_slices(target_columns)
         _slices = RepairSliceImplicitUses(self.graph).run(_slices)
         # convert from subgraph view to directed graph
-        return [s.to_directed() for s in _slices]
+        _slices = [s.to_directed() for s in _slices]
+        for s in _slices:
+            s.graph['seed_columns'] = target_columns
+            s.graph['seed_approach'] = 'use'
+        return _slices
 
 
 def get_all_donations(graph):
+    # graph annotated with uses/defs of columns
     annotated = annotate_graph(graph)
-    columns_defined = set([col for _, data in annotated.nodes(data=True) for col in data['columns_defined']])
-    columns_used = set([col for _, data in annotated.nodes(data=True) for col in data['columns_used']])
 
-    slices_defined = ColumnDefExtractor(annotated).run(columns_defined)
+    slices_defined = []
+    def_extractor = ColumnDefExtractor(annotated)
+    columns_defined = set([col for _, data in annotated.nodes(data=True) for col in data['columns_defined']])
+    for col in columns_defined:
+        slices_defined.extend(def_extractor.run(col))
     print("{} def slices".format(len(slices_defined)))
-    slices_used = ColumnUseExtractor(annotated).run(columns_used)
+
+    slices_used = []
+    columns_used = set([col for _, data in annotated.nodes(data=True) for col in data['columns_used']])
+    use_extractor = ColumnUseExtractor(annotated)
+    for col in columns_defined:
+        slices_used.extend(def_extractor.run(col))
     print("{} use slices".format(len(slices_used)))
+
     _slices = slices_defined + slices_used
     _slices = get_unique_graphs(_slices)
     print("{} unique slices".format(len(_slices)))
     loc = lambda g: len(g.nodes)
     return sorted(_slices, key=loc)
-
 
 
 def main(args):
