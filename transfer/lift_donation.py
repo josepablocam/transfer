@@ -86,7 +86,7 @@ def get_free_input_dataframes(graph):
     return global_free
 
 def get_created_dataframes(graph):
-    # TODO: this should likely also include modified functinos
+    # TODO: this should likely also include modified dataframes
     created = {}
     sorted_by_exec = node_data_in_exec_order(graph)
     for _, node_data in sorted_by_exec:
@@ -100,6 +100,7 @@ def get_created_dataframes(graph):
 
 ### Adding user code that we may not get to observe through trace ###
 # collects functions and user class definitions
+# doesn't account for things like named lambdas
 class CollectUserDefinedCallableNames(ast.NodeVisitor):
     def __init__(self):
         self.names = []
@@ -179,15 +180,14 @@ class CollectUserDefinedCallableBodies(ast.NodeVisitor):
         return list(code)
 
 
-def build_user_code_map(ast):
-    names = CollectUserDefinedCallableNames().run(ast)
+def build_user_code_map(tree):
+    names = CollectUserDefinedCallableNames().run(tree)
     code_map = CollectUserDefinedCallableBodies(names)
-    code_map.run(ast)
+    code_map.run(tree)
     return code_map
 
 # TODO: we should make this so that it can also consider class, currently just function
 def get_user_defined_functions(graph, user_code_map):
-    assert isinstance(user_code_map, CollectUserDefinedCallableBodies)
     names = set([])
     for _, node_data in graph.nodes(data=True):
         names.update([u.name for u in node_data['uses'] if u.type == 'function'])
@@ -197,22 +197,24 @@ def graph_to_lines(graph):
     sorted_nodes = node_data_in_exec_order(graph)
     code = []
     for _, node_data in sorted_nodes:
-        line = '# ' if node_data['treat_as_comment'] else ''
-        line += node_data['src']
+        line = '{comment_marker}{src}'.format(
+            comment_marker='# ' if node_data['treat_as_comment'] else '',
+            src=node_data['src']
+        )
         code.append(line)
     return code
 
 ### the donated function class ###
-# TODO: we should add the actual graph (we may want to retrieve this later)
-# we should also add some meta information, like what column is the seed for this slice etc
 class DonatedFunction(object):
     def __init__(self, graph, name, formal_arg_vars, return_var, cleaning_code, context_code=None):
-        # make sure to have a copy of the graph backing thsi function
+        # make sure to have a copy of the graph backing this function
+        # graph has some meta-data we care about as well
         self.graph = graph.to_directed()
 
         # function definition
         self.name = name
-        self.formal_arg_vars = list(formal_arg_vars)
+        # sort by name just for deterministic order
+        self.formal_arg_vars = sorted(list(formal_arg_vars), key=lambda x: x.name)
         self.return_var = return_var
         # source code
         self.cleaning_code = cleaning_code
@@ -222,30 +224,37 @@ class DonatedFunction(object):
         # executable function
         self._obj = None
 
-    # FIXME: this is nasty nasty
     def get_source(self):
         if self.code is None:
+            template = 'def {name}({formal_args_str}):\n{context_code_str}{core_code_str}'
 
-            context_code_str = '# no additional context code'
-            if self.context_code:
-                context_code_str = f'#additional context code from user definitions'
-                for _def in self.context_code:
-                    context_code_str += textwrap.dedent(_def)
-            context_code_str = textwrap.indent(context_code_str, '\t')
-
-            template = """
-            # cleaning function extracted from user traces
-            def {name}({formal_args_str}):
-            {context_code_str}
-            \t# core cleaning code
-            {core_code_str}
-            """
-            template = textwrap.dedent(template)
+            # arguments
             formal_args_str = ','.join([a.name for a in self.formal_arg_vars])
-            core_code = self.cleaning_code + ['return {}'.format(self.return_var.name)]
-            core_code_str = '\n'.join(core_code)
+
+            # context code
+            if self.context_code:
+                context_code_lines = ['# additional context code from user definitions']
+                for _def in self.context_code:
+                    # remove any body-specific indentation prior to adding in
+                    _def = textwrap.dedent(_def)
+                    if not _def.startswith('\n'):
+                        _def = '\n' + _def
+                    context_code_lines.append(_def)
+                # everything will be indented by a tab to be properly defined
+                # inside the broader function
+                context_code_lines.append('\n')
+                context_code_str = ''.join(context_code_lines)
+                context_code_str = textwrap.indent(context_code_str, '\t')
+            else:
+                context_code_str = ''
+
+            # core cleaning code
+            core_code_lines = ['# core cleaning code']
+            core_code_lines.extend(self.cleaning_code)
+            if self.return_var:
+                core_code_lines.append('return {}'.format(self.return_var.name))
+            core_code_str = '\n'.join(core_code_lines)
             core_code_str = textwrap.indent(core_code_str, '\t')
-            # add in return
 
             code = template.format(
                 name=self.name,
@@ -253,8 +262,8 @@ class DonatedFunction(object):
                 context_code_str=context_code_str,
                 core_code_str=core_code_str
             )
-
             self.code = code
+
         return self.code
 
     def _get_func_obj(self):
@@ -271,10 +280,6 @@ class DonatedFunction(object):
 
 
 def lift_to_functions(graphs, script_src, name_format=None, name_counter=None):
-    # we need to add user code for functions that may get executed but we don't directly trace
-    tree = ast.parse(script_src)
-    user_code_map = build_user_code_map(tree)
-
     if isinstance(graphs, nx.DiGraph):
         graphs = [graphs]
 
@@ -284,6 +289,10 @@ def lift_to_functions(graphs, script_src, name_format=None, name_counter=None):
     if name_counter is None:
         name_counter = 0
 
+    # we need to add user code for functions that may get executed but we don't directly trace
+    tree = ast.parse(script_src)
+    user_code_map = build_user_code_map(tree)
+
     functions = []
 
     for graph in graphs:
@@ -291,7 +300,7 @@ def lift_to_functions(graphs, script_src, name_format=None, name_counter=None):
         graph = graph.to_directed()
 
         # Graph annotation
-        # we remove reads and create free (dataframe) variables as a result
+        # we remove dataframe reads and create free (dataframe) variables as a result
         graph = comment_out_nodes(graph, is_pandas_read)
         # annotate with uses/defs for dataframes
         graph = annotate_dataframe_uses(graph)
@@ -299,7 +308,6 @@ def lift_to_functions(graphs, script_src, name_format=None, name_counter=None):
 
         # free dataframe variables become arguments for the function
         formal_args = get_free_input_dataframes(graph)
-        # dataframe variables created or the original input
         # FIXME: we also want returns that don't waste compute
         # i.e. if we decide to return X, we should not include computation
         # after that (maybe just comment it out?)
@@ -308,42 +316,36 @@ def lift_to_functions(graphs, script_src, name_format=None, name_counter=None):
         possible_returns.update(get_created_dataframes(graph))
         # we can also remove any references to the same object with different names
         possible_returns = {v.id:v for v in possible_returns.values()}
-        # and we can then just keep the names
         possible_returns = possible_returns.values()
 
-        additional_code = get_user_defined_functions(graph, user_code_map)
-        # collect code block and ignore comment nodes
+        # add in additional user code needed for execution (context), such as user function defs
+        context_code = get_user_defined_functions(graph, user_code_map)
+        # convert graph to lines of code
         cleaning_code = graph_to_lines(graph)
 
-        # since there are multiple possible return types, we lift into multiple functions
+        # since there are multiple possible return values, we lift into multiple functions
         for _return in possible_returns:
             func_name = name_format % name_counter
-            f = DonatedFunction(graph, func_name, formal_args, _return, cleaning_code, additional_code)
-            functions.append(f)
+            func = DonatedFunction(graph, func_name, formal_args, _return, cleaning_code, context_code)
+            functions.append(func)
 
     return functions
 
 def main(args):
-    graph_file = args.graph_file
-    src_file = args.src_file
-    output_file = args.output_file
-    name_format = args.name_format
-    name_counter = args.name_counter
-
-    with open(graph_file, 'rb') as f:
+    with open(args.graph_file, 'rb') as f:
         graphs = pickle.load(f)
 
-    with open(src_file, 'r') as f:
+    with open(args.src_file, 'r') as f:
         script_src = f.read()
 
-    functions = lift_to_functions(graphs, script_src, name_format=name_format, name_counter=name_counter)
+    functions = lift_to_functions(graphs, script_src, name_format=args.name_format, name_counter=args.name_counter)
     print('Collected {} functions'.format(len(functions)))
 
-    with open(output_file, 'wb') as f:
+    with open(args.output_file, 'wb') as f:
         pickle.dump(functions, f)
 
 if __name__ == '__main__':
-    parser = ArgumentParser(description='Lift collection of donation graphs to functions')
+    parser = ArgumentParser(description='Lift collection of donation graphs to Python functions')
     parser.add_argument('graph_file', type=str, help='Path to pickled donation graphs')
     parser.add_argument('src_file', type=str, help='Path to original user script to collect additional defs')
     parser.add_argument('output_file', type=str, help='Path to store pickled functions')
@@ -356,6 +358,7 @@ if __name__ == '__main__':
         import pdb
         pdb.post_mortem()
 
+# TODO: we should add the source script to each function that we produce...
 
 # TODOS:
 # 1 - Try this with other scripts
