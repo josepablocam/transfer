@@ -54,19 +54,35 @@ def annotate_dataframe_defs(graph):
 def node_data_in_exec_order(graph):
     return sorted(graph.nodes(data=True), key=lambda x: x[1]['event'].event_id)
 
+class GetNames(ast.NodeVisitor):
+    def __init__(self):
+        self.acc = set([])
+
+    def visit_Name(self, node):
+        self.acc.add(node.id)
+
+    def run(self, node):
+        self.visit(node)
+        return self.acc
+
+def can_be_computed(var, defined):
+    var_tree = ast.parse(var.name)
+    uses_names = GetNames().run(var_tree)
+    defined_names = set(d.name for d in defined)
+    return uses_names.issubset(defined_names)
+
 def get_free_input_dataframes(graph):
-    # FIXME: we also should not consider as free dataframes that are defined
-    # as a result of existing dataframes....e.g. df[col] will be 'undefined'
-    # even if df and col are defined, since there is no explicit def of df[col]
-    #
     global_free = set([])
     defined = set([])
     sorted_by_exec = node_data_in_exec_order(graph)
     for _, node_data in sorted_by_exec:
-        free = [var for var in node_data['dataframe_uses'] if not var in defined]
-        # TODO: also remove any free that can be derived from existing defs
-        global_free.update(free)
-        defined.update(node_data['dataframe_defs'])
+        if node_data['treat_as_comment']:
+            continue
+        for var in node_data['dataframe_uses']:
+            if not var in defined and not can_be_computed(var, defined):
+                global_free.add(var)
+        # update with all definitions, not just dataframes
+        defined.update(node_data['defs'])
     return global_free
 
 def get_created_dataframes(graph):
@@ -74,6 +90,8 @@ def get_created_dataframes(graph):
     created = {}
     sorted_by_exec = node_data_in_exec_order(graph)
     for _, node_data in sorted_by_exec:
+        if node_data['treat_as_comment']:
+            continue
         # just use names for this, don't care about memory location
         # take last reference to each name
         def_names = {d.name: d for d in node_data['dataframe_defs']}
