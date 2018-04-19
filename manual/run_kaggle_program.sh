@@ -8,4 +8,8 @@ echo "Running script $1"
     ipython3 -m plpy.analyze.dynamic_tracer -- generated/$1_lifted.py generated/$1_tracer.pkl --loop_bound 2 --log $1.log;
     echo 'Constructing graph';
     python -m plpy.analyze.graph_builder generated/$1_tracer.pkl generated/$1_graph.pkl --ignore_unknown --memory_refinement 1;
+    echo 'Identify donations';
+    python -m transfer.identify_donations generated/$1_graph.pkl generated/$1_donations.pkl;
+    echo 'Lift donations';
+    python -m transfer.lift_donations generated/$1_donations.pkl generated/$1_functions.pkl
 )
