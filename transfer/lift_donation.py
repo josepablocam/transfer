@@ -53,8 +53,6 @@ def node_data_in_exec_order(graph):
     return sorted(graph.nodes(data=True), key=lambda x: x[1]['event'].event_id)
 
 def get_free_input_dataframes(graph):
-    # => function inputs
-    # sort graph by lineno
     global_free = set([])
     defined = set([])
     sorted_by_exec = node_data_in_exec_order(graph)
@@ -62,14 +60,18 @@ def get_free_input_dataframes(graph):
         free = [var for var in node_data['dataframe_uses'] if not var in defined]
         global_free.update(free)
         defined.update(node_data['dataframe_defs'])
-    return free
+    return global_free
 
 def get_created_dataframes(graph):
-    created = set([])
-    for _, node_data in graph.nodes(data=True):
-        created.update(node_data['dataframe_defs'])
+    # TODO: this should likely also include modified functinos
+    created = {}
+    sorted_by_exec = node_data_in_exec_order(graph)
+    for _, node_data in sorted_by_exec:
+        # just use names for this, don't care about memory location
+        # take last reference to each name
+        def_names = {d.name: d for d in node_data['dataframe_defs']}
+        created.update(def_names)
     return created
-
 
 ### Adding user code that we may not get to observe through trace ###
 # collects functions and user class definitions
@@ -97,10 +99,6 @@ class CollectUserDefinedCallableBodies(ast.NodeVisitor):
         self.name_to_dependencies = defaultdict(lambda: set([]))
         self.inside_callable = []
         self.name_to_complete_code = defaultdict(lambda: [])
-
-    def run(self, tree):
-        self.visit(tree)
-        self._populate_user_def_code()
 
     def visit_Name(self, node):
         if self.inside_callable and node.id in self.names:
@@ -134,14 +132,20 @@ class CollectUserDefinedCallableBodies(ast.NodeVisitor):
                 code.extend(self._populate_user_def_code0(dep))
 
             self.name_to_complete_code[name] = code
+            return code
 
     def _populate_user_def_code(self):
         for name in self.names:
             self._populate_user_def_code0(name)
 
+    def run(self, tree):
+        self.visit(tree)
+        self._populate_user_def_code()
+
     def get_code(self, names):
         if isinstance(names, str):
             names = [names]
+        # portion of names that (may) be user-defined functions and should be added
         user_names = set(names).intersection(self.names)
 
         code = set([])
@@ -168,20 +172,28 @@ def graph_to_lines(graph):
     sorted_nodes = node_data_in_exec_order(graph)
     code = []
     for _, node_data in sorted_nodes:
-        if not node_data['treat_as_comment']:
-            code.append(node_data['src'])
+        line = '# ' if node_data['treat_as_comment'] else ''
+        line += node_data['src']
+        code.append(line)
     return code
 
 ### the donated function class ###
+# TODO: we should add the actual graph (we may want to retrieve this later)
+# we should also add some meta information, like what column is the seed for this slice etc
 class DonatedFunction(object):
-    def __init__(self, name, formal_arg_vars, return_var, cleaning_code, context_code=None):
+    def __init__(self, graph, name, formal_arg_vars, return_var, cleaning_code, context_code=None):
+        # make sure to have a copy of the graph backing thsi function
+        self.graph = graph.to_directed()
+
+        # function definition
         self.name = name
-        self.formal_arg_vars = formal_arg_vars
+        self.formal_arg_vars = list(formal_arg_vars)
         self.return_var = return_var
         # source code
         self.cleaning_code = cleaning_code
         self.context_code = context_code
         self.code = None
+
         # executable function
         self._obj = None
 
@@ -210,14 +222,15 @@ class DonatedFunction(object):
             core_code_str = textwrap.indent(core_code_str, '\t')
             # add in return
 
-            src = template.format(
+            code = template.format(
                 name=self.name,
                 formal_args_str=formal_args_str,
                 context_code_str=context_code_str,
                 core_code_str=core_code_str
             )
-            self.src = src
-        return src
+
+            self.code = code
+        return self.code
 
     def _get_func_obj(self):
         if self._obj is None:
@@ -246,10 +259,13 @@ def lift_graph_to_functions(name, graph, script_src):
     # free dataframe variables become arguments for the function
     formal_args = get_free_input_dataframes(graph)
     # dataframe variables created or the original input
-    possible_returns = get_created_dataframes(graph)
+    # FIXME: we also want returns that don't waste compute
+    # i.e. if we decide to return X, we should not include computation
+    # after that (maybe just comment it out?)
     # can always return the original input data frame
-    # TODO: this really should only happen if we modify the original input
-    possible_returns.update(formal_args)
+    possible_returns = {d.name:d for d in formal_args}
+    possible_returns.update(get_created_dataframes(graph))
+    possible_returns = possible_returns.values()
 
     # we need to add user code for functions that may get executed but we don't directly trace
     tree = ast.parse(script_src)
@@ -262,8 +278,17 @@ def lift_graph_to_functions(name, graph, script_src):
     # since there are multiple possible return types, we lift into multiple functions
     funcs = []
     for _return in possible_returns:
-        f = DonatedFunction(name, formal_args, _return, cleaning_code, additional_code)
+        f = DonatedFunction(graph, name, formal_args, _return, cleaning_code, additional_code)
         funcs.append(f)
     return funcs
 
+
+# TODOS:
+# 1 - Try this with other scripts
+# 2 - Fix so that it works with user defined classes (may need to tweak type annotations during tracing)
+# 3 - Try to lift without input args (i.e. don't comment reads out): => basic function executable check
+# 4 - Try lifting more
+# 5 - Start tests for this project: (convert candidates, identify donations, and lift) we'll live without tests for collect (since browser based)
+# 6 - There is additional work that needs to happen for repairing existing code: we may need to change references to columns to potentially new columns
+# in the code provided
 
