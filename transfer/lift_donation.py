@@ -14,6 +14,7 @@ from . import identify_donation
 
 ### Parameters and Return values ###
 def comment_out_nodes(graph, predicate):
+    # predicate can check things like if it reads from disk
     for _, node_data in graph.nodes(data=True):
         node_data['treat_as_comment'] = predicate(node_data)
     return graph
@@ -27,7 +28,6 @@ def is_pandas_read(node_data):
             return True
     return False
 
-# for example: read_*
 def annotate_dataframe_uses(graph):
     for _, node_data in graph.nodes(data=True):
         node_data['dataframe_uses'] = set([])
