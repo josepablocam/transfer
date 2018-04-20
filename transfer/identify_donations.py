@@ -113,6 +113,12 @@ def to_code_block(nodes):
     return '\n'.join(map(lambda x: x[1]['src'], nodes))
 
 
+def trim_non_reaching():
+    raise NotImplementedError
+
+
+# FIXME: this currently will include non-reaching definitions of the columns, we need to work on that
+# FIXME: can also use that to trim slices
 class RepairSliceImplicitUses(object):
     """
     Code can make implicit use of a column. By implicit we mean that its 'memory address' (as indicated by id) is not
