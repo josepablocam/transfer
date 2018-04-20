@@ -328,6 +328,7 @@ def lift_to_functions(graphs, script_src, name_format=None, name_counter=None):
             func_name = name_format % name_counter
             func = DonatedFunction(graph, func_name, formal_args, _return, cleaning_code, context_code)
             functions.append(func)
+            name_counter += 1
 
     return functions
 
