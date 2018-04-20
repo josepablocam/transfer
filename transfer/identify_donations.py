@@ -74,6 +74,7 @@ def annotate_graph(graph):
         node_data['annotator'] = __file__
     return graph
 
+# FIXME: removing subgraph should likely extend the seed graph metainfo to combine
 def remove_subgraphs(graphs):
     # graphs from least to most number of nodes
     sorted_graphs = sorted(graphs, key=lambda x: len(x.nodes))
@@ -90,6 +91,7 @@ def remove_subgraphs(graphs):
         clean.append(graph)
     return clean
 
+# FIXME: removing duplicate graphs should likely extend the seed graph metainfo to combine
 def get_unique_graphs(graphs):
     unique_graphs = {(frozenset(g.nodes), frozenset(g.edges)):g for g in graphs}
     return list(unique_graphs.values())
@@ -288,19 +290,24 @@ class ColumnUseExtractor(AbstractColumnBasedExtractor):
         return backward_helper._get_raw_donation_slices(cols_assigned_to)
 
 
-def get_all_donations(graph):
+def get_all_donations(graph, database_columns=None):
     # graph annotated with uses/defs of columns
     annotated = annotate_graph(graph)
 
+    # potential columns
+    columns_defined = set([col for _, data in annotated.nodes(data=True) for col in data['columns_defined']])
+    columns_used = set([col for _, data in annotated.nodes(data=True) for col in data['columns_used']])
+    if database_columns is not None:
+        columns_defined = columns_defined.intersection(database_columns)
+        columns_used = columns_used.intersection(database_columns)
+
     slices_defined = []
     def_extractor = ColumnDefExtractor(annotated)
-    columns_defined = set([col for _, data in annotated.nodes(data=True) for col in data['columns_defined']])
     for col in columns_defined:
         slices_defined.extend(def_extractor.run(col))
     print("{} def slices".format(len(slices_defined)))
 
     slices_used = []
-    columns_used = set([col for _, data in annotated.nodes(data=True) for col in data['columns_used']])
     use_extractor = ColumnUseExtractor(annotated)
     for col in columns_defined:
         slices_used.extend(def_extractor.run(col))
