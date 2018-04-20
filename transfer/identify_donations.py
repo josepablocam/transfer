@@ -27,6 +27,7 @@ class PossibleColumnCollector(ast.NodeVisitor):
         return set(self.acc)
 
 # TODO: would it be better to compute the columns assigned/used based on the memory locations?
+# TODO: we can use types to figure out if its actually a column
 def columns_assigned_to(node_data):
     try:
         ast_node = to_ast_node(node_data['src'])
@@ -92,16 +93,9 @@ def remove_subgraphs(graphs):
     return clean
 
 # FIXME: removing duplicate graphs should likely extend the seed graph metainfo to combine
-def get_unique_graphs(graphs):
+def remove_duplicate_graphs(graphs):
     unique_graphs = {(frozenset(g.nodes), frozenset(g.edges)):g for g in graphs}
     return list(unique_graphs.values())
-
-def merge_common_prefixes(graphs):
-    # TODO merge graphs that share a common prefix
-    pass
-
-def remove_noop_assignments(graph):
-    pass
 
 def show_lines(graph, annotate=True):
     if annotate:
@@ -134,7 +128,7 @@ class RepairSliceImplicitUses(object):
 
     def run(self, _slices):
         if isinstance(_slices, nx.Graph):
-            return self.repair_slice(_slice)
+            return self.repair_slice(_slices)
         else:
             repaired = []
             for _slice in _slices:
@@ -314,7 +308,7 @@ def get_all_donations(graph, database_columns=None):
     print("{} use slices".format(len(slices_used)))
 
     _slices = slices_defined + slices_used
-    _slices = get_unique_graphs(_slices)
+    _slices = remove_duplicate_graphs(_slices)
     print("{} unique slices".format(len(_slices)))
     loc = lambda g: len(g.nodes)
     return sorted(_slices, key=loc)
