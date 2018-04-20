@@ -311,7 +311,8 @@ def lift_to_functions(graphs, script_src, name_format=None, name_counter=None):
         # FIXME: we also want returns that don't waste compute
         # i.e. if we decide to return X, we should not include computation
         # after that (maybe just comment it out?)
-        # can always return the original input data frame
+        # can always return the original input data frame (BUT ONLY IF MODIFIED)
+        # FIXME: what we should do is: given return var(X), trim suffix of trace after last modification/assigment to var(X)
         possible_returns = {d.name:d for d in formal_args}
         possible_returns.update(get_created_dataframes(graph))
         # we can also remove any references to the same object with different names
