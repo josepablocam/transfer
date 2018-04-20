@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from argparse import ArgumentParser
 import ast
 from collections import defaultdict
@@ -180,8 +181,32 @@ class RepairSliceImplicitUses(object):
         return self.graph.subgraph(final_nodes)
 
 
+class AbstractColumnBasedExtractor(ABC):
+    @abstractmethod
+    def _get_approach_name():
+        pass
 
-class ColumnDefExtractor(object):
+    @abstractmethod
+    def _get_raw_donation_slices(self, target_columns):
+        pass
+
+    def run(self, target_columns):
+        if isinstance(target_columns, str):
+            target_columns = [target_columns]
+        target_columns = set(target_columns)
+
+        _slices = self._get_raw_donation_slices(target_columns)
+        _slices = RepairSliceImplicitUses(self.graph).run(_slices)
+        # convert from subgraph view to directed graph
+        _slices = [s.to_directed() for s in _slices]
+        for s in _slices:
+            s.graph['seed_columns'] = target_columns
+            s.graph['seed_approach'] = self._get_approach_name()
+        return _slices
+
+
+
+class ColumnDefExtractor(AbstractColumnBasedExtractor):
     """
     Extracts slices by:
         - take as seeds any stmt that assigns to a target column
@@ -196,6 +221,10 @@ class ColumnDefExtractor(object):
                 for col in data['columns_defined']:
                     col_to_node_ids[col].append(node_id)
         self.col_to_node_ids = col_to_node_ids
+
+    @staticmethod
+    def _get_approach_name():
+        return 'def'
 
     def _get_raw_donation_slices(self, target_columns):
         seeds = []
@@ -215,22 +244,8 @@ class ColumnDefExtractor(object):
         # keep only the largest slice when there are subslices
         return remove_subgraphs(slices)
 
-    def run(self, target_columns):
-        if isinstance(target_columns, str):
-            target_columns = [target_columns]
-        target_columns = set(target_columns)
 
-        _slices = self._get_raw_donation_slices(target_columns)
-        _slices = RepairSliceImplicitUses(self.graph).run(_slices)
-        # convert from subgraph view to directed graph
-        _slices = [s.to_directed() for s in _slices]
-        for s in _slices:
-            s.graph['seed_columns'] = target_columns
-            s.graph['seed_approach'] = 'def'
-        return _slices
-
-
-class ColumnUseExtractor(object):
+class ColumnUseExtractor(AbstractColumnBasedExtractor):
     """
     Extracts slices by:
         - take as seeds any stmt that uses a target column
@@ -247,6 +262,10 @@ class ColumnUseExtractor(object):
                 for col in data['columns_used']:
                     col_to_node_ids[col].append(node_id)
         self.col_to_node_ids = col_to_node_ids
+
+    @staticmethod
+    def _get_approach_name():
+        return 'use'
 
     def _get_raw_donation_slices(self, target_columns):
         seeds = []
@@ -267,20 +286,6 @@ class ColumnUseExtractor(object):
 
         backward_helper = ColumnDefExtractor(self.graph)
         return backward_helper._get_raw_donation_slices(cols_assigned_to)
-
-    def run(self, target_columns):
-        if isinstance(target_columns, str):
-            target_columns = [target_columns]
-        target_columns = set(target_columns)
-
-        _slices = self._get_raw_donation_slices(target_columns)
-        _slices = RepairSliceImplicitUses(self.graph).run(_slices)
-        # convert from subgraph view to directed graph
-        _slices = [s.to_directed() for s in _slices]
-        for s in _slices:
-            s.graph['seed_columns'] = target_columns
-            s.graph['seed_approach'] = 'use'
-        return _slices
 
 
 def get_all_donations(graph):
