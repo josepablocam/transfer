@@ -15,12 +15,21 @@ from plpy.analyze.dynamic_trace_events import ExecLine, MemoryUpdate
 class PossibleColumnCollector(ast.NodeVisitor):
     def __init__(self):
         self.acc = []
+        self.possible_column_ref = []
 
     def visit_Str(self, node):
-        self.acc.append(node.s)
+        # only care about string constants that are used in certain
+        # constructs (specifically: subscripting)
+        if self.possible_column_ref:
+            self.acc.append(node.s)
 
     def visit_Attribute(self, node):
         self.acc.append(node.attr)
+
+    def visit_Subscript(self, node):
+        self.possible_column_ref.append(astunparse.unparse(node))
+        self.generic_visit(node)
+        self.possible_column_ref.pop()
 
     def run(self, tree):
         self.visit(tree)
