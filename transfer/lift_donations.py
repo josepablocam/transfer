@@ -9,7 +9,7 @@ import networkx as nx
 import pandas as pd
 from plpy.analyze.dynamic_trace_events import ExecLine
 
-from . import identify_donations
+from .identify_donations import ColumnUse, ColumnDef
 
 
 ### Parameters and Return values ###

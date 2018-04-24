@@ -75,26 +75,104 @@ def annotate_graph(graph):
         node_data['annotator'] = __file__
     return graph
 
-# FIXME: removing subgraph should likely extend the seed graph metainfo to combine
-def remove_subgraphs(graphs):
-    # graphs from least to most number of nodes
-    sorted_graphs = sorted(graphs, key=lambda x: len(x.nodes))
-    # take set of nodes as key for each graph
-    keys = [frozenset(g.nodes) for g in sorted_graphs]
-    clean = []
-    for i, graph in enumerate(sorted_graphs):
-        larger_keys = keys[(i + 1):]
-        key = keys[i]
-        # ignore any graph that is a subset of a larger graph
-        # later on in our sorted list of graphs
-        if any(key.issubset(k) for k in larger_keys):
-            continue
-        clean.append(graph)
-    return clean
+class SeedInfo(ABC):
+    @abstractmethod
+    def get_target_column(self):
+        pass
 
-# FIXME: removing duplicate graphs should likely extend the seed graph metainfo to combine
+    @classmethod
+    def from_column(klass, col):
+        return klass(col)
+
+class ColumnUse(SeedInfo):
+    def __init__(self, column):
+        self.column = column
+
+    def get_target_column(self):
+        return self.column
+
+    def __repr__(self):
+        return 'Use({})'.format(self.column)
+
+    def __eq__(self, other):
+        if not isinstance(other, ColumnUse):
+            return False
+        return self.column == other.column
+
+    def __hash__(self):
+        return hash(self.column)
+
+
+class ColumnDef(SeedInfo):
+    def __init__(self, column):
+        self.column = column
+
+    def get_target_column(self):
+        return self.column
+
+    def __repr__(self):
+        return 'Def({})'.format(self.column)
+
+    def __eq__(self, other):
+        if not isinstance(other, ColumnDef):
+            return False
+        return self.column == other.column
+
+    def __hash__(self):
+        return hash(self.column)
+
+
+def is_subgraph(graph, subgraph):
+    return set(graph.nodes).issuperset(subgraph.nodes)
+
+def merge_graphs(graph1, graph2):
+    if set(graph1.nodes).issuperset(graph2.nodes):
+        keep = graph1
+        remove = graph2
+    else:
+        keep = graph2
+        remove = graph1
+
+    # avoid modifying the original graph by copying
+    keep = keep.to_directed()
+    # combine seed information for the two graphs
+    if 'seed_info' in keep.graph:
+        keep.graph['seed_info'].update(remove.graph.get('seed_info', {}))
+    elif 'seed_info' in remove.graph:
+        keep.graph['seed_info'] = {}
+        keep.graph.update(remove.graph.get('seed_info'))
+    else:
+        # neither have seed info
+        pass
+
+    return keep
+
+def remove_subgraphs(graphs):
+    # graphs from most to least number of nodes
+    sorted_graphs = sorted(graphs, key=lambda x: len(x.nodes), reverse=True)
+    # take set of nodes as key for each graph
+    merged = []
+    for g in sorted_graphs:
+        was_merged = False
+        for ix, possible_container_graph in enumerate(merged):
+            if is_subgraph(possible_container_graph, g):
+                merged[ix] = merge_graphs(possible_container_graph, g)
+                was_merged = True
+                break
+        if not was_merged:
+            merged.append(g)
+    return merged
+
 def remove_duplicate_graphs(graphs):
-    unique_graphs = {(frozenset(g.nodes), frozenset(g.edges)):g for g in graphs}
+    unique_graphs = {}
+    for g in graphs:
+        key = (frozenset(g.nodes), frozenset(g.edges))
+        existing_graph = unique_graphs.get(key, None)
+        if existing_graph is None:
+            unique_graphs[key] = g
+        else:
+            # merge to extend seed info
+            unique_graphs[key] = merge_graphs(existing_graph, g)
     return list(unique_graphs.values())
 
 def show_lines(graph, annotate=True):
@@ -185,7 +263,7 @@ class RepairSliceImplicitUses(object):
 
 class AbstractColumnBasedExtractor(ABC):
     @abstractmethod
-    def _get_approach_name():
+    def _get_seed_info():
         pass
 
     @abstractmethod
@@ -201,11 +279,14 @@ class AbstractColumnBasedExtractor(ABC):
         _slices = RepairSliceImplicitUses(self.graph).run(_slices)
         # convert from subgraph view to directed graph
         _slices = [s.to_directed() for s in _slices]
-        for s in _slices:
-            s.graph['seed_columns'] = target_columns
-            s.graph['seed_approach'] = self._get_approach_name()
-        return _slices
+        seed_info = self._get_seed_info()
 
+        for s in _slices:
+            if not 'seed_info' in s.graph:
+                s.graph['seed_info'] = set([])
+            for col in target_columns:
+                s.graph['seed_info'].add(seed_info.from_column(col))
+        return _slices
 
 
 class ColumnDefExtractor(AbstractColumnBasedExtractor):
@@ -225,8 +306,8 @@ class ColumnDefExtractor(AbstractColumnBasedExtractor):
         self.col_to_node_ids = col_to_node_ids
 
     @staticmethod
-    def _get_approach_name():
-        return 'def'
+    def _get_seed_info():
+        return ColumnDef
 
     def _get_raw_donation_slices(self, target_columns):
         seeds = []
@@ -266,8 +347,8 @@ class ColumnUseExtractor(AbstractColumnBasedExtractor):
         self.col_to_node_ids = col_to_node_ids
 
     @staticmethod
-    def _get_approach_name():
-        return 'use'
+    def _get_seed_info():
+        return ColumnUse
 
     def _get_raw_donation_slices(self, target_columns):
         seeds = []
