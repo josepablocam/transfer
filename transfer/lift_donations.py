@@ -371,3 +371,16 @@ if __name__ == '__main__':
 # 6 - There is additional work that needs to happen for repairing existing code: we may need to change references to columns to potentially new columns
 # in the code provided
 
+# Notes on things we need to do
+# 1 - Repair slices by adding missing variable bindings
+#     * uses x @ mem, but missing, but have y @ mem' s.t mem = mem', add x = y statement
+# 2 - Remove suffix of trace based on return value
+#     * identify all dataframes modified or created (based on mem)
+#     * take as return statement the last LHS use of that mem
+#     * remove all statements after that
+# 3 - Remove prefix based on return value
+#     * identify where that memory is initialized and remove everything before it
+#     * can turn init statement into free variable by commenting out (this generalizes the read_csv case)
+
+
+
