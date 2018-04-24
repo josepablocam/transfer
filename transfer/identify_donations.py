@@ -2,8 +2,10 @@ from abc import ABC, abstractmethod
 from argparse import ArgumentParser
 import ast
 from collections import defaultdict
-import networkx as nx
 import pickle
+
+import networkx as nx
+import pandas as pd
 
 from plpy.analyze.graph_builder import draw
 from plpy.analyze.dynamic_tracer import to_ast_node
@@ -27,7 +29,7 @@ class PossibleColumnCollector(ast.NodeVisitor):
         self.acc.append(node.attr)
 
     def visit_Subscript(self, node):
-        self.possible_column_ref.append(astunparse.unparse(node))
+        self.possible_column_ref.append(True)
         self.generic_visit(node)
         self.possible_column_ref.pop()
 
@@ -37,7 +39,30 @@ class PossibleColumnCollector(ast.NodeVisitor):
 
 # TODO: would it be better to compute the columns assigned/used based on the memory locations?
 # TODO: we can use types to figure out if its actually a column
+def is_dataframe(type_str):
+    return type_str in set([pd.DataFrame.__qualname__, pd.core.groupby.GroupBy.__qualname__])
+
+def is_series(type_str):
+    return type_str in set([pd.Series.__qualname__, pd.core.groupby.SeriesGroupBy.__qualname__])
+
+def is_index(type_str):
+    return type_str == pd.Index.__qualname__
+
+def has_possible_table_info(node_data):
+    refs = set([])
+    if node_data['defs']:
+        refs.update(node_data['defs'])
+    if node_data['uses']:
+        refs.update(node_data['uses'])
+    for ref in refs:
+        if is_dataframe(ref.type) or is_series(ref.type) or is_index(ref.type):
+            return True
+    return False
+
 def columns_assigned_to(node_data):
+    if not has_possible_table_info(node_data):
+        return set([])
+
     try:
         ast_node = to_ast_node(node_data['src'])
     except SyntaxError:
@@ -63,6 +88,9 @@ def columns_assigned_to(node_data):
     return cols_assigned
 
 def columns_used(node_data):
+    if not has_possible_table_info(node_data):
+        return set([])
+
     try:
         ast_node = to_ast_node(node_data['src'])
     except SyntaxError:
