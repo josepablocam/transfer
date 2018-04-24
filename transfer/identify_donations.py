@@ -373,11 +373,12 @@ class ColumnUseExtractor(AbstractColumnBasedExtractor):
 
 def get_all_donations(graph, database_columns=None):
     # graph annotated with uses/defs of columns
+    graph = graph.to_directed()
     annotated = annotate_graph(graph)
 
     # potential columns
-    columns_defined = set([col for _, data in annotated.nodes(data=True) for col in data['columns_defined']])
-    columns_used = set([col for _, data in annotated.nodes(data=True) for col in data['columns_used']])
+    columns_defined = set([col for node_id, data in annotated.nodes(data=True) for col in data['columns_defined']])
+    columns_used = set([col for node_id, data in annotated.nodes(data=True) for col in data['columns_used']])
     if database_columns is not None:
         columns_defined = columns_defined.intersection(database_columns)
         columns_used = columns_used.intersection(database_columns)
@@ -390,8 +391,8 @@ def get_all_donations(graph, database_columns=None):
 
     slices_used = []
     use_extractor = ColumnUseExtractor(annotated)
-    for col in columns_defined:
-        slices_used.extend(def_extractor.run(col))
+    for col in columns_used:
+        slices_used.extend(use_extractor.run(col))
     print("{} use slices".format(len(slices_used)))
 
     _slices = slices_defined + slices_used
