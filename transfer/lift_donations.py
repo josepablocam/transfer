@@ -9,7 +9,7 @@ import networkx as nx
 import pandas as pd
 from plpy.analyze.dynamic_trace_events import ExecLine
 
-from .identify_donations import ColumnUse, ColumnDef
+from .identify_donations import ColumnUse, ColumnDef, remove_duplicate_graphs
 
 
 ### Parameters and Return values ###
@@ -29,9 +29,10 @@ def is_pandas_read(node_data):
     return False
 
 def annotate_dataframe_uses(graph):
+    # defined as a load of a reference with a dataframe type
     for _, node_data in graph.nodes(data=True):
         node_data['dataframe_uses'] = set([])
-        if node_data['treat_as_comment']:
+        if node_data.get('treat_as_comment', False):
             continue
         if isinstance(node_data['event'], ExecLine):
             uses = node_data['uses']
@@ -39,16 +40,33 @@ def annotate_dataframe_uses(graph):
             node_data['dataframe_uses'].update(df_uses)
     return graph
 
+# TODO: consider that we might want to annotate
+# entire graph with the first/last LHS uses of these references
 def annotate_dataframe_defs(graph):
+    # defined as an assignment (LHS) that involves a reference to a dataframe type
     for _, node_data in graph.nodes(data=True):
         node_data['dataframe_defs'] = set([])
-        if node_data['treat_as_comment']:
+        if node_data.get('treat_as_comment', False):
             continue
         if isinstance(node_data['event'], ExecLine):
-            # TODO: this currently isn't here....
-            defs = node_data['defs']
+            defs = node_data['complete_defs']
             df_defs = [d for d in defs if d.type == pd.DataFrame.__name__]
             node_data['dataframe_defs'].update(df_defs)
+    return graph
+
+def annotate_dataframe_mods(graph):
+    # defined as an assignment (LHS) that involves a reference to a dataframe type
+    # and the same reference is previously defined
+    already_defined = set([])
+    for _, node_data in graph.nodes(data=True):
+        node_data['dataframe_mods'] = set([])
+        if node_data.get('treat_as_comment', False):
+            continue
+        if isinstance(node_data['event'], ExecLine):
+            dataframe_defs = node_data['dataframe_defs']
+            mods = set([df for df in dataframe_defs if df in already_defined])
+            node_data['dataframe_mods'].update(mods)
+            already_defined.update(dataframe_defs)
     return graph
 
 def node_data_in_exec_order(graph):
@@ -76,27 +94,50 @@ def get_free_input_dataframes(graph):
     defined = set([])
     sorted_by_exec = node_data_in_exec_order(graph)
     for _, node_data in sorted_by_exec:
-        if node_data['treat_as_comment']:
+        if node_data.get('treat_as_comment', False):
             continue
         for var in node_data['dataframe_uses']:
             if not var in defined and not can_be_computed(var, defined):
                 global_free.add(var)
         # update with all definitions, not just dataframes
-        defined.update(node_data['defs'])
+        # FIXME: shoudl this be 'defs' or 'complete_defs'?
+        defined.update(node_data['complete_defs'])
     return global_free
 
-def get_created_dataframes(graph):
-    # TODO: this should likely also include modified dataframes
-    created = {}
+# TODO: should this actually be based exclusively on memory location?
+# currently its name/mem-location
+def get_returnable_dataframes(graph):
+    returnable = set([])
     sorted_by_exec = node_data_in_exec_order(graph)
     for _, node_data in sorted_by_exec:
-        if node_data['treat_as_comment']:
+        if node_data.get('treat_as_comment', False):
             continue
-        # just use names for this, don't care about memory location
-        # take last reference to each name
-        def_names = {d.name: d for d in node_data['dataframe_defs']}
-        created.update(def_names)
-    return created
+        # we care to return only dataframes that have
+        # been defined or modified somehow
+        returnable.update(node_data['dataframe_defs'])
+        returnable.update(node_data['dataframe_mods'])
+    return returnable
+
+def trim_suffix_trace_based_on_return(graph, return_ref):
+    # remove any statements that occur after the last def/modification
+    # of a given dataframe ref
+    sorted_by_exec = node_data_in_exec_order(graph)
+    # find last use
+    last_lhs_event_id = None
+    for node_id, node_data in sorted_by_exec:
+        if return_ref in node_data['dataframe_defs'] or return_ref in node_data['dataframe_mods']:
+            last_lhs_event_id = node_data['event'].event_id
+    if last_lhs_event_id is None:
+        raise Exception('{} never used in graph'.format(return_ref))
+
+    trimmed_node_ids = []
+    for node_id, node_data in graph.nodes(data=True):
+        if node_data['event'].event_id <= last_lhs_event_id:
+            trimmed_node_ids.append(node_id)
+
+    trimmed = graph.subgraph(trimmed_node_ids)
+    return trimmed.to_directed()
+
 
 ### Adding user code that we may not get to observe through trace ###
 # collects functions and user class definitions
@@ -198,7 +239,7 @@ def graph_to_lines(graph):
     code = []
     for _, node_data in sorted_nodes:
         line = '{comment_marker}{src}'.format(
-            comment_marker='# ' if node_data['treat_as_comment'] else '',
+            comment_marker='# ' if node_data.get('treat_as_comment', False) else '',
             src=node_data['src']
         )
         code.append(line)
@@ -293,8 +334,10 @@ def lift_to_functions(graphs, script_src, name_format=None, name_counter=None):
     tree = ast.parse(script_src)
     user_code_map = build_user_code_map(tree)
 
-    functions = []
-
+    function_data = {}
+    trimmed_traces = []
+    # TODO: fix this horrible hack of id to remove duplicates later
+    _id = 0
     for graph in graphs:
         # create copy before we annotate/modify
         graph = graph.to_directed()
@@ -302,36 +345,46 @@ def lift_to_functions(graphs, script_src, name_format=None, name_counter=None):
         # Graph annotation
         # we remove dataframe reads and create free (dataframe) variables as a result
         graph = comment_out_nodes(graph, is_pandas_read)
-        # annotate with uses/defs for dataframes
+        # annotate with uses/defs (and modifications) for dataframes
         graph = annotate_dataframe_uses(graph)
         graph = annotate_dataframe_defs(graph)
+        graph = annotate_dataframe_mods(graph)
 
         # free dataframe variables become arguments for the function
         formal_args = get_free_input_dataframes(graph)
-        # FIXME: we also want returns that don't waste compute
-        # i.e. if we decide to return X, we should not include computation
-        # after that (maybe just comment it out?)
-        # can always return the original input data frame (BUT ONLY IF MODIFIED)
-        # FIXME: what we should do is: given return var(X), trim suffix of trace after last modification/assigment to var(X)
-        possible_returns = {d.name:d for d in formal_args}
-        possible_returns.update(get_created_dataframes(graph))
-        # we can also remove any references to the same object with different names
-        possible_returns = {v.id:v for v in possible_returns.values()}
-        possible_returns = possible_returns.values()
+        # possible returns are dataframes created or modified
+        possible_returns = get_returnable_dataframes(graph)
 
-        # add in additional user code needed for execution (context), such as user function/class defs
-        context_code = get_user_defined_callables(graph, user_code_map)
-        # convert graph to lines of code
-        cleaning_code = graph_to_lines(graph)
-
-        # since there are multiple possible return values, we lift into multiple functions
+        # we can created many functions based on the return value by trimming suffixes
         for _return in possible_returns:
-            func_name = name_format % name_counter
-            func = DonatedFunction(graph, func_name, formal_args, _return, cleaning_code, context_code)
-            functions.append(func)
-            name_counter += 1
+            trimmed = trim_suffix_trace_based_on_return(graph, _return)
+            trimmed.graph['_id'] = _id
+            function_data[_id] = (graph, trimmed, formal_args, _return)
+            trimmed_traces.append(trimmed)
+            _id += 1
+
+    # Remove traces that are duplciates now that we have removed suffixes
+    # TODO: fix this other part of the horrible hack
+    print('Identified {} functions'.format(len(trimmed_traces)))
+    unique_trimmed = remove_duplicate_graphs(trimmed_traces)
+    unique_function_data = []
+    for trimmed in unique_trimmed:
+        unique_function_data.append(function_data[trimmed.graph['_id']])
+    print('Lifting {} functions after removing duplicates'.format(len(unique_function_data)))
+
+    functions = []
+    for graph, trimmed_trace, formal_args, _return in unique_function_data:
+        # add in additional user code needed for execution (context), such as user function/class defs
+        context_code = get_user_defined_callables(trimmed_trace, user_code_map)
+        # convert graph to lines of code
+        cleaning_code = graph_to_lines(trimmed_trace)
+        function_name = name_format % name_counter
+        func = DonatedFunction(trimmed_trace, function_name, formal_args, _return, cleaning_code, context_code)
+        functions.append(func)
+        name_counter += 1
 
     return functions
+
 
 def main(args):
     with open(args.graph_file, 'rb') as f:
@@ -374,11 +427,7 @@ if __name__ == '__main__':
 # Notes on things we need to do
 # 1 - Repair slices by adding missing variable bindings
 #     * uses x @ mem, but missing, but have y @ mem' s.t mem = mem', add x = y statement
-# 2 - Remove suffix of trace based on return value
-#     * identify all dataframes modified or created (based on mem)
-#     * take as return statement the last LHS use of that mem
-#     * remove all statements after that
-# 3 - Remove prefix based on return value
+# 3 - Remove prefix based on return value (not sure if we actually want to do this right now...)
 #     * identify where that memory is initialized and remove everything before it
 #     * can turn init statement into free variable by commenting out (this generalizes the read_csv case)
 
