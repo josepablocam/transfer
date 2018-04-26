@@ -1,3 +1,4 @@
+#!/bin/bash
 echo "Running script $1"
 (
     cd scripts/;
