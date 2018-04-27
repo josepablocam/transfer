@@ -4,6 +4,7 @@
 from argparse import ArgumentParser
 from enum import Enum
 import pickle
+import inspect
 
 import py2neo
 
@@ -101,31 +102,52 @@ class FunctionDatabase(object):
         for f in funs:
             self.add_extracted_function(f)
 
-    def calls():
-        # write query here
-        raise NotImplementedError
+    def calls(self, fun, is_qualname=False, start_node=None):
+        if not inspect.isfunction(fun) and not inspect.ismethod(fun) and not is_qualname:
+            raise ValueError('fun must be a function or method object (or set is_qualname)')
+        if is_qualname:
+            qualname = fun
+        else:
+            qualname = fun.__qualname__
 
-    def defines():
-        # write query here
-        raise NotImplementedError
+        results = []
+        end_node = self.graph_db.find_one(NodeTypes.FUNCTION.name, 'name', qualname)
+        if end_node is None:
+            return results
+        for rel in self.graph_db.match(start_node=start_node, rel_type=RelationshipTypes.CALLS.name, end_node=end_node):
+            results.append(rel.start_node())
+        return results
 
-    def uses():
-        # write query
-        raise NotImplementedError
+    def defines(self, column_name, start_node=None):
+        results = []
+        end_node = self.graph_db.find_one(NodeTypes.COLUMN.name, 'name', column_name)
+        if end_node is None:
+            return results
+        for rel in self.graph_db.match(start_node=start_node, rel_type=RelationshipTypes.DEFINES.name, end_node=end_node):
+            results.append(rel.start_node())
+        return results
 
-    def map(self, f):
-        # write query
-        raise NotImplementedError
+    def uses(self, column_name, start_node=None):
+        results = []
+        end_node = self.graph_db.find_one(NodeTypes.COLUMN.name, 'name', column_name)
+        if end_node is None:
+            return results
+        for rel in self.graph_db.match(start_node=start_node, rel_type=RelationshipTypes.USES.name, end_node=end_node):
+            results.append(rel.start_node())
+        return results
 
-    def filter(self, f):
-        # write query
-        raise NotImplementedError
+    def get_function_from_node(self, node):
+        if not node.has_label(NodeTypes.EXTRACTED_FUNCTION.name):
+            raise ValueError('Can only retrieve code for extracted functions')
+        _id = self._get_node_id(node)
+        return self.id_to_fun[_id]
 
 
 def main(arg):
     db = FunctionDatabase()
     db.startup()
     for _file in arg.input_files:
+        print('Populating database with functions from {}'.format(_file))
         with open(_file, 'rb') as f:
             funs = pickle.load(f)
         db.populate(funs)
