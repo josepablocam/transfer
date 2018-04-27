@@ -408,7 +408,7 @@ class ColumnUseExtractor(AbstractColumnBasedExtractor):
         return backward_helper._get_raw_donation_slices(cols_assigned_to)
 
 
-def get_all_donations(graph, database_columns=None):
+def get_all_donations(graph, database_columns=None, filename=None):
     # graph annotated with uses/defs of columns
     graph = graph.to_directed()
     annotated = annotate_graph(graph)
@@ -416,6 +416,7 @@ def get_all_donations(graph, database_columns=None):
     # potential columns
     columns_defined = set([col for node_id, data in annotated.nodes(data=True) for col in data['columns_defined']])
     columns_used = set([col for node_id, data in annotated.nodes(data=True) for col in data['columns_used']])
+
     if database_columns is not None:
         columns_defined = columns_defined.intersection(database_columns)
         columns_used = columns_used.intersection(database_columns)
@@ -436,7 +437,12 @@ def get_all_donations(graph, database_columns=None):
     _slices = remove_duplicate_graphs(_slices)
     print("{} unique slices".format(len(_slices)))
     loc = lambda g: len(g.nodes)
-    return sorted(_slices, key=loc)
+    _slices = sorted(_slices, key=loc)
+    if filename is not None:
+        for s in _slices:
+            s.graph['filename'] = filename
+
+    return _slices
 
 
 def main(args):
@@ -445,7 +451,7 @@ def main(args):
 
     with open(graph_file, 'rb') as f:
         graph = pickle.load(f)
-    donations = get_all_donations(graph,)
+    donations = get_all_donations(graph, filename=args.input_file)
 
     with open(slices_file, 'wb') as f:
         pickle.dump(donations, f)
@@ -473,8 +479,3 @@ if __name__ == '__main__':
 #       - need to decide what to do about control-flow
 #      - common prefix traces
 #      - no-op assignments that are indistinguishable given memory location info
-
-
-
-
-

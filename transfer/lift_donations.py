@@ -413,16 +413,13 @@ if __name__ == '__main__':
         import pdb
         pdb.post_mortem()
 
-# TODO: we should add the source script to each function that we produce...
 
-# TODOS:
+# TODO:
 # 1 - Try this with other scripts
-# 2 - Fix so that it works with user defined classes (may need to tweak type annotations during tracing)
 # 3 - Try to lift without input args (i.e. don't comment reads out): => basic function executable check
 # 4 - Try lifting more
 # 5 - Start tests for this project: (convert candidates, identify donations, and lift) we'll live without tests for collect (since browser based)
-# 6 - There is additional work that needs to happen for repairing existing code: we may need to change references to columns to potentially new columns
-# in the code provided
+
 
 # Notes on things we need to do
 # 1 - Repair slices by adding missing variable bindings
