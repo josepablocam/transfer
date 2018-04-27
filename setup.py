@@ -10,6 +10,7 @@ setup(name='transfer',
       packages=['transfer'],
       install_requires=[
           'plpy==0.1',
+          'py2neo==3.1.2',
       ],
       setup_requires=['pytest-runner'],
       tests_require=['pytest'],
