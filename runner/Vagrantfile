@@ -1,0 +1,50 @@
+# Basic VM configuration
+
+require "set"
+
+VAGRANT_BOX = "ubuntu/xenial64"
+VM_NAME = 'boruca'
+# in MB
+VM_MEMORY = 100000
+VM_DISK = '60GB'
+VM_CPUS = 8
+
+
+# very basic, since we can just ssh after to setup environment as needed
+Vagrant.configure(2) do |config|
+  config.vm.box = VAGRANT_BOX
+  config.vm.hostname = VM_NAME
+  # set up disk size (this requires the vagrant-disksize plugin)
+  config.disksize.size = VM_DISK
+
+  config.vm.synced_folder ".", ".", create: false, disabled: true
+
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.gui    = false
+    vb.name   = VM_NAME
+    vb.cpus   = VM_CPUS
+    vb.memory = VM_MEMORY
+  end
+  config.vm.provision "shell", inline: <<-SHELL
+    apt-get update
+    apt-get install -y git vim build-essential
+    apt-get install -y python python3-pip
+    pip3 install ipython
+    # installing docker
+    apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    software-properties-common
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+    add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+   apt-get update
+   apt-get install -y docker-ce
+   # install java
+   sudo apt-get install openjdk-8-jre-headless
+  SHELL
+end
