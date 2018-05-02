@@ -29,6 +29,7 @@ class FunctionDatabase(object):
         self.column_to_id = {}
         self.qualname_to_id = {}
         self.graph_db = None
+        self.selectors = None
 
     def startup(self):
         self.graph_db = py2neo.Graph()
@@ -39,6 +40,7 @@ class FunctionDatabase(object):
 
     def shutdown(self):
         self.graph_db = None
+        self.selectors = {}
 
     def _create_node(self, node_type, **kwargs):
         node = py2neo.Node(node_type.name, **kwargs)
@@ -102,7 +104,9 @@ class FunctionDatabase(object):
                 if node_data['calls'] is None:
                     continue
                 for call in node_data['calls']:
-                    qualnames.add(call.details['qualname'])
+                    qualname = call.details['qualname']
+                    if qualname is not None:
+                        qualnames.add(qualname)
         return qualnames
 
     def add_column(self, _str):
@@ -198,14 +202,17 @@ class FunctionDatabase(object):
         return list(self.selectors[NodeTypes.COLUMN])
 
 
-def main(arg):
-    if len(arg.functions_files) != len(arg.graph_files):
+def main(args):
+    functions_files = args.functions_files_list.split(',')
+    graph_files = args.graph_files_list.split(',')
+
+    if len(functions_files) != len(graph_files):
         raise Exception('Must provide same number of input and graph files')
 
     db = FunctionDatabase()
     db.startup()
 
-    for funs_file, graph_file in zip(arg.functions_files, arg.graph_files):
+    for funs_file, graph_file in zip(functions_files, graph_files):
         print('Populating database with functions from {}'.format(funs_file))
         print('Using graph file:{}'.format(graph_file))
         # functions we extracted
@@ -218,14 +225,14 @@ def main(arg):
         db.populate(funs, program_graph)
     db.shutdown()
 
-    with open(arg.output_file, 'wb') as f:
+    with open(args.output_file, 'wb') as f:
         pickle.dump(db, f)
 
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Populate graph database with donated functions')
-    parser.add_argument('functions_files', nargs='+', type=str, help='Path to pickled donated function files')
-    parser.add_argument('graph_files', nargs='+', type=str, help='Path to pickled program dependency graph files')
+    parser.add_argument('functions_files_list', type=str, help='CSV list of paths to pickled donated function files')
+    parser.add_argument('graph_files_list', type=str, help='CSV list of paths to pickled program dependency graph files')
     parser.add_argument('-o', '--output_file', type=str, help='Path to store database', default='boruca.pkl')
     args = parser.parse_args()
 
