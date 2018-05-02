@@ -6,11 +6,12 @@ RUN apt-get install zip -y
 RUN apt-get install vim -y
 
 # Python analysis tools
-RUN pip install git+https://github.com/josepablocam/python-pl
+RUN git clone https://github.com/josepablocam/python-pl
+RUN pip install -e python-pl
 
 # Transfer analysis tools
 ADD transfer-cleaning.zip transfer-cleaning.zip
-RUN unzip transfer-cleaning.zip
+RUN unzip transfer-cleaning.zip -d transfer-cleaning
 RUN pip install -e transfer-cleaning
 
 # install ipython to succesfully run
