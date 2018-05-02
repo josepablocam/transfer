@@ -170,6 +170,8 @@ class FunctionDatabase(object):
         return self._get_relationships(start_node, RelationshipTypes.USES, end_node, _lambda)
 
     def wrangles_for(self, fun, start_node=None, _lambda=None):
+        if _lambda is None:
+            _lambda = lambda x: x.start_node()
         qualname = self._get_qualname(fun) if fun is not None else None
         end_node = self.graph_db.find_one(NodeTypes.FUNCTION.name, 'name', qualname)
         if end_node is None and fun is not None:
@@ -181,6 +183,18 @@ class FunctionDatabase(object):
             raise ValueError('Can only retrieve code for extracted functions')
         _id = self._get_node_id(node)
         return self.id_to_fun[_id]
+
+    def _get_nodes(self, node_type):
+        return list(self.graph_db.find(node_type.name))
+
+    def functions(self):
+        return self._get_nodes(NodeTypes.FUNCTION)
+
+    def extracted_functions(self):
+        return self._get_nodes(NodeTypes.EXTRACTED_FUNCTION)
+
+    def columns(self):
+        return self._get_nodes(NodeTypes.COLUMN)
 
 
 def main(arg):
