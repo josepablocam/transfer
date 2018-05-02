@@ -9,9 +9,9 @@ def rewrite(script_path, lifted_path):
     return subprocess.call(cmd)
 
 def trace(timeout, execution_dir, lifted_name, trace_path, loop_bound):
+    trace_path = os.path.abspath(trace_path)
     current_dir = os.getcwd()
     os.chdir(execution_dir)
-    trace_path = os.path.abspath(trace_path)
     print('Executing from {}'.format(execution_dir))
     print('Tracing {} to {} with loop bound={} (timeout={})'.format(lifted_name, trace_path, loop_bound, timeout))
     cmd = ['timeout', timeout]
