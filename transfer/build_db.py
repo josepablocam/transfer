@@ -32,6 +32,10 @@ class FunctionDatabase(object):
 
     def startup(self):
         self.graph_db = py2neo.Graph()
+        self.selectors = {}
+        # setup selectors
+        for node_type in NodeTypes:
+            self.selectors[node_type] = py2neo.NodeSelector(self.graph_db).select(node_type.name)
 
     def shutdown(self):
         self.graph_db = None
@@ -148,7 +152,7 @@ class FunctionDatabase(object):
         if _lambda is None:
             _lambda = lambda x: x.start_node()
         qualname = self._get_qualname(fun) if fun is not None else None
-        end_node = self.graph_db.find_one(NodeTypes.FUNCTION.name, 'name', qualname)
+        end_node = self.selectors[NodeTypes.FUNCTION].where(name=qualname).first()
         if end_node is None and fun is not None:
             return []
         return self._get_relationships(start_node, RelationshipTypes.CALLS, end_node, _lambda)
@@ -156,7 +160,7 @@ class FunctionDatabase(object):
     def defines(self, column_name, start_node=None, _lambda=None):
         if _lambda is None:
             _lambda = lambda x: x.start_node()
-        end_node = self.graph_db.find_one(NodeTypes.COLUMN.name, 'name', column_name)
+        end_node = self.selectors[NodeTypes.COLUMN].where(name=column_name).first()
         if end_node is None and column_name is not None:
             return []
         return self._get_relationships(start_node, RelationshipTypes.DEFINES, end_node, _lambda)
@@ -164,7 +168,7 @@ class FunctionDatabase(object):
     def uses(self, column_name, start_node=None, _lambda=None):
         if _lambda is None:
             _lambda = lambda x: x.start_node()
-        end_node = self.graph_db.find_one(NodeTypes.COLUMN.name, 'name', column_name)
+        end_node = self.selectors[NodeTypes.COLUMN].where(name=column_name).first()
         if end_node is None and column_name is not None:
             return []
         return self._get_relationships(start_node, RelationshipTypes.USES, end_node, _lambda)
@@ -173,7 +177,7 @@ class FunctionDatabase(object):
         if _lambda is None:
             _lambda = lambda x: x.start_node()
         qualname = self._get_qualname(fun) if fun is not None else None
-        end_node = self.graph_db.find_one(NodeTypes.FUNCTION.name, 'name', qualname)
+        end_node = self.selectors[NodeTypes.FUNCTION].where(name=qualname).first()
         if end_node is None and fun is not None:
             return []
         return self._get_relationships(start_node, RelationshipTypes.WRANGLES_FOR, end_node, _lambda)
@@ -184,17 +188,14 @@ class FunctionDatabase(object):
         _id = self._get_node_id(node)
         return self.id_to_fun[_id]
 
-    def _get_nodes(self, node_type):
-        return list(self.graph_db.find(node_type.name))
-
     def functions(self):
-        return self._get_nodes(NodeTypes.FUNCTION)
+        return list(self.selectors[NodeTypes.FUNCTION])
 
     def extracted_functions(self):
-        return self._get_nodes(NodeTypes.EXTRACTED_FUNCTION)
+        return list(self.selectors[NodeTypes.EXTRACTED_FUNCTION])
 
     def columns(self):
-        return self._get_nodes(NodeTypes.COLUMN)
+        return list(self.selectors[NodeTypes.COLUMN])
 
 
 def main(arg):
