@@ -42,7 +42,7 @@ def lift_donations(donations_path, script_path, functions_path):
 def main(args):
     script_path = args.script_path
     script_dir = os.path.dirname(script_path)
-    basename = '.'.join(os.path.basename(script_path).split('.')[-1:])
+    basename = '.'.join(os.path.basename(script_path).split('.')[:-1])
 
     output_dir = args.output_dir
     if not os.path.exists(output_dir):
