@@ -33,10 +33,10 @@ def identify_donations(graph_path, donations_path):
     cmd += [graph_path, donations_path]
     return subprocess.call(cmd)
 
-def lift_donations(donations_path, functions_path):
-    print('Lifting from {} to {}'.format(donations_path, functions_path))
+def lift_donations(donations_path, script_path, functions_path):
+    print('Lifting from {} to {} (script={})'.format(donations_path, functions_path, script_path))
     cmd = ['python', '-m', 'transfer.lift_donations']
-    cmd += [donations_path, functions_path]
+    cmd += [donations_path, script_path, functions_path]
     return subprocess.call(cmd)
 
 def main(args):
@@ -65,7 +65,7 @@ def main(args):
     trace(timeout, script_dir, lifted_name, trace_path, loop_bound)
     graph(trace_path, graph_path, memory_refinement)
     identify_donations(graph_path, donations_path)
-    lift_donations(donations_path, functions_path)
+    lift_donations(donations_path, script_path, functions_path)
 
 
 if __name__ == '__main__':
