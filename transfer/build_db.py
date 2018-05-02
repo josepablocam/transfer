@@ -30,6 +30,8 @@ class FunctionDatabase(object):
         self.qualname_to_id = {}
         self.graph_db = None
         self.selectors = None
+        # maintain a global count of functions extracted and added
+        self.fun_counter = 0
 
     def startup(self):
         self.graph_db = py2neo.Graph()
@@ -55,9 +57,15 @@ class FunctionDatabase(object):
     def _get_node_id(self, node):
         return py2neo.remote(node)._id
 
+    def _allocate_global_fun_name(self, name):
+        ct = self.fun_counter
+        self.fun_counter += 1
+        return '{}_{}'.format(name, ct)
+
     def add_extracted_function(self, fun, program_graph):
         assert isinstance(fun, DonatedFunction), 'Can only add extracted functions'
-        extracted_node = self._create_node(NodeTypes.EXTRACTED_FUNCTION, name=fun.name)
+        global_fun_name = self._allocate_global_fun_name(fun.name)
+        extracted_node = self._create_node(NodeTypes.EXTRACTED_FUNCTION, name=global_fun_name)
         _id = self._get_node_id(extracted_node)
         self.id_to_fun[_id] = fun
 
