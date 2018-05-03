@@ -1,50 +1,70 @@
 from argparse import ArgumentParser
 import os
 import subprocess
+import tempfile
 
-def build_docker_command(script_path, vm_output_dir, docker_output_dir, mem_limit, timeout):
+def build_docker_command(docker_image, timeout, script_path, vm_output_dir, docker_output_dir, mem_limit):
+    # to be able to mount volumes, must use absolute path
+    vm_output_dir = os.path.abspath(vm_output_dir)
+    # TODO: we should probably fix this
+    docker_output_dir = os.path.join('/', docker_output_dir)
+    container_name = script_path.replace('/', '_')
     docker_command = [
-    'docker',
-    '--name', script_path,
-    'run',
-    '-v', '{}:{}'.format(vm_output_dir, docker_output_dir),
-    '--mem', mem_limit,
-    script_path, docker_output_dir, timeout
+        'docker',
+        'run',
+        '--name', container_name,
+        '-v', '{}:{}'.format(vm_output_dir, docker_output_dir),
+        '--memory', mem_limit,
+        docker_image,
+        timeout, script_path, docker_output_dir
     ]
     return docker_command
 
 def schedule(command):
-    at_command = ['at', '-q', 'b', '-m', 'now']
-    full_command = at_command + command
-    return subprocess.call(full_command)
+    at_command = ['at', '-q', 'b', '-m', 'now', '-f']
+    # need to write out command to a temporary file
+    # before feeding to at
+    script_file =  tempfile.NamedTemporaryFile(suffix='.sh', delete=False)
+    if not isinstance(command, str):
+        command = ' '.join(command)
+    script_file.write('#!/bin/bash\n')
+    script_file.write('{}\n'.format(command))
+    script_file.flush()
+    script_file.close()
+    full_command = at_command + [script_file.name]
+    return_code =  subprocess.call(full_command)
+    os.remove(script_file.name)
+    return return_code
 
 def setup_at_config(load_avg):
     load_avg_cmd = ['atd', '-l', str(load_avg)]
     return subprocess.call(load_avg_cmd)
 
-def schedule_jobs(scripts_dir, vm_output_dir, docker_output_dir, load_avg, mem_limit, timeout):
+def schedule_jobs(docker_image, scripts_dir, vm_output_dir, docker_output_dir, timeout, load_avg, mem_limit):
     setup_at_config(load_avg)
-    scripts = os.listdir(scripts_dir)
+    scripts = [s for s in os.listdir(scripts_dir) if s.split('.')[-1] == 'py']
     for script_name in scripts:
         script_path = os.path.join(scripts_dir, script_name)
-        cmd = build_docker_command(script_path, vm_output_dir, docker_output_dir, mem_limit, timeout)
+        cmd = build_docker_command(docker_image, timeout, script_path, vm_output_dir, docker_output_dir, mem_limit)
         schedule(cmd)
 
 def main(args):
     schedule_jobs(
+        args.docker_image,
         args.scripts_dir,
         args.vm_output_dir,
         args.docker_output_dir,
-        args.load_average,
-        args.mem_limit,
         args.timeout,
+        args.load_average,
+        args.mem_limit
     )
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Schedule batch of Kaggle scripts')
+    parser.add_argument('docker_image', type=str, help='Name for docker image to use to execute scripts')
     parser.add_argument('scripts_dir', type=str, help='Path to directory with scripts')
-    parser.add_argument('docker_output_dir', type=str, help='Path in docker container to save any outputs generated')
     parser.add_argument('vm_output_dir', type=str, help='Path in VM that maps to docker output path')
+    parser.add_argument('docker_output_dir', type=str, help='Path in docker container to save any outputs generated')
     parser.add_argument('-m', '--mem_limit', type=str, help='Maximum memory per docker container', default='20GB')
     parser.add_argument('-t', '--timeout', type=str, help='Timeout per tracing portion', default='2h')
     parser.add_argument('-l', '--load_average', type=float, help='Load average for atd command', default=5.0)
