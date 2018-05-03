@@ -6,7 +6,7 @@ VAGRANT_BOX = "ubuntu/xenial64"
 VM_NAME = 'boruca'
 # in MB
 VM_MEMORY = 100000
-VM_DISK = '60GB'
+#VM_DISK = '60GB'
 VM_CPUS = 8
 
 
@@ -15,7 +15,7 @@ Vagrant.configure(2) do |config|
   config.vm.box = VAGRANT_BOX
   config.vm.hostname = VM_NAME
   # set up disk size (this requires the vagrant-disksize plugin)
-  config.disksize.size = VM_DISK
+ # config.disksize.size = VM_DISK
 
   config.vm.synced_folder ".", ".", create: false, disabled: true
 
@@ -25,6 +25,8 @@ Vagrant.configure(2) do |config|
     vb.name   = VM_NAME
     vb.cpus   = VM_CPUS
     vb.memory = VM_MEMORY
+    # remove logging that ubuntu/xenial64 box does by default
+    vb.customize ["modifyvm", :id, "--uartmode1", "disconnected"]
   end
   config.vm.provision "shell", inline: <<-SHELL
     apt-get update
@@ -45,12 +47,16 @@ Vagrant.configure(2) do |config|
    apt-get update
    apt-get install -y docker-ce
    # install java
-   sudo apt-get install openjdk-8-jre-headless
+   sudo apt-get install -y openjdk-8-jre-headless
   SHELL
 
-  config.vm.provision "file", source:"../../transfer-cleaning", destination:"$HOME/transfer-cleaning"
-
+  # copy in folder for transfer stuff/data
+  config.vm.provision "file", source: "./transfer-cleaning.zip", destination:"$HOME/transfer-cleaning.zip"
+  # unzip and prepare for the docker builder
   config.vm.provision "shell", inline: <<-SHELL
-  (cd $HOME/transfer-cleaning/runner; make build_docker)
+  apt-get install -y zip
+  unzip transfer-cleaning.zip -d transfer-cleaning
   SHELL
+
+
 end
