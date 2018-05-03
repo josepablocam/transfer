@@ -46,8 +46,8 @@ Vagrant.configure(2) do |config|
    stable"
    apt-get update
    apt-get install -y docker-ce
-   # install java
-   apt-get install -y openjdk-8-jre-headless
+   # add default user to docker group, to avoid having to call with sudo
+   gpasswd --add vagrant docker
    # install zip
    apt-get install -y zip
   SHELL
