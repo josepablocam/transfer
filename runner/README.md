@@ -9,19 +9,35 @@
     sudo vagrant plugin install vagrant-disksize
     ```
 3. Clone the main repository to `/raid/` on Rhino (make sure nothing uses AFS)
-4. Build the vagrant VM, used to sandbox the Kaggle scripts
+
+4. Make sure that any data you want to run on is stored in
+   `transfer-cleaning/runner/program_data`.
+   The directory structure assumed is:
+   ```
+program_data
+└── <project_name>
+    ├── input
+    │   └── <data>.csv
+    └── scripts
+        ├── <script>.py
+        ├── ...
+```
+
+This directory is copied on to the VM and then the Docker container within that.
+
+5. Build the vagrant VM, used to sandbox the Kaggle scripts
     ```
     cd transfer-cleaning/runner; make build_vagrant; vagrant halt
     ```
-5. Start up the VM with `longjob` to remain logged in for a day (change this for longer)
+6. Start up the VM with `longjob` to remain logged in for a day (change this for longer)
     ```
     longjob --renew 1d
     ```
-6. Connect to the VM
+7. Connect to the VM
     ```
     vagrant ssh
     ```
-5. Build docker inside the VM
+8. Build docker inside the VM
     ```
     cd transfer-cleaning/runner; make build_docker
     ```
@@ -29,7 +45,7 @@ Note that you do not need to run the `make` command here using `sudo`, as `make 
 added the default user (`vagrant`) to the `docker` group.
 So all `docker` commands can run without `sudo`.
 
-6. You can now schedule jobs to running by using the command below
+9. You can now schedule jobs to running by using the command below
     and modifying script locations etc as desired.
     The actual scheduling is done with the `at`
     command underneath the covers. Timeout is
