@@ -39,12 +39,7 @@ def schedule(command):
     os.remove(script_file.name)
     return return_code
 
-def setup_at_config(load_avg):
-    load_avg_cmd = ['atd', '-l', str(load_avg)]
-    return subprocess.call(load_avg_cmd)
-
-def schedule_jobs(docker_image, scripts_dir, vm_output_dir, docker_output_dir, timeout, load_avg, mem_limit, regex_pattern):
-    setup_at_config(load_avg)
+def schedule_jobs(docker_image, scripts_dir, vm_output_dir, docker_output_dir, timeout, mem_limit, regex_pattern):
     scripts = [s for s in os.listdir(scripts_dir) if s.split('.')[-1] == 'py']
     for script_name in scripts:
         script_path = os.path.join(scripts_dir, script_name)
@@ -60,7 +55,6 @@ def main(args):
         args.vm_output_dir,
         args.docker_output_dir,
         args.timeout,
-        args.load_average,
         args.mem_limit,
         args.regex
     )
@@ -73,7 +67,6 @@ if __name__ == '__main__':
     parser.add_argument('docker_output_dir', type=str, help='Path in docker container to save any outputs generated')
     parser.add_argument('-m', '--mem_limit', type=str, help='Maximum memory per docker container', default='20GB')
     parser.add_argument('-t', '--timeout', type=str, help='Timeout per tracing portion', default='4h')
-    parser.add_argument('-l', '--load_average', type=float, help='Load average for atd command', default=5.0)
     parser.add_argument('-r', '--regex', type=str, help='Only schedule scripts with a path that matches the regex', default=None)
     args = parser.parse_args()
     try:

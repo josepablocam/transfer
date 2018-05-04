@@ -44,12 +44,26 @@ python schedule_jobs.py \
     program_data/loan_data/results \
     program_data/loan_data/results/ \
     --mem_limit 20GB \
-    --timeout 2h \
-    --load_average 1.0
+    --timeout 2h
 ```
 
 Note that if you have already built the VM with all the data needed, and docker has been built accordingly, then
 you can just skip to the last step directly.
+
+This runs with the default `atd` settings. If you want to schedule jobs so
+that more are run concurrently and there is less startup time between jobs
+you should:
+
+* Find the currently running `atd` daemon.
+```
+ps aux | grep atd
+```
+* Kill it.
+* Start a new `atd` daemon with your desired configuration
+```
+sudo atd -l <load-limit> -b <time-between-job-launches>
+```
+* Run `schedule_jobs.py` as explained above.
 
 
 # Known Issues
