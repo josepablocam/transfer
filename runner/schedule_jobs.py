@@ -72,7 +72,7 @@ if __name__ == '__main__':
     parser.add_argument('vm_output_dir', type=str, help='Path in VM that maps to docker output path')
     parser.add_argument('docker_output_dir', type=str, help='Path in docker container to save any outputs generated')
     parser.add_argument('-m', '--mem_limit', type=str, help='Maximum memory per docker container', default='20GB')
-    parser.add_argument('-t', '--timeout', type=str, help='Timeout per tracing portion', default='2h')
+    parser.add_argument('-t', '--timeout', type=str, help='Timeout per tracing portion', default='4h')
     parser.add_argument('-l', '--load_average', type=float, help='Load average for atd command', default=5.0)
     parser.add_argument('-r', '--regex', type=str, help='Only schedule scripts with a path that matches the regex', default=None)
     args = parser.parse_args()

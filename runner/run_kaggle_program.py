@@ -1,6 +1,14 @@
 from argparse import ArgumentParser
 import os
 import subprocess
+import sys
+
+def exit_with_error_if_file_missing(file_path):
+    # TODO: we check for the file because the subprocess.calls
+    # will actually always return 0, because we have some pdb code
+    # catching exceptions at the bottom of each of our library scripts...
+    if not os.path.exists(file_path):
+        sys.exit(1)
 
 def rewrite(script_path, lifted_path):
     print('Rewriting {} to {}'.format(script_path, lifted_path))
@@ -61,11 +69,23 @@ def main(args):
     memory_refinement = str(args.memory_refinement)
 
     rewrite(script_path, lifted_path)
+    exit_with_error_if_file_missing(lifted_path)
+
     # need to execute from same directory as script
-    trace(timeout, script_dir, lifted_name, trace_path, loop_bound)
+    timeout_return = trace(timeout, script_dir, lifted_name, trace_path, loop_bound)
+    # we can actually still check the timeout
+    if timeout_return != 0:
+        sys.exit(timeout_return)
+    exit_with_error_if_file_missing(trace_path)
+
     graph(trace_path, graph_path, memory_refinement)
+    exit_with_error_if_file_missing(graph_path)
+
     identify_donations(graph_path, donations_path)
+    exit_with_error_if_file_missing(donations_path)
+
     lift_donations(donations_path, script_path, functions_path)
+    exit_with_error_if_file_missing(functions_path)
 
 
 if __name__ == '__main__':
