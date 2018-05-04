@@ -9,7 +9,6 @@ build_docker: Dockerfile
 build_vagrant: Vagrantfile
 	(cd ../; git archive --format=zip -o runner/transfer-cleaning.zip master)
 	(cd ../; zip -r runner/transfer-cleaning.zip runner/program_data)
-	echo "test_file is here" > test_file.txt
 	# make sure that virtualbox doesn't store the VM image on AFS
 	vboxmanage setproperty machinefolder /raid/jcamsan/virtualbox_vms
 	vagrant up
