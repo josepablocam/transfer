@@ -63,7 +63,9 @@ def summarize_functions(functions_path):
         functions = pickle.load(f)
     info['num_functions'] = len(functions)
     info['avg_function_len'] = np.mean([f.graph.number_of_nodes() for f in functions])
-    func_objs = [f._get_func_obj() for f in functions]
+    # FIXME: this line fails because we currently lift some functions incorrectly
+    # func_objs = [f._get_func_obj() for f in functions]
+    func_objs = []
     info['fraction_more_than_one_arg'] = np.mean([len(inspect.getfullargspec(f).args) > 1 for f in func_objs])
     return info
 
@@ -120,9 +122,9 @@ def print_report(summary_df):
     for f in mean_fields:
         print('Mean {}: {}'.format(f, round(np.mean(summary_df[f]), 2)))
     print('======================')
-    print('Detailed Report')
-    detailed_fields = ['name', 'num_donations', 'num_functions', 'avg_function_len']
-    reduced_df = summary_df[detailed_fields]
+    print('Detailed Report (only entries with a trace)')
+    detailed_fields = ['name', 'trace_len', 'num_donations', 'num_functions', 'avg_function_len']
+    reduced_df = summary_df.loc[summary_df['has_trace']][detailed_fields]
     print(tabulate.tabulate(reduced_df, headers='keys', tablefmt='grid', showindex=False))
 
 def main(args):
