@@ -3,6 +3,8 @@ import os
 import subprocess
 import sys
 
+from transfer.utils import build_script_paths
+
 def exit_with_error_if_file_missing(file_path):
     # TODO: we check for the file because the subprocess.calls
     # will actually always return 0, because we have some pdb code
@@ -14,6 +16,12 @@ def rewrite(script_path, lifted_path):
     print('Rewriting {} to {}'.format(script_path, lifted_path))
     cmd = ['python', '-m', 'plpy.rewrite.expr_lifter']
     cmd += [script_path, lifted_path]
+    return subprocess.call(cmd)
+
+def filter_file(script_path):
+    print('Removing lines that cause failures in IPython3 for {}'.format(script_path))
+    cmd = ['python', '-m', 'transfer.filter_file']
+    cmd += [script_path]
     return subprocess.call(cmd)
 
 def trace(timeout, execution_dir, lifted_name, trace_path, loop_bound):
@@ -50,24 +58,26 @@ def lift_donations(donations_path, script_path, functions_path):
 def main(args):
     script_path = args.script_path
     script_dir = os.path.dirname(script_path)
-    basename = '.'.join(os.path.basename(script_path).split('.')[:-1])
 
     output_dir = args.output_dir
     if not os.path.exists(output_dir):
         print('Creating output directory {}'.format(output_dir))
         os.makedirs(output_dir)
 
-    lifted_path = os.path.join(script_dir, basename + '_lifted.py')
+    paths = build_script_paths(script_path, output_dir=output_dir)
+
+    lifted_path = paths['lifted_path']
     lifted_name = os.path.basename(lifted_path)
-    trace_path = os.path.join(output_dir, basename + '_tracer.pkl')
-    graph_path = os.path.join(output_dir, basename + '_graph.pkl')
-    donations_path = os.path.join(output_dir, basename + '_donations.pkl')
-    functions_path = os.path.join(output_dir, basename + '_functions.pkl')
+    trace_path = paths['trace_path']
+    graph_path = paths['graph_path']
+    donations_path = paths['donations_path']
+    functions_path = paths['functions_path']
 
     timeout = str(args.timeout)
     loop_bound = str(args.loop_bound)
     memory_refinement = str(args.memory_refinement)
 
+    filter_file(script_path)
     rewrite(script_path, lifted_path)
     exit_with_error_if_file_missing(lifted_path)
 
