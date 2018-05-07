@@ -83,4 +83,11 @@ sudo atd -l <load-limit> -b <time-between-job-launches>
 
 
 # Known Issues
+
 * It seems that on occasion, `vagrant` can fail when building and not actually include docker. If this happens, I suggest removing the box (`vagrant destroy`), cleaning up, and calling `make build_vagrant` again. That seems to solve the issue in all cases I've encountered.
+
+* If anything hangs for a long time, I suggest deleting the `.vagrant*`
+folders created in the `transfer-cleaning/runner` folder. You may also want
+to delete the `/raid/jcamsan/virtualbox_vms` folder as well. Also, kill any
+`vboxmanage` or `vagrant` processes and then try again. I realize this may be
+overkill (no pun intended) but not sure how to fix otherwise.

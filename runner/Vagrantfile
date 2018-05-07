@@ -54,7 +54,7 @@ Vagrant.configure(2) do |config|
 
   # copy in folder for transfer stuff/data
   config.vm.provision "file", source: "./transfer-cleaning.zip", destination:"$HOME/transfer-cleaning.zip"
-  
+
   # unzip and prepare for the docker builder
   config.vm.provision "shell", privileged: false, inline: <<-SHELL
     unzip ${HOME}/transfer-cleaning.zip -d ${HOME}/transfer-cleaning
