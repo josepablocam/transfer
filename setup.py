@@ -11,7 +11,9 @@ setup(name='transfer',
       install_requires=[
           'plpy==0.1',
           'py2neo==3.1.2',
-          'tabulate'
+          'tabulate',
+          'zss',
+          'editdistance',
       ],
       setup_requires=['pytest-runner'],
       tests_require=['pytest'],
