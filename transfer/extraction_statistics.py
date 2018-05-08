@@ -17,6 +17,9 @@ from .identify_donations import ColumnUse, ColumnDef, remove_duplicate_graphs
 from .lift_donations import DonatedFunction
 from .utils import build_script_paths
 
+def print_df(df):
+    print(tabulate.tabulate(df, headers='keys', tablefmt='grid', showindex=False))
+
 def summarize_lifted(lifted_path):
     if not os.path.exists(lifted_path):
         return dict(lifted=False)
@@ -85,7 +88,8 @@ def summarize(scripts_dir, results_dir, detailed=False):
     results = []
     for s in scripts_paths:
         paths = build_script_paths(s, output_dir=results_dir)
-        info = dict(name=os.path.basename(paths['script_path']))
+        info = dict(script_path=paths['script_path'])
+        info['name'] = os.path.basename(info['script_path'])
         info.update(summarize_lifted(paths['lifted_path']))
         info.update(summarize_trace(paths['trace_path']))
         info.update(summarize_graph(paths['graph_path']))
@@ -125,11 +129,40 @@ def print_report(summary_df):
     print('Detailed Report (only entries with a trace)')
     detailed_fields = ['name', 'trace_len', 'num_donations', 'num_functions', 'avg_function_len']
     reduced_df = summary_df.loc[summary_df['has_trace']][detailed_fields]
-    print(tabulate.tabulate(reduced_df, headers='keys', tablefmt='grid', showindex=False))
+    print_df(reduced_df)
+
+def print_failed_trace(summary_df):
+    mask = ~summary_df['has_trace']
+    if any(mask):
+        failed = summary_df[mask]
+        print('Failed to collect a trace: {} / {}'.format(failed.shape[0], summary_df.shape[0]))
+        print_df(failed[['script_path']])
+    else:
+        print('No trace collection failures')
+
+def print_failed_graph(summary_df):
+    has_trace = summary_df['has_trace']
+    missing_graph = ~summary_df['has_graph']
+    mask = has_trace & missing_graph
+    if any(mask):
+        failed = summary_df[mask]
+        print('Failed to build a graph: {} / {}'.format(failed.shape[0], summary_df.shape[0]))
+        print_df(failed[['script_path']])
+    else:
+        print('No graph building failures')
 
 def main(args):
     summary_df = summarize(args.scripts_dir, args.results_dir)
-    print_report(summary_df)
+
+    if not args.silent_report:
+        print_report(summary_df)
+
+    if args.failed_trace:
+        print_failed_trace(summary_df)
+
+    if args.failed_graph:
+        print_failed_graph(summary_df)
+
     if args.output_path:
         summary_df.to_csv(args.output_path, index=False)
 
@@ -139,6 +172,9 @@ if __name__ == '__main__':
     parser.add_argument('scripts_dir', type=str, help='Directory for scripts')
     parser.add_argument('results_dir', type=str, help='Directory to results (trace, graph, etc)')
     parser.add_argument('-o', '--output_path', type=str, help='Path to store csv of summary')
+    parser.add_argument('-t', '--failed_trace', action='store_true', help='Print info for scripts that failed to trace')
+    parser.add_argument('-g', '--failed_graph', action='store_true', help='Print info for scripts that failed to graph')
+    parser.add_argument('-s', '--silent_report', action='store_true', help='Do not print out main report')
     args = parser.parse_args()
     try:
         main(args)
