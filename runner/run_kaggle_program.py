@@ -24,7 +24,7 @@ def filter_file(script_path):
     cmd += [script_path]
     return subprocess.call(cmd)
 
-def trace(timeout, execution_dir, lifted_name, trace_path, loop_bound):
+def trace(timeout, execution_dir, lifted_name, trace_path, loop_bound, log):
     trace_path = os.path.abspath(trace_path)
     current_dir = os.getcwd()
     os.chdir(execution_dir)
@@ -33,6 +33,8 @@ def trace(timeout, execution_dir, lifted_name, trace_path, loop_bound):
     cmd = ['timeout', timeout]
     cmd += ['ipython3', '-m', 'plpy.analyze.dynamic_tracer', '--']
     cmd += [lifted_name, trace_path, '--loop_bound', str(loop_bound)]
+    if log is not None:
+        cmd += ['--log', log]
     return_code = subprocess.call(cmd)
     os.chdir(current_dir)
     return return_code
@@ -76,13 +78,14 @@ def main(args):
     timeout = str(args.timeout)
     loop_bound = str(args.loop_bound)
     memory_refinement = str(args.memory_refinement)
+    tracer_log = args.log
 
     filter_file(script_path)
     rewrite(script_path, lifted_path)
     exit_with_error_if_file_missing(lifted_path)
 
     # need to execute from same directory as script
-    timeout_return = trace(timeout, script_dir, lifted_name, trace_path, loop_bound)
+    timeout_return = trace(timeout, script_dir, lifted_name, trace_path, loop_bound, tracer_log)
     # we can actually still check the timeout
     if timeout_return != 0:
         sys.exit(timeout_return)
@@ -103,8 +106,9 @@ if __name__ == '__main__':
     parser.add_argument('timeout', type=str, help='Timeout string for tracing portion')
     parser.add_argument('script_path', type=str, help='Path to Kaggle script')
     parser.add_argument('output_dir', type=str, help='Path to output directory')
-    parser.add_argument('-l', '--loop_bound', type=int, help='Loop bound for tracing', default=2)
+    parser.add_argument('-b', '--loop_bound', type=int, help='Loop bound for tracing', default=2)
     parser.add_argument('-m', '--memory_refinement', type=int, help='Memory refinement strategy for graph builder', default=1)
+    parser.add_argument('-l', '--log', type=str, help='Turn on logging for the tracer')
     args = parser.parse_args()
     print(args)
     try:
