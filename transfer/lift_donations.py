@@ -260,13 +260,22 @@ class DonatedFunction(object):
         # source code
         self.cleaning_code = cleaning_code
         self.context_code = context_code
-        self.code = None
+        self._source = None
+        self._ast = None
 
         # executable function
         self._obj = None
 
-    def get_source(self):
-        if self.code is None:
+    @property
+    def ast(self):
+        if self._ast is None:
+            tree = ast.parse(self.source)
+            self._ast = tree
+        return self._ast
+
+    @property
+    def source(self):
+        if self._source is None:
             template = 'def {name}({formal_args_str}):\n{context_code_str}{core_code_str}'
 
             # arguments
@@ -303,21 +312,20 @@ class DonatedFunction(object):
                 context_code_str=context_code_str,
                 core_code_str=core_code_str
             )
-            self.code = code
+            self._source = code
 
-        return self.code
+        return self._source
 
-    def _get_func_obj(self):
+    @property
+    def obj(self):
         if self._obj is None:
-            code = self.get_source()
             _globals = {}
-            exec(code, _globals)
+            exec(self.source, _globals)
             self._obj = _globals[self.name]
         return self._obj
 
     def __call__(self, *args):
-        func = self._get_func_obj()
-        return func(*args)
+        return self.obj(*args)
 
 
 def lift_to_functions(graphs, script_src, name_format=None, name_counter=None):
@@ -427,6 +435,3 @@ if __name__ == '__main__':
 # 3 - Remove prefix based on return value (not sure if we actually want to do this right now...)
 #     * identify where that memory is initialized and remove everything before it
 #     * can turn init statement into free variable by commenting out (this generalizes the read_csv case)
-
-
-
