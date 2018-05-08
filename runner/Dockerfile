@@ -4,6 +4,8 @@ FROM kaggle/python
 RUN apt-get update
 RUN apt-get install zip -y
 RUN apt-get install vim -y
+# set up basic .vimrc file
+RUN echo -e ":syntax on\n:set expandtab\n:set number" > ~/.vimrc
 
 # Update tensorflow to avoid core dump in Ubuntu VM
 # Distributor ID: Ubuntu
