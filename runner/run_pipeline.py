@@ -12,6 +12,33 @@ def exit_with_error_if_file_missing(file_path):
     if not os.path.exists(file_path):
         sys.exit(1)
 
+def run_plain(timeout, script_path, confirmation_dir):
+    # useful when debugging to figure out if script is just plain wrong
+    # get absolute paths so things work when we change directories
+    script_path = os.path.abspath(script_path)
+    confirmation_dir = os.path.abspath(confirmation_dir)
+    script_name = '.'.join(os.path.basename(script_path).split('.')[:-1])
+
+    current_dir = os.getcwd()
+    os.chdir(os.path.dirname(script_path))
+
+    cmd = ['timeout', timeout, 'ipython3', script_path]
+    confirmation_path = os.path.join(confirmation_dir, script_name + '.plain')
+    with open(confirmation_path, 'w') as stdout:
+        proc = subprocess.Popen(cmd, stdout=stdout)
+    proc.communicate()
+    return_status = proc.returncode
+
+    with open(confirmation_path, 'a') as f:
+        f.write('Program return value: {}'.format(return_status))
+    # rename file to be clear what happened
+    confirmation_ending = '.success' if return_status == 0 else '.failure'
+    new_confirmation_path = confirmation_path + confirmation_ending
+    os.rename(confirmation_path, new_confirmation_path)
+
+    os.chdir(current_dir)
+    return return_status
+
 def rewrite(script_path, lifted_path):
     print('Rewriting {} to {}'.format(script_path, lifted_path))
     cmd = ['python', '-m', 'plpy.rewrite.expr_lifter']
@@ -81,6 +108,13 @@ def main(args):
     tracer_log = args.log
 
     filter_file(script_path)
+
+    # only execute plain after the filtering...otherwise guaranteed to fail
+    # for a lot of scripts...
+    if args.plain:
+        return_plain = run_plain(timeout, script_path, output_dir)
+        sys.exit(return_plain)
+
     rewrite(script_path, lifted_path)
     exit_with_error_if_file_missing(lifted_path)
 
@@ -109,6 +143,7 @@ if __name__ == '__main__':
     parser.add_argument('-b', '--loop_bound', type=int, help='Loop bound for tracing', default=2)
     parser.add_argument('-m', '--memory_refinement', type=int, help='Memory refinement strategy for graph builder', default=1)
     parser.add_argument('-l', '--log', type=str, help='Turn on logging for the tracer')
+    parser.add_argument('-p', '--plain', action='store_true', help='Run program as plain ipython (with timeout) and store stdout')
     args = parser.parse_args()
     print(args)
     try:
