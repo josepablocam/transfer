@@ -13,6 +13,9 @@ from .identify_donations import ColumnUse, ColumnDef, remove_duplicate_graphs
 
 
 ### Parameters and Return values ###
+def to_ast_node(elem):
+    return ast.parse(elem).body[0]
+
 def comment_out_nodes(graph, predicate):
     # predicate can check things like if it reads from disk
     for _, node_data in graph.nodes(data=True):
@@ -257,6 +260,14 @@ class DonatedFunction(object):
         # sort by name just for deterministic order
         self.formal_arg_vars = sorted(list(formal_arg_vars), key=lambda x: x.name)
         self.return_var = return_var
+
+        for arg in self.formal_arg_vars:
+            if arg and not self._var_is_name(arg):
+                raise ValueError('Function param must be of type ast.Name: {}'.format(arg))
+
+        if self.return_var and not self._var_is_name(self.return_var):
+            raise ValueError('Return must be of type ast.Name: {}'.format(self.return_var))
+
         # source code
         self.cleaning_code = cleaning_code
         self.context_code = context_code
@@ -265,6 +276,11 @@ class DonatedFunction(object):
 
         # executable function
         self._obj = None
+
+    @staticmethod
+    def _var_is_name(_var):
+        node = to_ast_node(_var.name).value
+        return isinstance(node, ast.Name)
 
     @property
     def ast(self):
