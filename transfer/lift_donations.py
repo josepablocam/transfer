@@ -9,7 +9,7 @@ import networkx as nx
 import pandas as pd
 from plpy.analyze.dynamic_trace_events import ExecLine
 
-from .identify_donations import remove_duplicate_graphs
+from .identify_donations import remove_duplicate_graphs, is_dataframe
 
 
 ### Parameters and Return values ###
@@ -100,8 +100,15 @@ def get_free_input_dataframes(graph):
         if node_data.get('treat_as_comment', False):
             continue
         for var in node_data['dataframe_uses']:
-            if not var in defined and not can_be_computed(var, defined):
+            # criteria to become a parameter to our functions
+            if not var in defined and \
+            not can_be_computed(var, defined) and \
+            is_dataframe(var.type) and \
+            isinstance(to_ast_node(var.name).value, ast.Name):
                 global_free.add(var)
+                # we can now extend the defined set to include this variable
+                # as it will be made into a parameter to the function
+                defined.add(var)
         # update with all definitions, not just dataframes
         # FIXME: shoudl this be 'defs' or 'complete_defs'?
         defined.update(node_data['complete_defs'])

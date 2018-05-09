@@ -126,6 +126,7 @@ def from_source_to_functions(src, tempdir):
 
 
 lift_functions_cases = [
+    # basic example
     (
         """
         import pandas as pd
@@ -139,22 +140,52 @@ lift_functions_cases = [
             return df
         """
     ),
-    #
-    # (
-    #     """
-    #     import pandas as pd
-    #     df = pd.read_csv('dummy.csv')
-    #     x = 'c1'
-    #     df['c1'] = df[x]
-    #     """,
-    #     """
-    #     def f(df):
-    #         import pandas as pd
-    #         x = 'c1'
-    #         _var0 = df[x]
-    #         df['c1'] = _var0
-    #     """
-    # )
+
+    # with some context code
+    (
+        """
+        class A(object):
+            def __init__(self, v):
+                self.v = v
+
+
+        import pandas as pd
+        df = pd.read_csv('data.csv')
+        a = A(2)
+        df['c1'] = a.v
+        """,
+        """
+        def cleaning_func_0(df):
+            class A(object):
+                def __init__(self, v):
+                    self.v = v
+
+            import pandas as pd
+            a = A(2)
+            df['c1'] = a.v
+            return df
+        """
+    ),
+
+    # a case where we used to incorrectly lift df[names]
+    # this should now be corrected and added as a regression test
+    (
+        """
+        import pandas as pd
+        df = pd.read_csv('data.csv')
+        names = ['c1', 'c2']
+        loan = df[names]
+        loan['extra'] = 3
+        """,
+        """
+        def cleaning_func_0(df):
+            import pandas as pd
+            names = ['c1', 'c2']
+            loan = df[names]
+            loan['extra'] = 3
+            return loan
+        """
+    ),
 ]
 
 
@@ -173,6 +204,7 @@ def test_lift_functions(src, expected_src):
     functions = from_source_to_functions(src, tempdir)
     assert len(functions) == 1
     function = functions[0]
+    print(function.source)
     assert to_ast_dump(function.source) == to_ast_dump(expected_src)
 
     shutil.rmtree(tempdir)
