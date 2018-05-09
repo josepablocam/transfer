@@ -1,13 +1,21 @@
 import ast
+import argparse
+import os
+import shutil
+import sys
+import tempfile
+import textwrap
 
+import dill
 import networkx as nx
 import pandas as pd
 from plpy.analyze.dynamic_trace_events import Variable
 import pytest
-import textwrap
 
 from transfer.lift_donations import DonatedFunction
-
+from transfer.utils import build_script_paths
+sys.path.append('../')
+from runner import run_pipeline
 
 
 def test_args_and_return_vars_donated_functions():
@@ -92,3 +100,79 @@ def test_source_donated_functions(info):
     expected_src = "def f(): x; x + 2; return x"
     assert to_ast_dump(fun.source) == to_ast_dump(expected)
     assert to_ast_dump(fun.ast) == to_ast_dump(expected)
+
+
+def from_source_to_functions(src, tempdir):
+    script_path = os.path.join(tempdir, 'script.py')
+
+    with open(script_path, 'w') as f:
+        f.write(src)
+
+    args = argparse.Namespace(
+        timeout='2h',
+        script_path=script_path,
+        output_dir=tempdir,
+        loop_bound=2,
+        memory_refinement=1,
+        log=None,
+    )
+    run_pipeline.main(args)
+
+    functions_path = build_script_paths(script_path)['functions_path']
+    with open(functions_path, 'rb') as f:
+        functions = dill.load(f)
+
+    return functions
+
+
+lift_functions_cases = [
+    (
+        """
+        import pandas as pd
+        df = pd.read_csv('data.csv')
+        df['c1'] = 2
+        """,
+        """
+        def cleaning_func_0(df):
+            import pandas as pd
+            df['c1'] = 2
+            return df
+        """
+    ),
+    #
+    # (
+    #     """
+    #     import pandas as pd
+    #     df = pd.read_csv('dummy.csv')
+    #     x = 'c1'
+    #     df['c1'] = df[x]
+    #     """,
+    #     """
+    #     def f(df):
+    #         import pandas as pd
+    #         x = 'c1'
+    #         _var0 = df[x]
+    #         df['c1'] = _var0
+    #     """
+    # )
+]
+
+
+@pytest.mark.parametrize('src,expected_src', lift_functions_cases)
+def test_lift_functions(src, expected_src):
+    src = textwrap.dedent(src)
+    expected_src = textwrap.dedent(expected_src)
+
+    tempdir = tempfile.mkdtemp()
+    # prepare data for examples to run
+    data_path = os.path.join(tempdir, 'data.csv')
+    dummy_data = pd.DataFrame([(1, 2), (3, 4)], columns=['c1', 'c2'])
+    dummy_data.to_csv(data_path, index=False)
+
+    from transfer.lift_donations import DonatedFunction
+    functions = from_source_to_functions(src, tempdir)
+    assert len(functions) == 1
+    function = functions[0]
+    assert to_ast_dump(function.source) == to_ast_dump(expected_src)
+
+    shutil.rmtree(tempdir)
