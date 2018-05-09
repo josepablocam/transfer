@@ -131,7 +131,10 @@ def print_report(summary_df):
     reduced_df = summary_df.loc[summary_df['has_trace']][detailed_fields]
     print_df(reduced_df)
 
-def print_failed_trace(summary_df):
+def create_regex(df):
+    return '|'.join(['({})'.format(s) for s in df['script_path'].values])
+
+def print_failed_trace(summary_df, regex):
     mask = ~summary_df['has_trace']
     if any(mask):
         failed = summary_df[mask]
@@ -140,7 +143,10 @@ def print_failed_trace(summary_df):
     else:
         print('No trace collection failures')
 
-def print_failed_graph(summary_df):
+    if regex:
+        print(create_regex(summary_df))
+
+def print_failed_graph(summary_df, regex):
     has_trace = summary_df['has_trace']
     missing_graph = ~summary_df['has_graph']
     mask = has_trace & missing_graph
@@ -151,6 +157,9 @@ def print_failed_graph(summary_df):
     else:
         print('No graph building failures')
 
+    if regex:
+        print(create_regex(summary_df))
+
 def main(args):
     summary_df = summarize(args.scripts_dir, args.results_dir)
 
@@ -158,10 +167,10 @@ def main(args):
         print_report(summary_df)
 
     if args.failed_trace:
-        print_failed_trace(summary_df)
+        print_failed_trace(summary_df, args.regex)
 
     if args.failed_graph:
-        print_failed_graph(summary_df)
+        print_failed_graph(summary_df, args.regex)
 
     if args.output_path:
         summary_df.to_csv(args.output_path, index=False)
@@ -175,6 +184,7 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--failed_trace', action='store_true', help='Print info for scripts that failed to trace')
     parser.add_argument('-g', '--failed_graph', action='store_true', help='Print info for scripts that failed to graph')
     parser.add_argument('-s', '--silent_report', action='store_true', help='Do not print out main report')
+    parser.add_argument('-r', '--regex', action='store_true', help='Produce regex of script names')
     args = parser.parse_args()
     try:
         main(args)
