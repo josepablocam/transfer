@@ -35,6 +35,6 @@ RUN pip install ipython
 ADD program_data/ program_data/
 
 # copy in the driver
-ADD run_kaggle_program.py run_kaggle_program.py
+ADD run_pipeline.py run_pipeline.py
 
-ENTRYPOINT ["python", "run_kaggle_program.py"]
+ENTRYPOINT ["python", "run_pipeline.py"]

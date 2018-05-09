@@ -102,9 +102,9 @@ def main(args):
 
 
 if __name__ == '__main__':
-    parser = ArgumentParser(description='Run extraction pipeline for a given Kaggle script')
+    parser = ArgumentParser(description='Run extraction pipeline for a given script')
     parser.add_argument('timeout', type=str, help='Timeout string for tracing portion')
-    parser.add_argument('script_path', type=str, help='Path to Kaggle script')
+    parser.add_argument('script_path', type=str, help='Path to script')
     parser.add_argument('output_dir', type=str, help='Path to output directory')
     parser.add_argument('-b', '--loop_bound', type=int, help='Loop bound for tracing', default=2)
     parser.add_argument('-m', '--memory_refinement', type=int, help='Memory refinement strategy for graph builder', default=1)
