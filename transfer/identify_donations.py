@@ -27,6 +27,7 @@ class PossibleColumnCollector(ast.NodeVisitor):
 
     def visit_Attribute(self, node):
         self.acc.append(node.attr)
+        self.generic_visit(node)
 
     def visit_Subscript(self, node):
         self.possible_column_ref.append(True)
@@ -39,13 +40,19 @@ class PossibleColumnCollector(ast.NodeVisitor):
 
 # TODO: would it be better to compute the columns assigned/used based on the memory locations?
 # TODO: we can use types to figure out if its actually a column
+def type_to_str(_type):
+    return _type.__qualname__ if isinstance(_type, type) else _type
+
 def is_dataframe(type_str):
+    type_str = type_to_str(type_str)
     return type_str in set([pd.DataFrame.__qualname__, pd.core.groupby.GroupBy.__qualname__])
 
 def is_series(type_str):
+    type_str = type_to_str(type_str)
     return type_str in set([pd.Series.__qualname__, pd.core.groupby.SeriesGroupBy.__qualname__])
 
 def is_index(type_str):
+    type_str = type_to_str(type_str)
     return type_str == pd.Index.__qualname__
 
 def has_possible_table_info(node_data):
