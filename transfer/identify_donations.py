@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 from argparse import ArgumentParser
 import ast
 from collections import defaultdict
-import pickle
 
+import dill
 import networkx as nx
 import pandas as pd
 
@@ -457,11 +457,11 @@ def main(args):
     slices_file = args.output_file
 
     with open(graph_file, 'rb') as f:
-        graph = pickle.load(f)
+        graph = dill.load(f)
     donations = get_all_donations(graph, filename=args.input_file)
 
     with open(slices_file, 'wb') as f:
-        pickle.dump(donations, f)
+        dill.dump(donations, f)
 
 
 
