@@ -4,7 +4,7 @@ import re
 import subprocess
 import tempfile
 
-def build_docker_command(docker_image, timeout, script_path, vm_output_dir, docker_output_dir, mem_limit):
+def build_docker_command(docker_image, timeout, script_path, vm_output_dir, docker_output_dir, mem_limit, plain):
     # to be able to mount volumes, must use absolute path
     vm_output_dir = os.path.abspath(vm_output_dir)
     # TODO: we should probably fix this
@@ -20,6 +20,8 @@ def build_docker_command(docker_image, timeout, script_path, vm_output_dir, dock
         docker_image,
         timeout, script_path, docker_output_dir
     ]
+    if plain:
+        docker_command += ['--plain']
     return docker_command
 
 def schedule(command):
@@ -39,13 +41,13 @@ def schedule(command):
     os.remove(script_file.name)
     return return_code
 
-def schedule_jobs(docker_image, scripts_dir, vm_output_dir, docker_output_dir, timeout, mem_limit, regex_pattern):
+def schedule_jobs(docker_image, scripts_dir, vm_output_dir, docker_output_dir, timeout, mem_limit, regex_pattern, plain):
     scripts = [s for s in os.listdir(scripts_dir) if s.split('.')[-1] == 'py']
     for script_name in scripts:
         script_path = os.path.join(scripts_dir, script_name)
         if regex_pattern is not None and re.match(regex_pattern, script_path) is None:
             continue
-        cmd = build_docker_command(docker_image, timeout, script_path, vm_output_dir, docker_output_dir, mem_limit)
+        cmd = build_docker_command(docker_image, timeout, script_path, vm_output_dir, docker_output_dir, mem_limit, plain)
         schedule(cmd)
 
 def main(args):
@@ -56,7 +58,8 @@ def main(args):
         args.docker_output_dir,
         args.timeout,
         args.mem_limit,
-        args.regex
+        args.regex,
+        args.plain
     )
 
 if __name__ == '__main__':
@@ -68,6 +71,7 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--mem_limit', type=str, help='Maximum memory per docker container', default='20GB')
     parser.add_argument('-t', '--timeout', type=str, help='Timeout per tracing portion', default='4h')
     parser.add_argument('-r', '--regex', type=str, help='Only schedule scripts with a path that matches the regex', default=None)
+    parser.add_argument('-p', '--plain', action='store_true', help='Run program as plain ipython (with timeout) and store stdout')
     args = parser.parse_args()
     try:
         main(args)
