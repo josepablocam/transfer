@@ -54,6 +54,9 @@ def get_wrangles_for(fun, program_graph):
     full_names = set([])
     for _, node_data in fwd_slice.nodes(data=True):
         if isinstance(node_data['event'], ExecLine):
+            # this may or may not be annotated, so be safe...
+            if node_data.get('treat_as_comment', False):
+                continue
             if node_data['calls'] is None:
                 continue
             for call in node_data['calls']:
@@ -67,6 +70,8 @@ def get_extracted_function_relationships(fun, program_graph=None):
     relationship_tuples = set([])
 
     for _, node_data in fun.graph.nodes(data=True):
+        if node_data.get('treat_as_comment', False):
+            continue
         for col in node_data['columns_defined']:
             relationship_tuples.add((RelationshipTypes.DEFINES, col))
         for col in node_data['columns_used']:
