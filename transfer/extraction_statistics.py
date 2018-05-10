@@ -140,11 +140,10 @@ def print_failed_trace(summary_df, regex):
         failed = summary_df[mask]
         print('Failed to collect a trace: {} / {}'.format(failed.shape[0], summary_df.shape[0]))
         print_df(failed[['script_path']])
+        if regex:
+            print(create_regex(failed))
     else:
         print('No trace collection failures')
-
-    if regex:
-        print(create_regex(failed))
 
 def print_failed_graph(summary_df, regex):
     has_trace = summary_df['has_trace']
@@ -154,11 +153,10 @@ def print_failed_graph(summary_df, regex):
         failed = summary_df[mask]
         print('Failed to build a graph: {} / {}'.format(failed.shape[0], summary_df.shape[0]))
         print_df(failed[['script_path']])
+        if regex:
+            print(create_regex(failed))
     else:
         print('No graph building failures')
-
-    if regex:
-        print(create_regex(failed))
 
 def main(args):
     summary_df = summarize(args.scripts_dir, args.results_dir)
