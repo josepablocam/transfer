@@ -247,7 +247,7 @@ class FunctionDatabase(object):
 
         return query_results
 
-    def extracted_function_relationships_from_node(self, node):
+    def get_extracted_function_relationships_from_node(self, node):
         assert node.has_label(NodeTypes.EXTRACTED_FUNCTION.name)
         rels = set([])
         results = self.graph_db.match(start_node=node, rel_type=None, end_node=None)
