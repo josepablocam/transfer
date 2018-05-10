@@ -247,6 +247,16 @@ class FunctionDatabase(object):
 
         return query_results
 
+    def extracted_function_relationships_from_node(self, node):
+        assert node.has_label(NodeTypes.EXTRACTED_FUNCTION.name)
+        rels = set([])
+        results = self.graph_db.match(start_node=node, rel_type=None, end_node=None)
+        for res in results:
+            rel_type = RelationshipTypes[res.type()]
+            end_name = res.end_node()['name']
+            rels.add((rel_type, end_name))
+        return rels
+
     def get_function_from_node(self, node):
         if not node.has_label(NodeTypes.EXTRACTED_FUNCTION.name):
             raise ValueError('Can only retrieve code for extracted functions')
