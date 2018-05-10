@@ -156,6 +156,7 @@ class SourceCodeStringDistance(FunctionDistanceComputer):
         src_2 = self.get_string(function_2)
         return self.str_dist_fun(src_1, src_2)
 
+
 class LearningDataPreparer(ABC):
     def prepare(self, db):
         # takes database
@@ -196,26 +197,40 @@ class BinaryRelationshipDataPreparer(LearningDataPreparer):
             _dict[prefix + relationship_type.name + '+' + val] = True
         return _dict
 
-    def prepare(self, remove_nodes=None):
+    # TODO: this function is an obscenity....jesus. fix this
+    def prepare(self, query_elems=None, query_results=None, remove_nodes=None):
         self.db.startup()
         X_data = []
         y_data = []
-        # construct data matrix over all functions we extracted and stored in db
-        extracted_fun_nodes = self.db.extracted_functions()
 
-        for query_node in tqdm.tqdm(extracted_fun_nodes):
-            query_rels, query_feats = self._get_relationships_and_features(query_node, prefix='query-node')
+        if query_elems is None:
+            query_elems = self.db.extracted_functions()
 
-            query_results = self.db.query_by_relationships(query_rels)
-            query_fun = self.db.get_function_from_node(query_node)
+        if isinstance(query_elems[0], tuple):
+            query_elems = [query_elems]
+
+        for query_elem in tqdm.tqdm(query_elems):
+
+            if isinstance(query_elem, py2neo.Node):
+                query_rels, query_feats = self._get_relationships_and_features(query_elem, prefix='query-node')
+                query_fun = self.db.get_function_from_node(query_elem)
+            else:
+                query_rels = query_elem
+                query_feats = self._relationships_to_dict(query_rels, prefix='query-node')
+                query_fun = None
+
+            if query_results is None:
+                result_nodes = self.db.query_by_relationships(query_rels)
+            else:
+                result_nodes = set(query_results)
 
             # remove self from results
-            query_results.remove(query_node)
+            result_nodes.remove(query_elem)
             # drop other nodes (may be useful for train/test setups)
             if remove_nodes:
-                query_results = query_results.difference(remove_nodes)
+                result_nodes = result_nodes.difference(remove_nodes)
 
-            for result_node in tqdm.tqdm(query_results):
+            for result_node in tqdm.tqdm(result_nodes):
                 result_rels, result_feats = self._get_relationships_and_features(result_node, prefix='result-node')
                 result_fun = self.db.get_function_from_node(result_node)
 
@@ -224,54 +239,21 @@ class BinaryRelationshipDataPreparer(LearningDataPreparer):
                 row.update(result_feats)
                 X_data.append(row)
 
-                dist = self.distance_computer.distance(query_fun, result_fun)
-                y_data.append(dist)
+                if query_fun is not None:
+                    dist = self.distance_computer.distance(query_fun, result_fun)
+                    y_data.append(dist)
 
-        X_matrix = self.vectorizer.fit_transform(X_data)
+        if not hasattr(self.vectorizer, 'vocabulary_'):
+            print('Fitting transformer')
+            self.vectorizer.fit(X_data)
+
+        X_matrix = self.vectorizer.transform(X_data)
         y_vec = np.array(y_data)
         return X_matrix, y_vec
 
 
-#
-# class FunctionRanker(ABC):
-#     def __init__(self, graph, abstractor, distance_computer):
-#         pass
-#
-#     @abstractmethod
-#     def train(self):
-#         pass
-#
-#     @abstractmethod
-#     def predict(self, function_1, relationships):
-#         pass
-#
-#     def rank(self, functions, query_relationships):
-#         return sorted(functions, lambda x: self.predict(x, query_relationships))
-#
-# class LinearRegressionRanker(FunctionRanker):
-#     def __init__(self, graph, distance_function):
-#         self.graph = graph
-#         self.X = None
-#         self.y = None
-#         self.model = None
-#
-#     def _prepare(self):
-#         # for each node inthe graph
-#         # compute features, and store
-#         pass
-#
-#     def train(self):
-#         self.model = sklearn.linear_models.LinearRegression()
-#         self.model.fit(self.X, self.y)
-#
-#     def predict(self, function_1, query_relationships):
-#         X = self._prepare(function_1, query_relationships)
-#         return self.model.predict(X)
-#
-#
-# class DecisionTreeRegressionRanker(FunctionRanker):
-#     # pass
-#
-# class NeuralRegressionRanker(FunctionRanker):
-#     # this one should be stochastic
-#     pass
+def rank_query_results(data_preparer, model, rels_for_query, query_results):
+    X, _ = data_preparer.prepare(rels_for_query, query_results)
+    predicted_dists = model.predict(query_results)
+    query_results = sorted(zip(query_results, predicted_dists), key=lambda x: x[1])
+    return [r for r, _ in query_results]
