@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 from argparse import ArgumentParser
 import ast
 from collections import defaultdict
+import pickle
 
-import dill
 import networkx as nx
 import pandas as pd
 
@@ -139,7 +139,7 @@ class ColumnUse(SeedInfo):
         return 'Use({})'.format(self.column)
 
     def __eq__(self, other):
-        if not isinstance(other, ColumnUse):
+        if not isinstance(other, type(self)):
             return False
         return self.column == other.column
 
@@ -158,7 +158,7 @@ class ColumnDef(SeedInfo):
         return 'Def({})'.format(self.column)
 
     def __eq__(self, other):
-        if not isinstance(other, ColumnDef):
+        if not isinstance(other, type(self)):
             return False
         return self.column == other.column
 
@@ -457,11 +457,11 @@ def main(args):
     slices_file = args.output_file
 
     with open(graph_file, 'rb') as f:
-        graph = dill.load(f)
+        graph = pickle.load(f)
     donations = get_all_donations(graph, filename=args.input_file)
 
     with open(slices_file, 'wb') as f:
-        dill.dump(donations, f)
+        pickle.dump(donations, f)
 
 
 

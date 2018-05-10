@@ -1,15 +1,15 @@
 from argparse import ArgumentParser
 import ast
 from collections import defaultdict
+import pickle
 import textwrap
 
 from astunparse import unparse
-import dill
 import networkx as nx
 import pandas as pd
 from plpy.analyze.dynamic_trace_events import ExecLine
 
-from .identify_donations import remove_duplicate_graphs, is_dataframe
+from .identify_donations import ColumnUse, ColumnDef, remove_duplicate_graphs, is_dataframe
 
 
 ### Parameters and Return values ###
@@ -421,7 +421,7 @@ def lift_to_functions(graphs, script_src, name_format=None, name_counter=None):
 
 def main(args):
     with open(args.graph_file, 'rb') as f:
-        graphs = dill.load(f)
+        graphs = pickle.load(f)
 
     with open(args.src_file, 'r') as f:
         script_src = f.read()
@@ -430,7 +430,7 @@ def main(args):
     print('Collected {} functions'.format(len(functions)))
 
     with open(args.output_file, 'wb') as f:
-        dill.dump(functions, f)
+        pickle.dump(functions, f)
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Lift collection of donation graphs to Python functions')
