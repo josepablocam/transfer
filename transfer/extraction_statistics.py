@@ -144,7 +144,7 @@ def print_failed_trace(summary_df, regex):
         print('No trace collection failures')
 
     if regex:
-        print(create_regex(summary_df))
+        print(create_regex(failed))
 
 def print_failed_graph(summary_df, regex):
     has_trace = summary_df['has_trace']
@@ -158,7 +158,7 @@ def print_failed_graph(summary_df, regex):
         print('No graph building failures')
 
     if regex:
-        print(create_regex(summary_df))
+        print(create_regex(failed))
 
 def main(args):
     summary_df = summarize(args.scripts_dir, args.results_dir)
