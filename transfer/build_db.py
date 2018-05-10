@@ -24,20 +24,22 @@ class RelationshipTypes(Enum):
     WRANGLES_FOR = 4
 
 def get_function_full_name(elem):
-    if isinstance(elem, dict):
+    if isinstance(elem, str):
+        return elem
+    elif isinstance(elem, dict):
         call_details = elem
         modulename = call_details['module']
         qualname = call_details['qualname']
         co_name = call_details['co_name']
-    elif inspect.isfunction(elem) or inspect.ismethod(elem):
-        fun = elem
-        modulename = fun.getattr('__module__', None)
-        qualname = fun.getattr('__qualname__', None)
-        code = fun.getattr('__code__', None)
-        co_name = '' if code is None else code.co_name
     else:
-        raise ValueError('Unknown elem type for function full name: {}'.type(elem))
-
+        try:
+            fun = elem
+            modulename = getattr(fun, '__module__', None)
+            qualname = getattr(fun, '__qualname__', None)
+            code = getattr(fun, '__code__', None)
+            co_name = '' if code is None else code.co_name
+        except AttributeError:
+            raise ValueError('Unable to compute full_name from {}, provide string of name'.format(elem))
     full_name = []
     full_name.append('' if modulename is None else modulename + '.')
     full_name.append(co_name if qualname is None else qualname)
@@ -91,6 +93,7 @@ class FunctionDatabase(object):
         self.selectors = None
         # maintain a global count of functions extracted and added
         self.fun_counter = 0
+        self._has_started_up = False
 
     def startup(self):
         self.graph_db = py2neo.Graph()
@@ -98,10 +101,12 @@ class FunctionDatabase(object):
         # setup selectors
         for node_type in NodeTypes:
             self.selectors[node_type] = py2neo.NodeSelector(self.graph_db).select(node_type.name)
+        self._has_started_up = True
 
     def shutdown(self):
         self.graph_db = None
         self.selectors = {}
+        self._has_started_up = False
 
     def _get_or_create_node(self, node_type, **kwargs):
         name = kwargs['name']
@@ -159,12 +164,16 @@ class FunctionDatabase(object):
         return extracted_node
 
     def populate(self, funs, program_graph=None):
+        if not self._has_started_up:
+            raise Exception('Must start database by running self.startup()')
         for f in funs:
             # we can add some more info if we have the complete program graph
             # though we can still do useful things without it
             self.add_extracted_function(f, program_graph=program_graph)
 
     def _run_relationship_query(self, start_node, rel_type, end_node, _lambda=None):
+        if not self._has_started_up:
+            raise Exception('Must start database by running self.startup()')
         if _lambda is None:
             _lambda = lambda x: x
         results = []
@@ -172,20 +181,16 @@ class FunctionDatabase(object):
             results.append(_lambda(rel))
         return results
 
-    # Querying API
-    def calls(self, fun, start_node=None, _lambda=None):
-        if _lambda is None:
-            _lambda = lambda x: x.start_node()
-        qualname = get_function_full_name(fun) if fun is not None else None
-        end_node = self.selectors[NodeTypes.FUNCTION].where(name=qualname).first()
-        if end_node is None and fun is not None:
-            return []
-        return self._run_relationship_query(start_node, RelationshipTypes.CALLS, end_node, _lambda)
+    def _get_selector(self, node_type):
+        if not self._has_started_up:
+            raise Exception('Must start database by running self.startup()')
+        return self.selectors[node_type]
 
+    # Querying API
     def defines(self, column_name, start_node=None, _lambda=None):
         if _lambda is None:
             _lambda = lambda x: x.start_node()
-        end_node = self.selectors[NodeTypes.COLUMN].where(name=column_name).first()
+        end_node = self._get_selector(NodeTypes.COLUMN).where(name=column_name).first()
         if end_node is None and column_name is not None:
             return []
         return self._run_relationship_query(start_node, RelationshipTypes.DEFINES, end_node, _lambda)
@@ -193,40 +198,49 @@ class FunctionDatabase(object):
     def uses(self, column_name, start_node=None, _lambda=None):
         if _lambda is None:
             _lambda = lambda x: x.start_node()
-        end_node = self.selectors[NodeTypes.COLUMN].where(name=column_name).first()
+        end_node = self._get_selector(NodeTypes.COLUMN).where(name=column_name).first()
         if end_node is None and column_name is not None:
             return []
         return self._run_relationship_query(start_node, RelationshipTypes.USES, end_node, _lambda)
 
+    def calls(self, fun, start_node=None, _lambda=None):
+        if _lambda is None:
+            _lambda = lambda x: x.start_node()
+        full_name = get_function_full_name(fun) if fun is not None else None
+        end_node = self._get_selector(NodeTypes.FUNCTION).where(name=full_name).first()
+        if end_node is None and fun is not None:
+            return []
+        return self._run_relationship_query(start_node, RelationshipTypes.CALLS, end_node, _lambda)
+
     def wrangles_for(self, fun, start_node=None, _lambda=None):
         if _lambda is None:
             _lambda = lambda x: x.start_node()
-        qualname = get_function_full_name(fun) if fun is not None else None
-        end_node = self.selectors[NodeTypes.FUNCTION].where(name=qualname).first()
+        full_name = get_function_full_name(fun) if fun is not None else None
+        end_node = self._get_selector(NodeTypes.FUNCTION).where(name=full_name).first()
         if end_node is None and fun is not None:
             return []
         return self._run_relationship_query(start_node, RelationshipTypes.WRANGLES_FOR, end_node, _lambda)
 
-    # def query_by_relationships(self, relationship_tuples):
-    #     if isinstance(relationship_tuples, tuple):
-    #         relationship_tuples = [relationship_tuples]
-    #     criteria = set(relationship_tuples)
-    #     query_results = set([])
-    #     query_handler = {
-    #         RelationshipTypes.CALLS:self.calls,
-    #         RelationshipTypes.DEFINES:self.defines,
-    #         RelationshipTypes.USES:self.uses,
-    #         RelationshipTypes.WRANGLES_FOR:self.wrangles_for,
-    #     }
-    #
-    #     while criteria:
-    #         relationship_type, end_node_value = criteria.pop()
-    #         query_fun = query_handler.get(relationship_type, None)
-    #         if query_fun is None:
-    #             raise ValueError('Invalid relation type: {}'.format(relationship_type))
-    #         query_results.update(query_fun(end_node_value))
-    #
-    #     return query_results
+    def query_by_relationships(self, relationship_tuples):
+        if isinstance(relationship_tuples, tuple):
+            relationship_tuples = [relationship_tuples]
+        criteria = set(relationship_tuples)
+        query_results = set([])
+        query_handler = {
+            RelationshipTypes.CALLS:        self.calls,
+            RelationshipTypes.DEFINES:      self.defines,
+            RelationshipTypes.USES:         self.uses,
+            RelationshipTypes.WRANGLES_FOR: self.wrangles_for,
+        }
+
+        while criteria:
+            relationship_type, end_node_value = criteria.pop()
+            query_fun = query_handler.get(relationship_type, None)
+            if query_fun is None:
+                raise ValueError('Invalid relation type: {}'.format(relationship_type))
+            query_results.update(query_fun(end_node_value))
+
+        return query_results
 
     def get_function_from_node(self, node):
         if not node.has_label(NodeTypes.EXTRACTED_FUNCTION.name):
@@ -235,13 +249,13 @@ class FunctionDatabase(object):
         return self.id_to_fun[_id]
 
     def functions(self):
-        return list(self.selectors[NodeTypes.FUNCTION])
+        return list(self._get_selector(NodeTypes.FUNCTION))
 
     def extracted_functions(self):
-        return list(self.selectors[NodeTypes.EXTRACTED_FUNCTION])
+        return list(self._get_selector(NodeTypes.EXTRACTED_FUNCTION))
 
     def columns(self):
-        return list(self.selectors[NodeTypes.COLUMN])
+        return list(self._get_selector(NodeTypes.COLUMN))
 
 
 def main(args):
