@@ -1,7 +1,9 @@
 import ast
 import argparse
 import os
+import pickle
 import shutil
+import subprocess
 import sys
 import tempfile
 import textwrap
@@ -115,10 +117,24 @@ def from_source_to_functions(src, tempdir):
         loop_bound=2,
         memory_refinement=1,
         log=None,
+        plain=False,
     )
     run_pipeline.main(args)
 
     functions_path = build_script_paths(script_path)['functions_path']
+    # horrible hack (but for some reason pickle failing within pytest)
+    # even after importing DonatedFunction into the module
+    hack = """
+    import dill
+    from transfer.lift_donations import DonatedFunction
+    with open('{0}', 'rb') as f:
+        functions = dill.load(f)
+    with open('{0}', 'wb') as f:
+        dill.dump(functions, f)
+    """.format(functions_path)
+    hack = textwrap.dedent(hack)
+    subprocess.call(['python', '-c', hack])
+
     with open(functions_path, 'rb') as f:
         functions = dill.load(f)
 
@@ -200,7 +216,6 @@ def test_lift_functions(src, expected_src):
     dummy_data = pd.DataFrame([(1, 2), (3, 4)], columns=['c1', 'c2'])
     dummy_data.to_csv(data_path, index=False)
 
-    from transfer.lift_donations import DonatedFunction
     functions = from_source_to_functions(src, tempdir)
     assert len(functions) == 1
     function = functions[0]
