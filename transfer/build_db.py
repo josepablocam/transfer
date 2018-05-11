@@ -46,6 +46,15 @@ def get_function_full_name(elem):
     full_name =  ''.join(full_name)
     return None if full_name == '' else full_name
 
+def get_column_name(elem):
+    if isinstance(elem, str):
+        return elem
+    elif isinstance(elem, py2neo.Node):
+        assert elem.has_label(NodeTypes.COLUMN.name)
+        return elem['name']
+    else:
+        raise ValueError('Unable to compute column_name from {}, provide string of name'.format(elem))
+
 def get_wrangles_for(fun, program_graph):
     # use node id for the value associated with the return
     _return_node_id = max(fun.graph.nodes)
@@ -195,6 +204,7 @@ class FunctionDatabase(object):
     def defines(self, column_name, start_node=None, _lambda=None):
         if _lambda is None:
             _lambda = lambda x: x.start_node()
+        column_name = get_column_name(column_name)
         end_node = self._get_selector(NodeTypes.COLUMN).where(name=column_name).first()
         if end_node is None and column_name is not None:
             return []
@@ -203,6 +213,7 @@ class FunctionDatabase(object):
     def uses(self, column_name, start_node=None, _lambda=None):
         if _lambda is None:
             _lambda = lambda x: x.start_node()
+        column_name = get_column_name(column_name)
         end_node = self._get_selector(NodeTypes.COLUMN).where(name=column_name).first()
         if end_node is None and column_name is not None:
             return []
