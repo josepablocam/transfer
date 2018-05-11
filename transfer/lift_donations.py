@@ -423,13 +423,13 @@ def lift_to_functions(graphs, script_src, name_format=None, name_counter=None):
 
 
 def main(args):
-    with open(args.graph_file, 'rb') as f:
-        graphs = pickle.load(f)
+    with open(args.donations_file, 'rb') as f:
+        donations = pickle.load(f)
 
     with open(args.src_file, 'r') as f:
         script_src = f.read()
 
-    functions = lift_to_functions(graphs, script_src, name_format=args.name_format, name_counter=args.name_counter)
+    functions = lift_to_functions(donations, script_src, name_format=args.name_format, name_counter=args.name_counter)
     print('Collected {} functions'.format(len(functions)))
 
     with open(args.output_file, 'wb') as f:
@@ -437,7 +437,7 @@ def main(args):
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Lift collection of donation graphs to Python functions')
-    parser.add_argument('graph_file', type=str, help='Path to pickled donation graphs')
+    parser.add_argument('donations_file', type=str, help='Path to pickled donation graphs')
     parser.add_argument('src_file', type=str, help='Path to original user script to collect additional defs')
     parser.add_argument('output_file', type=str, help='Path to store pickled functions')
     parser.add_argument('-n', '--name_format', type=str, help='String formatting for function name', default='cleaning_func_%d')
