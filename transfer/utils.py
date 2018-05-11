@@ -1,4 +1,5 @@
 import os
+import tabulate
 
 def build_script_paths(script_path, output_dir=None):
     script_dir = os.path.dirname(script_path)
@@ -14,3 +15,6 @@ def build_script_paths(script_path, output_dir=None):
         functions_path = os.path.join(output_dir, basename + '_functions.pkl'),
     )
     return paths
+
+def print_df(df):
+    print(tabulate.tabulate(df, headers='keys', tablefmt='grid', showindex=False))

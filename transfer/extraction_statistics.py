@@ -10,15 +10,12 @@ plt.ion()
 import networkx as nx
 import numpy as np
 import pandas as pd
-import tabulate
 from plpy.analyze.dynamic_tracer import DynamicDataTracer
 
 from .identify_donations import ColumnUse, ColumnDef, remove_duplicate_graphs
 from .lift_donations import DonatedFunction
-from .utils import build_script_paths
+from .utils import build_script_paths, print_df
 
-def print_df(df):
-    print(tabulate.tabulate(df, headers='keys', tablefmt='grid', showindex=False))
 
 def summarize_lifted(lifted_path):
     if not os.path.exists(lifted_path):
