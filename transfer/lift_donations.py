@@ -180,7 +180,7 @@ class CollectUserDefinedCallableBodies(ast.NodeVisitor):
     def visit_Name(self, node):
         if self.inside_callable and node.id in self.names:
             enclosing_name = self.inside_callable[-1]
-            self.name_to_dependencies[enclosing_name].append(node.id)
+            self.name_to_dependencies[enclosing_name].add(node.id)
 
     def visit_FunctionDef(self, node):
         self.name_to_body[node.name] = unparse(node)
@@ -194,26 +194,29 @@ class CollectUserDefinedCallableBodies(ast.NodeVisitor):
         self.generic_visit(node)
         self.inside_callable.pop()
 
-    def _populate_user_def_code0(self, name):
+    def _populate_user_def_code0(self, name, already_added):
         # this is recursive for now, for clarity, but Python
         # can hit recursion error pretty easily. shouldn't be an issue
         # here since the definitions are likely not to be deeply nested
         if name in self.name_to_complete_code:
-            return self.name_to_complete_code[extra]
+            return self.name_to_complete_code[name]
         else:
             code = []
             code.append(self.name_to_body[name])
+            already_added.add(name)
 
             depends_on = self.name_to_dependencies[name]
+            # remove things we already added before
+            depends_on = [d for d in depends_on if not d in already_added]
             for dep in depends_on:
-                code.extend(self._populate_user_def_code0(dep))
+                code.extend(self._populate_user_def_code0(dep, already_added))
 
             self.name_to_complete_code[name] = code
             return code
 
     def _populate_user_def_code(self):
         for name in self.names:
-            self._populate_user_def_code0(name)
+            self._populate_user_def_code0(name, set([]))
 
     def run(self, tree):
         self.visit(tree)
