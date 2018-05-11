@@ -12,8 +12,6 @@ from plpy.analyze.dynamic_tracer import to_ast_node
 from plpy.analyze.dynamic_trace_events import ExecLine, MemoryUpdate
 
 
-# will produce false positives for attributes that match a column name
-# TODO: we can fix this using the type information we collect for defs/uses
 class PossibleColumnCollector(ast.NodeVisitor):
     def __init__(self):
         self.acc = []
@@ -38,8 +36,6 @@ class PossibleColumnCollector(ast.NodeVisitor):
         self.visit(tree)
         return set(self.acc)
 
-# TODO: would it be better to compute the columns assigned/used based on the memory locations?
-# TODO: we can use types to figure out if its actually a column
 def type_to_str(_type):
     return _type.__qualname__ if isinstance(_type, type) else _type
 
@@ -55,6 +51,7 @@ def is_index(type_str):
     type_str = type_to_str(type_str)
     return type_str == pd.Index.__qualname__
 
+# TODO: should we use complete_defs?
 def has_possible_table_info(node_data):
     refs = set([])
     if node_data['defs']:
@@ -66,9 +63,27 @@ def has_possible_table_info(node_data):
             return True
     return False
 
+def known_possible_columns(node_data, field):
+    cols = set([])
+    found_columns = False
+    if node_data[field]:
+        for n in node_data[field]:
+            if 'columns' in n.extra:
+                found_columns = True
+                cols.update(n.extra['columns'])
+    if found_columns:
+        return cols
+    else:
+        # there are conditions where we might not be able to get
+        # known columns, in such a case, we avoid excluding
+        # possible columns...
+        return None
+
 def columns_assigned_to(node_data):
     if not has_possible_table_info(node_data):
         return set([])
+
+    known = known_possible_columns(node_data, 'defs')
 
     try:
         ast_node = to_ast_node(node_data['src'])
@@ -92,11 +107,15 @@ def columns_assigned_to(node_data):
     for node in lhs:
         cols_assigned.update(PossibleColumnCollector().run(node))
 
+    if known is not None:
+        cols_assigned = cols_assigned.intersection(known)
     return cols_assigned
 
 def columns_used(node_data):
     if not has_possible_table_info(node_data):
         return set([])
+
+    known = known_possible_columns(node_data, 'uses')
 
     try:
         ast_node = to_ast_node(node_data['src'])
@@ -106,7 +125,12 @@ def columns_used(node_data):
     # FIXME: we should consider the lhs of augmente assigne as used as well
     if isinstance(ast_node, (ast.Assign, ast.AugAssign)):
         ast_node = ast_node.value
-    return PossibleColumnCollector().run(ast_node)
+
+    cols_used = PossibleColumnCollector().run(ast_node)
+
+    if known is not None:
+        cols_used = cols_used.intersection(known)
+    return cols_used
 
 def annotate_graph(graph):
     for node_id, node_data in graph.nodes(data=True):
