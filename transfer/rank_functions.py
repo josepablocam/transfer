@@ -10,6 +10,7 @@ import tqdm
 import zss
 
 from .lift_donations import DonatedFunction
+from .utils import sort_by_values
 
 class FunctionDistanceComputer(ABC):
     """
@@ -202,6 +203,8 @@ class BinaryRelationshipDataPreparer(LearningDataPreparer):
         self.db.startup()
         X_data = []
         y_data = []
+        ref_query_elems = []
+        ref_result_elems = []
 
         if query_elems is None:
             query_elems = self.db.extracted_functions()
@@ -238,6 +241,8 @@ class BinaryRelationshipDataPreparer(LearningDataPreparer):
                 row.update(query_feats)
                 row.update(result_feats)
                 X_data.append(row)
+                ref_query_elems.append(query_elem)
+                ref_result_elems.append(result_node)
 
                 if query_fun is not None:
                     dist = self.distance_computer.distance(query_fun, result_fun)
@@ -249,11 +254,15 @@ class BinaryRelationshipDataPreparer(LearningDataPreparer):
 
         X_matrix = self.vectorizer.transform(X_data)
         y_vec = np.array(y_data)
-        return X_matrix, y_vec
+        ref_query_elems_vec = np.array(ref_query_elems)
+        ref_result_elems_vec = np.array(ref_result_elems)
+        return X_matrix, y_vec, ref_query_elems_vec, ref_result_elems_vec
 
 
 def rank_query_results(data_preparer, model, rels_for_query, query_results):
     X, _ = data_preparer.prepare(rels_for_query, query_results)
-    predicted_dists = model.predict(query_results)
-    query_results = sorted(zip(query_results, predicted_dists), key=lambda x: x[1])
-    return [r for r, _ in query_results]
+    predicted_distances = model.predict(X)
+    # use to break ties deterministically
+    result_names = [n['name'] for n in query_results]
+    rank_metric = list(zip(predicted_distances, result_names))
+    return sort_by_values(query_results, rank_metric)
