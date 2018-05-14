@@ -3,6 +3,7 @@
 
 from argparse import ArgumentParser
 from enum import Enum
+import glob
 import pickle
 import inspect
 
@@ -285,8 +286,8 @@ class FunctionDatabase(object):
 
 
 def main(args):
-    functions_files = args.functions_files_list.split(',')
-    graph_files = args.graph_files_list.split(',')
+    functions_files = glob.glob(args.functions_file_pattern)
+    graph_files = glob.glob(args.graph_file_pattern)
 
     if len(functions_files) != len(graph_files):
         raise Exception('Must provide same number of input and graph files')
@@ -295,6 +296,7 @@ def main(args):
     db.startup()
 
     for funs_file, graph_file in zip(functions_files, graph_files):
+        assert funs_file.split('_')[:-1] == graph_file.split('_')[:-1], 'Mismatched files'
         print('Populating database with functions from {}'.format(funs_file))
         print('Using graph file:{}'.format(graph_file))
         # functions we extracted
@@ -313,8 +315,8 @@ def main(args):
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Populate graph database with donated functions')
-    parser.add_argument('functions_files_list', type=str, help='CSV list of paths to pickled donated function files')
-    parser.add_argument('graph_files_list', type=str, help='CSV list of paths to pickled program dependency graph files')
+    parser.add_argument('functions_file_pattern', type=str, help='Glob pattern to pickled donated function files')
+    parser.add_argument('graph_file_pattern', type=str, help='Glob pattern to pickled program dependency graph files')
     parser.add_argument('-o', '--output_file', type=str, help='Path to store database', default='boruca.pkl')
     args = parser.parse_args()
 
