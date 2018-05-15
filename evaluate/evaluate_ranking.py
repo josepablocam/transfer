@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import scipy.stats
 import sklearn.linear_model
+import sklearn.tree
 import tqdm
 
 from transfer.build_db import *
@@ -50,7 +51,7 @@ def load_distance_computer(db, distance_computer):
         else:
             obj = load_distance_computer(db, None)
             with open(distance_computer, 'wb') as f:
-                f.write(obj)
+                pickle.dump(obj, f)
             return obj
     else:
         raise ValueError('Invalid distance computer')
@@ -167,7 +168,7 @@ def run(db, n_iters, model_constuctors, distance_computer=None):
                         # evaluate ranking relative to ideal
                         optimally_ranked_results_names = [n['name'] for n in optimally_ranked_results]
                         pred_ranked_results_names = [n['name'] for n in pred_ranked_results]
-                        info['spearman_corr'], info['pval'] = spearman_correlation(
+                        info['spearman_corr'], info['spearman_pval'] = spearman_correlation(
                             optimally_ranked_results_names,
                             pred_ranked_results_names
                             )
@@ -185,7 +186,11 @@ def main(args):
     # pre-set for now...
     model_constructors = [
         lambda: sklearn.linear_model.LinearRegression(),
-        lambda: BaselineRandomRegressor(1),
+        lambda: sklearn.linear_model.Ridge(),
+        lambda: sklearn.linear_model.Lasso(),
+        lambda: sklearn.linear_model.ElasticNet(),
+        lambda: sklearn.tree.DecisionTreeRegressor(),
+        lambda: BaselineRandomRegressor(),
     ]
 
     database_file = args.database_file
