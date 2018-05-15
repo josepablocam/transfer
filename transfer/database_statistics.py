@@ -6,7 +6,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 import pandas as pd
 
 from .build_db import FunctionDatabase, NodeTypes, RelationshipTypes
-from .utils import print_df
+from .utils import print_df, plot_df_table
 
 
 def get_node_label(node):
@@ -38,16 +38,9 @@ def compute_basic_db_distributions(db, top_n=None):
     node_ct_df = pd.DataFrame(list(zip(node_types, node_cts)), columns=['node_type', 'ct'])
     print_df(node_ct_df)
 
-    _, ax = plt.subplots(1)
-    ax.table(
-        cellText=node_ct_df['ct'].map(lambda x: [str(x)]).values,
-        rowLabels=node_ct_df['node_type'].values,
-        colLabels=['count'],
-        loc='center'
-        )
-    ax.set_title('Node Type Distribution')
-    plt.axis('off')
-    plots.append(ax)
+    table_plot = plot_df_table(node_ct_df)
+    table_plot.set_title('Node Type Distribution')
+    plots.append(table_plot)
 
     rel_data = []
     for f in funs:

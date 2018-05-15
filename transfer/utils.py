@@ -19,6 +19,20 @@ def build_script_paths(script_path, output_dir=None):
 def print_df(df):
     print(tabulate.tabulate(df, headers='keys', tablefmt='grid', showindex=False))
 
+
+def plot_df_table(df):
+    import matplotlib.pyplot as plt
+    _, ax = plt.subplots(1)
+    ax.table(
+        cellText=df.values.astype(str).tolist(),
+        rowLabels=None,
+        colLabels=df.columns.tolist(),
+        loc='center'
+    )
+    plt.axis('off')
+    return ax
+
+
 def sort_by_values(orig_ls, vals, reverse=False):
     ls_and_vals = list(zip(orig_ls, vals))
     ls_and_vals = sorted(ls_and_vals, key=lambda x: x[1], reverse=reverse)
