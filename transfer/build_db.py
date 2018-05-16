@@ -109,6 +109,8 @@ class FunctionDatabase(object):
         # maintain a global count of functions extracted and added
         self.fun_counter = 0
         self._has_started_up = False
+        # accumulate function bodies to avoid duplicates
+        self.function_acc = set([])
 
     def startup(self):
         self.graph_db = py2neo.Graph()
@@ -182,9 +184,14 @@ class FunctionDatabase(object):
         if not self._has_started_up:
             raise Exception('Must start database by running self.startup()')
         for f in funs:
-            # we can add some more info if we have the complete program graph
-            # though we can still do useful things without it
-            self.add_extracted_function(f, program_graph=program_graph)
+            # some functions can be duplicated across programs
+            # TODO: should we highlight these somehow? Seems they are useful
+            # if multiple programs have them
+            if not tuple(f.cleaning_code) in self.function_acc:
+                # we can add some more info if we have the complete program graph
+                # though we can still do useful things without it
+                self.add_extracted_function(f, program_graph=program_graph)
+                self.function_acc.add(tuple(f.cleaning_code))
 
     def _run_relationship_query(self, start_node, rel_type, end_node, _lambda=None):
         if not self._has_started_up:
