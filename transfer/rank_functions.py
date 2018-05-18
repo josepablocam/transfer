@@ -157,6 +157,13 @@ class SourceCodeStringDistance(FunctionDistanceComputer):
         src_2 = self.get_string(function_2)
         return self.str_dist_fun(src_1, src_2)
 
+def get_distance_computer_by_type(distance_type):
+    if distance_type == 'string':
+        return SourceCodeStringDistance('levenshtein')
+    elif distance_type == 'tree':
+        return ZhangShashaTreeDistance()
+    else:
+        raise Exception('invalid source code distance type (must be one of string or tree)')
 
 class LearningDataPreparer(ABC):
     def prepare(self, db):
