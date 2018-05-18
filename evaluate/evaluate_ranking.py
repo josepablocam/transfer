@@ -24,8 +24,8 @@ def get_test_file_info_from_db(db):
         info[graph_file_name].append(n)
     return info
 
-def precompute_distances(db):
-    distance_computer = SourceCodeStringDistance('levenshtein')
+def precompute_distances(db, distance_type):
+    distance_computer = get_distance_computer_by_type(distance_type)
     funs = db.extracted_functions()
     print('Pre-computing distances')
     # compute and caches underneath covers
@@ -36,9 +36,9 @@ def precompute_distances(db):
             distance_computer.distance(f1, f2)
     return distance_computer
 
-def load_distance_computer(db, distance_computer):
+def load_distance_computer(db, distance_computer, distance_type):
     if distance_computer is None:
-        obj = precompute_distances(db)
+        obj = precompute_distances(db, distance_type)
         return obj
     elif isinstance(distance_computer, FunctionDistanceComputer):
         return distance_computer
@@ -49,7 +49,7 @@ def load_distance_computer(db, distance_computer):
                 obj = pickle.load(f)
             return obj
         else:
-            obj = load_distance_computer(db, None)
+            obj = load_distance_computer(db, None, distance_type)
             with open(distance_computer, 'wb') as f:
                 pickle.dump(obj, f)
             return obj
@@ -105,8 +105,10 @@ class BaselineRandomRegressor(object):
         return self.random_state.uniform(size=X.shape[0])
 
 
-def run(db, n_iters, model_constuctors, distance_computer=None):
-    distance_computer = load_distance_computer(db, distance_computer)
+def run(db, n_iters, model_constuctors, distance_computer=None, distance_type=None):
+    if distance_type is None:
+        distance_type = 'string'
+    distance_computer = load_distance_computer(db, distance_computer, distance_type)
     data = []
     test_file_info = get_test_file_info_from_db(db)
 
@@ -199,7 +201,8 @@ def main(args):
     db.startup()
     n_iters = args.n_iters
     distance_computer = args.distance_computer
-    result_df = run(db, n_iters, model_constructors, distance_computer=distance_computer)
+    distance_type=args.distance_type
+    result_df = run(db, n_iters, model_constructors, distance_computer=distance_computer, distance_type=distance_type)
     result_df.to_pickle(args.output_path)
     db.shutdown()
 
@@ -208,6 +211,7 @@ if __name__ == '__main__':
     parser.add_argument('database_file', type=str, help='Pickled database interface file')
     parser.add_argument('n_iters', type=int, help='Number of iterations for each test_node')
     parser.add_argument('output_path', type=str, help='Path to store pickled dataframe with evaluation raw data')
+    parser.add_argument('-t', '--distance_type', type=str, help='Type of distance computation', default='string')
     parser.add_argument('-d', '--distance_computer', type=str, help='Path to existing (or desired location for storage) for distance computer')
     args = parser.parse_args()
     try:
