@@ -16,7 +16,6 @@ from selenium.webdriver.support import expected_conditions as EC
 import tqdm
 import wget
 
-
 WINDOW_WIDTH = 1000
 WINDOW_HEIGHT = 500
 
@@ -30,14 +29,22 @@ log = logging.getLogger(__name__)
 def parse_source(page_source):
     return BeautifulSoup(page_source, 'html5lib')
 
+
 def make_browser():
     browser = webdriver.Firefox()
     # make sure we don't get mobile websites by setting size
     browser.set_window_size(WINDOW_WIDTH, WINDOW_HEIGHT)
     return browser
 
+
 class KaggleCrawler(object):
-    def __init__(self, kernels_url, output_dir, language='Python', sort_by='Most Votes'):
+    def __init__(
+        self,
+        kernels_url,
+        output_dir,
+        language='Python',
+        sort_by='Most Votes'
+    ):
         self.kernels_url = kernels_url
         # specify crawl kernel parameters
         self.language = language
@@ -60,9 +67,14 @@ class KaggleCrawler(object):
     @staticmethod
     def get_dropdown_constants():
         menus = {
-            'language': set(['Languages', 'Julia', 'R', 'Python', 'SQLite']),
-            'sort'    : set(['Hotness', 'Most Votes', 'Most Comments', 'Recently Created', 'Recently Run']),
-          }
+            'language':
+            set(['Languages', 'Julia', 'R', 'Python', 'SQLite']),
+            'sort':
+            set([
+                'Hotness', 'Most Votes', 'Most Comments', 'Recently Created',
+                'Recently Run'
+            ]),
+        }
         return menus
 
     @staticmethod
@@ -70,13 +82,18 @@ class KaggleCrawler(object):
         """ Possible options in particular drop down menu """
         drop_down_constants = KaggleCrawler.get_dropdown_constants()
         if not which in drop_down_constants.keys():
-            raise ValueError("Drop down menu must be one of %s: %s" % (drop_down_constants.keys(), which))
+            raise ValueError(
+                "Drop down menu must be one of %s: %s" %
+                (drop_down_constants.keys(), which)
+            )
         return drop_down_constants[which]
 
     def _get_drop_down(self, which):
         """ Find dropdown in website by identifying one of the options """
         # retrieve all possible drop downs
-        dropdowns = self.browser.find_elements_by_xpath("//div[contains(@class, 'Select-value')]")
+        dropdowns = self.browser.find_elements_by_xpath(
+            "//div[contains(@class, 'Select-value')]"
+        )
         options = self._get_drop_down_options(which)
         for d in dropdowns:
             if d.text in options:
@@ -85,13 +102,17 @@ class KaggleCrawler(object):
 
     def _get_drop_down_list_elem(self, dropdown):
         dropdown.click()
-        elems = self.browser.find_elements_by_xpath("//div[contains(@class, 'Select-input')]")
+        elems = self.browser.find_elements_by_xpath(
+            "//div[contains(@class, 'Select-input')]"
+        )
         expanded = []
         for elem in elems:
             if elem.get_attribute('aria-expanded') == 'true':
                 expanded.append(elem)
         if len(expanded) > 1:
-            print('Warning: multiple drop down menus are expanded, returning first')
+            print(
+                'Warning: multiple drop down menus are expanded, returning first'
+            )
         return expanded[0]
 
     def _select_drop_down(self, which, option):
@@ -99,7 +120,9 @@ class KaggleCrawler(object):
         drop_down = self._get_drop_down(which)
         options = self._get_drop_down_options(which)
         if not option.upper() in map(lambda x: x.upper(), options):
-            raise ValueError("No such option for menu %s: %s" % (which, option))
+            raise ValueError(
+                "No such option for menu %s: %s" % (which, option)
+            )
 
         # we need to get the dropdown list from the Select-value element
         dropdown_list = self._get_drop_down_list_elem(drop_down)
@@ -132,21 +155,29 @@ class KaggleCrawler(object):
     def _scroll_pg_down(self):
         """ Raw scroll, returns after executing, even if loading is not done """
         # scroll by entire page
-        self.browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        self.browser.execute_script(
+            "window.scrollTo(0, document.body.scrollHeight);"
+        )
         # and scroll to see loading message
-        self.browser.execute_script("window.scrollTo(0, document.body.scrollHeight - 10);")
+        self.browser.execute_script(
+            "window.scrollTo(0, document.body.scrollHeight - 10);"
+        )
 
     def _blocked_scroll_down(self, delay):
         """ Blocked scroll down. Checks that message for loading more kernels appears and disappears """
         try:
             # wait until kernel loading message appears/disappears
             wait = WebDriverWait(self.browser, delay)
-            kernels_loading_msg = (By.XPATH, "//*[. = 'Loading more kernels...']")
+            kernels_loading_msg = (
+                By.XPATH, "//*[. = 'Loading more kernels...']"
+            )
             # raw full page scroll
             self._scroll_pg_down()
             # wait until visible
             wait.until(EC.visibility_of_element_located(kernels_loading_msg))
-            wait.until_not(EC.visibility_of_element_located(kernels_loading_msg))
+            wait.until_not(
+                EC.visibility_of_element_located(kernels_loading_msg)
+            )
         except TimeoutException:
             log.warn('Timed out on scroll')
 
@@ -173,21 +204,27 @@ class KaggleCrawler(object):
         return True
 
     def _get_new_kernel_links(self):
-      """
+        """
       Only returns new links (ignores previously downloaded).
       """
-      parsed_src = parse_source(self.browser.page_source)
-      raw_links = parsed_src.findAll('a', {'class': 'block-link__anchor'})
-      raw_links = set([urljoin(self.get_base_url(), link['href']) for link in raw_links])
-      # remove links we've already downloaded or tried to and failed
-      new_links = raw_links - self.downloaded_links - self.failed_links
-      return list(new_links)
+        parsed_src = parse_source(self.browser.page_source)
+        raw_links = parsed_src.findAll('a', {'class': 'block-link__anchor'})
+        raw_links = set([
+            urljoin(self.get_base_url(), link['href']) for link in raw_links
+        ])
+        # remove links we've already downloaded or tried to and failed
+        new_links = raw_links - self.downloaded_links - self.failed_links
+        return list(new_links)
 
     @staticmethod
     def _get_wget_link(kernel_browser):
-        code_tab = kernel_browser.find_element_by_xpath('//span[contains(text(), "Code")]')
+        code_tab = kernel_browser.find_element_by_xpath(
+            '//span[contains(text(), "Code")]'
+        )
         code_tab.click()
-        pane = kernel_browser.find_element_by_class_name('script-code-pane__download')
+        pane = kernel_browser.find_element_by_class_name(
+            'script-code-pane__download'
+        )
         link = pane.get_attribute('href')
         return link
 
@@ -223,18 +260,24 @@ class KaggleCrawler(object):
         ct_downloaded = 0
 
         sources_file = open(os.path.join(self.output_dir, 'sources.txt'), 'w')
-        log.info('Writing sources for downloaded files to {}'.format(sources_file))
+        log.info(
+            'Writing sources for downloaded files to {}'.format(sources_file)
+        )
 
         while scroll_failure_budget > 0:
             # scroll to find new links
-            scrolled = self._infinite_scroll_kernels(n_scrolls=n_scrolls, batch_size=batch_size)
+            scrolled = self._infinite_scroll_kernels(
+                n_scrolls=n_scrolls, batch_size=batch_size
+            )
             scroll_failure_budget -= 1 if not scrolled else 0
             new_links = self._get_new_kernel_links()
             for link in tqdm.tqdm(new_links):
                 # use same browser, to avoid openning a ton of firefox windows
                 try:
                     filename = 'kernel_%d' % ct_downloaded
-                    self._download_source_code(download_browser, link, filename)
+                    self._download_source_code(
+                        download_browser, link, filename
+                    )
                     self.downloaded_links.add(link)
                     sources_file.write('{} = {}\n'.format(filename, link))
                     ct_downloaded += 1
@@ -261,9 +304,20 @@ def main(args):
     finally:
         crawler.cleanup()
 
+
 if __name__ == '__main__':
-    parser = ArgumentParser('Download all kernels from a given dataset by starting at kernels URL')
-    parser.add_argument('kernels_url', type=str, help='URL to kernels homepage for given data set')
-    parser.add_argument('output_dir', type=str, help='Path to existing directory to save kernels')
+    parser = ArgumentParser(
+        'Download all kernels from a given dataset by starting at kernels URL'
+    )
+    parser.add_argument(
+        'kernels_url',
+        type=str,
+        help='URL to kernels homepage for given data set'
+    )
+    parser.add_argument(
+        'output_dir',
+        type=str,
+        help='Path to existing directory to save kernels'
+    )
     args = parser.parse_args()
     main(args)

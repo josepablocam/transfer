@@ -10,7 +10,6 @@ import shutil
 import subprocess
 import tempfile
 
-
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s:%(levelname)s:%(message)s",
@@ -24,13 +23,16 @@ def get_basename(_path, with_ext=True):
         name = '.'.join(name.split('.')[:-1])
     return name
 
+
 def get_ipython_notebooks(input_dir):
     pattern = os.path.join(input_dir, '*.ipynb')
     return glob.glob(pattern)
 
+
 def get_py_scripts(input_dir):
     pattern = os.path.join(input_dir, '*.py')
     return glob.glob(pattern)
+
 
 def check_can_parse(script_path):
     try:
@@ -40,11 +42,16 @@ def check_can_parse(script_path):
     except SyntaxError:
         return False
 
+
 def convert_2_to_3(script_path, output_dir):
-    command = ['2to3', '--write-unchanged-files', '--write', '-n', '--output-dir=%s' % output_dir, script_path]
+    command = [
+        '2to3', '--write-unchanged-files', '--write', '-n',
+        '--output-dir=%s' % output_dir, script_path
+    ]
     subprocess.call(command)
     new_path = os.path.join(output_dir, get_basename(script_path))
     return new_path
+
 
 def convert_notebook_to_script(notebook_path, output_dir):
     # the output here is added on from the notebook_path
@@ -52,8 +59,12 @@ def convert_notebook_to_script(notebook_path, output_dir):
     # relative to '.'
     relative_new_path = os.path.join(output_dir, new_name)
     # make it relative to current directory (where executing...)
-    command = ['jupyter', 'nbconvert', '--to', 'python', notebook_path, '--output', relative_new_path, '--output-dir', '.']
+    command = [
+        'jupyter', 'nbconvert', '--to', 'python', notebook_path, '--output',
+        relative_new_path, '--output-dir', '.'
+    ]
     subprocess.call(command)
+
 
 def filter_scripts(input_dir, output_dir=None):
     if output_dir is None:
@@ -79,6 +90,7 @@ def filter_scripts(input_dir, output_dir=None):
     shutil.rmtree(temp_dir)
     return output_dir
 
+
 def convert_notebooks(input_dir, output_dir=None):
     if output_dir is None:
         output_dir = os.path.join(input_dir, 'converted_notebooks/')
@@ -92,6 +104,7 @@ def convert_notebooks(input_dir, output_dir=None):
 
     return output_dir
 
+
 def filter_candidates(input_dir, parsed_dir, converted_dir):
     # *.py scripts
     filter_scripts(input_dir, parsed_dir)
@@ -102,16 +115,38 @@ def filter_candidates(input_dir, parsed_dir, converted_dir):
     filter_scripts(converted_dir, parsed_dir)
 
     n = len(os.listdir(parsed_dir))
-    print("Filtered down to {} candidates that can be parsed with Python 3.*".format(n))
+    print(
+        "Filtered down to {} candidates that can be parsed with Python 3.*".
+        format(n)
+    )
+
 
 def main(args):
     filter_candidates(args.input_dir, args.parsed_dir, args.converted_dir)
 
+
 if __name__ == "__main__":
-    parser = ArgumentParser(description='Convert ipython notebook kernels to py scripts and filter based on parsing from Python 3.*')
-    parser.add_argument('input_dir', type=str, help='Directory containing Kaggle kernels')
-    parser.add_argument('-o', '--parsed_dir', type=str, help='Directory to store parsed kernels', default='parsed_kernels')
-    parser.add_argument('-c', '--converted_dir', type=str, help='Directory to store converted notebooks', default='converted_notebooks')
+    parser = ArgumentParser(
+        description=
+        'Convert ipython notebook kernels to py scripts and filter based on parsing from Python 3.*'
+    )
+    parser.add_argument(
+        'input_dir', type=str, help='Directory containing Kaggle kernels'
+    )
+    parser.add_argument(
+        '-o',
+        '--parsed_dir',
+        type=str,
+        help='Directory to store parsed kernels',
+        default='parsed_kernels'
+    )
+    parser.add_argument(
+        '-c',
+        '--converted_dir',
+        type=str,
+        help='Directory to store converted notebooks',
+        default='converted_notebooks'
+    )
 
     args = parser.parse_args()
     try:
@@ -119,5 +154,3 @@ if __name__ == "__main__":
     except Exception as err:
         import pdb
         pdb.post_mortem()
-
-

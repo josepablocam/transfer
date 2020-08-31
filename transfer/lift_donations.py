@@ -16,11 +16,13 @@ from .identify_donations import ColumnUse, ColumnDef, remove_duplicate_graphs, i
 def to_ast_node(elem):
     return ast.parse(elem).body[0]
 
+
 def comment_out_nodes(graph, predicate):
     # predicate can check things like if it reads from disk
     for _, node_data in graph.nodes(data=True):
         node_data['treat_as_comment'] = predicate(node_data)
     return graph
+
 
 def is_pandas_read(node_data):
     calls = node_data['calls']
@@ -30,6 +32,7 @@ def is_pandas_read(node_data):
         if call_event.details['qualname'] == pd.read_csv.__qualname__:
             return True
     return False
+
 
 def annotate_dataframe_uses(graph):
     # defined as a load of a reference with a dataframe type
@@ -42,6 +45,7 @@ def annotate_dataframe_uses(graph):
             df_uses = [u for u in uses if u.type == pd.DataFrame.__name__]
             node_data['dataframe_uses'].update(df_uses)
     return graph
+
 
 # TODO: consider that we might want to annotate
 # entire graph with the first/last LHS uses of these references
@@ -56,6 +60,7 @@ def annotate_dataframe_defs(graph):
             df_defs = [d for d in defs if d.type == pd.DataFrame.__name__]
             node_data['dataframe_defs'].update(df_defs)
     return graph
+
 
 def annotate_dataframe_mods(graph):
     # defined as an assignment (LHS) that involves a reference to a dataframe type
@@ -72,8 +77,10 @@ def annotate_dataframe_mods(graph):
             already_defined.update(dataframe_defs)
     return graph
 
+
 def node_data_in_exec_order(graph):
     return sorted(graph.nodes(data=True), key=lambda x: x[1]['event'].event_id)
+
 
 class GetNames(ast.NodeVisitor):
     def __init__(self):
@@ -86,11 +93,13 @@ class GetNames(ast.NodeVisitor):
         self.visit(node)
         return self.acc
 
+
 def can_be_computed(var, defined):
     var_tree = ast.parse(var.name)
     uses_names = GetNames().run(var_tree)
     defined_names = set(d.name for d in defined)
     return uses_names.issubset(defined_names)
+
 
 def get_free_input_dataframes(graph):
     global_free = set([])
@@ -114,6 +123,7 @@ def get_free_input_dataframes(graph):
         defined.update(node_data['complete_defs'])
     return global_free
 
+
 # TODO: should this actually be based exclusively on memory location?
 # currently its name/mem-location
 def get_returnable_dataframes(graph):
@@ -128,6 +138,7 @@ def get_returnable_dataframes(graph):
         returnable.update(node_data['dataframe_mods'])
     return returnable
 
+
 def trim_suffix_trace_based_on_return(graph, return_ref):
     # remove any statements that occur after the last def/modification
     # of a given dataframe ref
@@ -135,7 +146,8 @@ def trim_suffix_trace_based_on_return(graph, return_ref):
     # find last use
     last_lhs_event_id = None
     for node_id, node_data in sorted_by_exec:
-        if return_ref in node_data['dataframe_defs'] or return_ref in node_data['dataframe_mods']:
+        if return_ref in node_data[
+                'dataframe_defs'] or return_ref in node_data['dataframe_mods']:
             last_lhs_event_id = node_data['event'].event_id
     if last_lhs_event_id is None:
         raise Exception('{} never used in graph'.format(return_ref))
@@ -167,6 +179,7 @@ class CollectUserDefinedCallableNames(ast.NodeVisitor):
         # we ignore things that may be private by convention
         if not node.name.startswith('_'):
             self.names.append(node.name)
+
 
 # collect body (and dependencies) for user callables
 class CollectUserDefinedCallableBodies(ast.NodeVisitor):
@@ -240,27 +253,42 @@ def build_user_code_map(tree):
     code_map.run(tree)
     return code_map
 
+
 def get_user_defined_callables(graph, user_code_map):
     names = set([])
     for _, node_data in graph.nodes(data=True):
         # type == 'type' should pick up user defined classes
-        names.update([u.name for u in node_data['uses'] if u.type == 'function' or u.type == 'type'])
+        names.update([
+            u.name for u in node_data['uses']
+            if u.type == 'function' or u.type == 'type'
+        ])
     return user_code_map.get_code(names)
+
 
 def graph_to_lines(graph):
     sorted_nodes = node_data_in_exec_order(graph)
     code = []
     for _, node_data in sorted_nodes:
         line = '{comment_marker}{src}'.format(
-            comment_marker='# ' if node_data.get('treat_as_comment', False) else '',
+            comment_marker='# '
+            if node_data.get('treat_as_comment', False) else '',
             src=node_data['src']
         )
         code.append(line)
     return code
 
+
 ### the donated function class ###
 class DonatedFunction(object):
-    def __init__(self, graph, name, formal_arg_vars, return_var, cleaning_code, context_code=None):
+    def __init__(
+        self,
+        graph,
+        name,
+        formal_arg_vars,
+        return_var,
+        cleaning_code,
+        context_code=None
+    ):
         # make sure to have a copy of the graph backing this function
         # graph has some meta-data we care about as well
         self.graph = graph.to_directed()
@@ -268,15 +296,21 @@ class DonatedFunction(object):
         # function definition
         self.name = name
         # sort by name just for deterministic order
-        self.formal_arg_vars = sorted(list(formal_arg_vars), key=lambda x: x.name)
+        self.formal_arg_vars = sorted(
+            list(formal_arg_vars), key=lambda x: x.name
+        )
         self.return_var = return_var
 
         for arg in self.formal_arg_vars:
             if arg and not self._var_is_name(arg):
-                raise ValueError('Function param must be of type ast.Name: {}'.format(arg))
+                raise ValueError(
+                    'Function param must be of type ast.Name: {}'.format(arg)
+                )
 
         if self.return_var and not self._var_is_name(self.return_var):
-            raise ValueError('Return must be of type ast.Name: {}'.format(self.return_var))
+            raise ValueError(
+                'Return must be of type ast.Name: {}'.format(self.return_var)
+            )
 
         # source code
         self.cleaning_code = cleaning_code
@@ -311,7 +345,9 @@ class DonatedFunction(object):
 
             # context code
             if self.context_code:
-                context_code_lines = ['# additional context code from user definitions']
+                context_code_lines = [
+                    '# additional context code from user definitions'
+                ]
                 for _def in self.context_code:
                     # remove any body-specific indentation prior to adding in
                     _def = textwrap.dedent(_def)
@@ -330,7 +366,9 @@ class DonatedFunction(object):
             core_code_lines = ['# core cleaning code']
             core_code_lines.extend(self.cleaning_code)
             if self.return_var:
-                core_code_lines.append('return {}'.format(self.return_var.name))
+                core_code_lines.append(
+                    'return {}'.format(self.return_var.name)
+                )
             core_code_str = '\n'.join(core_code_lines)
             core_code_str = textwrap.indent(core_code_str, '\t')
 
@@ -406,7 +444,11 @@ def lift_to_functions(graphs, script_src, name_format=None, name_counter=None):
     unique_function_data = []
     for trimmed in unique_trimmed:
         unique_function_data.append(function_data[trimmed.graph['_id']])
-    print('Lifting {} functions after removing duplicates'.format(len(unique_function_data)))
+    print(
+        'Lifting {} functions after removing duplicates'.format(
+            len(unique_function_data)
+        )
+    )
 
     functions = []
     for graph, trimmed_trace, formal_args, _return in unique_function_data:
@@ -415,7 +457,10 @@ def lift_to_functions(graphs, script_src, name_format=None, name_counter=None):
         # convert graph to lines of code
         cleaning_code = graph_to_lines(trimmed_trace)
         function_name = name_format % name_counter
-        func = DonatedFunction(trimmed_trace, function_name, formal_args, _return, cleaning_code, context_code)
+        func = DonatedFunction(
+            trimmed_trace, function_name, formal_args, _return, cleaning_code,
+            context_code
+        )
         functions.append(func)
         name_counter += 1
 
@@ -429,19 +474,47 @@ def main(args):
     with open(args.src_file, 'r') as f:
         script_src = f.read()
 
-    functions = lift_to_functions(donations, script_src, name_format=args.name_format, name_counter=args.name_counter)
+    functions = lift_to_functions(
+        donations,
+        script_src,
+        name_format=args.name_format,
+        name_counter=args.name_counter
+    )
     print('Collected {} functions'.format(len(functions)))
 
     with open(args.output_file, 'wb') as f:
         pickle.dump(functions, f)
 
+
 if __name__ == '__main__':
-    parser = ArgumentParser(description='Lift collection of donation graphs to Python functions')
-    parser.add_argument('donations_file', type=str, help='Path to pickled donation graphs')
-    parser.add_argument('src_file', type=str, help='Path to original user script to collect additional defs')
-    parser.add_argument('output_file', type=str, help='Path to store pickled functions')
-    parser.add_argument('-n', '--name_format', type=str, help='String formatting for function name', default='cleaning_func_%d')
-    parser.add_argument('-c', '--name_counter', type=int, help='Initialize function counter for naming', default=0)
+    parser = ArgumentParser(
+        description='Lift collection of donation graphs to Python functions'
+    )
+    parser.add_argument(
+        'donations_file', type=str, help='Path to pickled donation graphs'
+    )
+    parser.add_argument(
+        'src_file',
+        type=str,
+        help='Path to original user script to collect additional defs'
+    )
+    parser.add_argument(
+        'output_file', type=str, help='Path to store pickled functions'
+    )
+    parser.add_argument(
+        '-n',
+        '--name_format',
+        type=str,
+        help='String formatting for function name',
+        default='cleaning_func_%d'
+    )
+    parser.add_argument(
+        '-c',
+        '--name_counter',
+        type=int,
+        help='Initialize function counter for naming',
+        default=0
+    )
     args = parser.parse_args()
     try:
         main(args)
@@ -449,13 +522,11 @@ if __name__ == '__main__':
         import pdb
         pdb.post_mortem()
 
-
 # TODO:
 # 1 - Try this with other scripts
 # 3 - Try to lift without input args (i.e. don't comment reads out): => basic function executable check
 # 4 - Try lifting more
 # 5 - Start tests for this project: (convert candidates, identify donations, and lift) we'll live without tests for collect (since browser based)
-
 
 # Notes on things we need to do
 # 1 - Repair slices by adding missing variable bindings

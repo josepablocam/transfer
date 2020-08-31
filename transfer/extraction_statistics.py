@@ -1,4 +1,3 @@
-
 from argparse import ArgumentParser
 import glob
 import inspect
@@ -23,6 +22,7 @@ def summarize_lifted(lifted_path):
     else:
         return dict(lifted=True)
 
+
 def summarize_trace(trace_path):
     info = dict(has_trace=False, trace_len=0)
     if not os.path.exists(trace_path):
@@ -32,6 +32,7 @@ def summarize_trace(trace_path):
         tracer = pickle.load(f)
     info['trace_len'] = len(tracer.trace_events)
     return info
+
 
 def summarize_graph(graph_path):
     info = dict(has_graph=False, num_graph_nodes=0, num_graph_edges=0)
@@ -44,6 +45,7 @@ def summarize_graph(graph_path):
     info['num_graph_edges'] = graph.number_of_edges()
     return info
 
+
 def summarize_donations(donations_path):
     info = dict(has_donations=False, num_donations=0)
     if not os.path.exists(donations_path):
@@ -54,6 +56,7 @@ def summarize_donations(donations_path):
     info['num_donations'] = len(donations)
     return info
 
+
 def summarize_functions(functions_path):
     info = dict(has_functions=False, num_functions=0)
     if not os.path.exists(functions_path):
@@ -62,21 +65,28 @@ def summarize_functions(functions_path):
     with open(functions_path, 'rb') as f:
         functions = pickle.load(f)
     info['num_functions'] = len(functions)
-    info['avg_function_len'] = np.mean([f.graph.number_of_nodes() for f in functions])
+    info['avg_function_len'] = np.mean([
+        f.graph.number_of_nodes() for f in functions
+    ])
     # FIXME: this line fails because we currently lift some functions incorrectly
     # func_objs = [f._get_func_obj() for f in functions]
     func_objs = []
-    info['fraction_more_than_one_arg'] = np.mean([len(inspect.getfullargspec(f).args) > 1 for f in func_objs])
+    info['fraction_more_than_one_arg'] = np.mean([
+        len(inspect.getfullargspec(f).args) > 1 for f in func_objs
+    ])
     return info
+
 
 def functions_length_distribution(functions):
     s = pd.Series([f.graph.number_of_nodes() for f in functions])
     return s, s.plot(kind='hist')
 
+
 def functions_args_distribution(functions):
     func_objs = [f._get_func_obj() for f in functions]
     s = pd.Series([len(inspect.getfullargspec(f).args) for f in func_objs])
     return s, s.plot(kind='hist')
+
 
 def summarize(scripts_dir, results_dir, detailed=False):
     scripts_paths = glob.glob(os.path.join(scripts_dir, '*[0-9].py'))
@@ -108,6 +118,7 @@ def summarize(scripts_dir, results_dir, detailed=False):
     arg_dist_results = functions_args_distribution(functions)
     return summary_df, length_dist_results, arg_dist_results
 
+
 def print_report(summary_df):
     total_ct = summary_df.shape[0]
     ct_fields = ['has_trace', 'has_graph', 'has_donations', 'has_functions']
@@ -117,30 +128,44 @@ def print_report(summary_df):
     print('---------------------')
     for f in ct_fields:
         ct = summary_df[f].sum()
-        print('Files {}: {}/{} ({})'.format(f, ct, total_ct, round(ct / total_ct, 2)))
+        print(
+            'Files {}: {}/{} ({})'.format(
+                f, ct, total_ct, round(ct / total_ct, 2)
+            )
+        )
     for f in sum_fields:
         print('Total {}: {}'.format(f, summary_df[f].sum()))
     for f in mean_fields:
         print('Mean {}: {}'.format(f, round(np.mean(summary_df[f]), 2)))
     print('======================')
     print('Detailed Report (only entries with a trace)')
-    detailed_fields = ['name', 'trace_len', 'num_donations', 'num_functions', 'avg_function_len']
+    detailed_fields = [
+        'name', 'trace_len', 'num_donations', 'num_functions',
+        'avg_function_len'
+    ]
     reduced_df = summary_df.loc[summary_df['has_trace']][detailed_fields]
     print_df(reduced_df)
 
+
 def create_regex(df):
     return '|'.join(['({})'.format(s) for s in df['script_path'].values])
+
 
 def print_failed_trace(summary_df, regex):
     mask = ~summary_df['has_trace']
     if any(mask):
         failed = summary_df[mask]
-        print('Failed to collect a trace: {} / {}'.format(failed.shape[0], summary_df.shape[0]))
+        print(
+            'Failed to collect a trace: {} / {}'.format(
+                failed.shape[0], summary_df.shape[0]
+            )
+        )
         print_df(failed[['script_path']])
         if regex:
             print(create_regex(failed))
     else:
         print('No trace collection failures')
+
 
 def print_failed_graph(summary_df, regex):
     has_trace = summary_df['has_trace']
@@ -148,12 +173,17 @@ def print_failed_graph(summary_df, regex):
     mask = has_trace & missing_graph
     if any(mask):
         failed = summary_df[mask]
-        print('Failed to build a graph: {} / {}'.format(failed.shape[0], summary_df.shape[0]))
+        print(
+            'Failed to build a graph: {} / {}'.format(
+                failed.shape[0], summary_df.shape[0]
+            )
+        )
         print_df(failed[['script_path']])
         if regex:
             print(create_regex(failed))
     else:
         print('No graph building failures')
+
 
 def main(args):
     summary_df = summarize(args.scripts_dir, args.results_dir)
@@ -174,12 +204,38 @@ def main(args):
 if __name__ == '__main__':
     parser = ArgumentParser(description='Summarize extraction statistics')
     parser.add_argument('scripts_dir', type=str, help='Directory for scripts')
-    parser.add_argument('results_dir', type=str, help='Directory to results (trace, graph, etc)')
-    parser.add_argument('-o', '--output_path', type=str, help='Path to store csv of summary')
-    parser.add_argument('-t', '--failed_trace', action='store_true', help='Print info for scripts that failed to trace')
-    parser.add_argument('-g', '--failed_graph', action='store_true', help='Print info for scripts that failed to graph')
-    parser.add_argument('-s', '--silent_report', action='store_true', help='Do not print out main report')
-    parser.add_argument('-r', '--regex', action='store_true', help='Produce regex of script names')
+    parser.add_argument(
+        'results_dir',
+        type=str,
+        help='Directory to results (trace, graph, etc)'
+    )
+    parser.add_argument(
+        '-o', '--output_path', type=str, help='Path to store csv of summary'
+    )
+    parser.add_argument(
+        '-t',
+        '--failed_trace',
+        action='store_true',
+        help='Print info for scripts that failed to trace'
+    )
+    parser.add_argument(
+        '-g',
+        '--failed_graph',
+        action='store_true',
+        help='Print info for scripts that failed to graph'
+    )
+    parser.add_argument(
+        '-s',
+        '--silent_report',
+        action='store_true',
+        help='Do not print out main report'
+    )
+    parser.add_argument(
+        '-r',
+        '--regex',
+        action='store_true',
+        help='Produce regex of script names'
+    )
     args = parser.parse_args()
     try:
         main(args)

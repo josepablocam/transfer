@@ -36,20 +36,29 @@ class PossibleColumnCollector(ast.NodeVisitor):
         self.visit(tree)
         return set(self.acc)
 
+
 def type_to_str(_type):
     return _type.__qualname__ if isinstance(_type, type) else _type
 
+
 def is_dataframe(type_str):
     type_str = type_to_str(type_str)
-    return type_str in set([pd.DataFrame.__qualname__, pd.core.groupby.GroupBy.__qualname__])
+    return type_str in set([
+        pd.DataFrame.__qualname__, pd.core.groupby.GroupBy.__qualname__
+    ])
+
 
 def is_series(type_str):
     type_str = type_to_str(type_str)
-    return type_str in set([pd.Series.__qualname__, pd.core.groupby.SeriesGroupBy.__qualname__])
+    return type_str in set([
+        pd.Series.__qualname__, pd.core.groupby.SeriesGroupBy.__qualname__
+    ])
+
 
 def is_index(type_str):
     type_str = type_to_str(type_str)
     return type_str == pd.Index.__qualname__
+
 
 # TODO: should we use complete_defs?
 def has_possible_table_info(node_data):
@@ -62,6 +71,7 @@ def has_possible_table_info(node_data):
         if is_dataframe(ref.type) or is_series(ref.type) or is_index(ref.type):
             return True
     return False
+
 
 def known_possible_columns(node_data, field):
     cols = set([])
@@ -78,6 +88,7 @@ def known_possible_columns(node_data, field):
         # known columns, in such a case, we avoid excluding
         # possible columns...
         return None
+
 
 def columns_assigned_to(node_data):
     if not has_possible_table_info(node_data):
@@ -111,6 +122,7 @@ def columns_assigned_to(node_data):
         cols_assigned = cols_assigned.intersection(known)
     return cols_assigned
 
+
 def columns_used(node_data):
     if not has_possible_table_info(node_data):
         return set([])
@@ -132,6 +144,7 @@ def columns_used(node_data):
         cols_used = cols_used.intersection(known)
     return cols_used
 
+
 def annotate_graph(graph):
     for node_id, node_data in graph.nodes(data=True):
         if node_data.get('annotator') == __file__:
@@ -143,6 +156,7 @@ def annotate_graph(graph):
         node_data['annotator'] = __file__
     return graph
 
+
 class SeedInfo(ABC):
     @abstractmethod
     def get_target_column(self):
@@ -151,6 +165,7 @@ class SeedInfo(ABC):
     @classmethod
     def from_column(klass, col):
         return klass(col)
+
 
 class ColumnUse(SeedInfo):
     def __init__(self, column):
@@ -193,6 +208,7 @@ class ColumnDef(SeedInfo):
 def is_subgraph(graph, subgraph):
     return set(graph.nodes).issuperset(subgraph.nodes)
 
+
 def merge_graphs(graph1, graph2):
     if set(graph1.nodes).issuperset(graph2.nodes):
         keep = graph1
@@ -215,6 +231,7 @@ def merge_graphs(graph1, graph2):
 
     return keep
 
+
 def remove_subgraphs(graphs):
     # graphs from most to least number of nodes
     sorted_graphs = sorted(graphs, key=lambda x: len(x.nodes), reverse=True)
@@ -231,6 +248,7 @@ def remove_subgraphs(graphs):
             merged.append(g)
     return merged
 
+
 def remove_duplicate_graphs(graphs):
     unique_graphs = {}
     for g in graphs:
@@ -243,15 +261,18 @@ def remove_duplicate_graphs(graphs):
             unique_graphs[key] = merge_graphs(existing_graph, g)
     return list(unique_graphs.values())
 
+
 def show_lines(graph, annotate=True):
     if annotate:
-        nodes = [(node_id, dict(data)) for node_id, data in graph.nodes(data=True)]
+        nodes = [(node_id, dict(data))
+                 for node_id, data in graph.nodes(data=True)]
         for node_id, data in nodes:
             if isinstance(data['event'], ExecLine):
                 data['uses'] = data['event'].uses
     else:
         nodes = graph.nodes(data=True)
     return sorted(nodes, key=lambda x: x[1]['lineno'])
+
 
 def to_code_block(nodes):
     if isinstance(nodes, nx.Graph):
@@ -293,13 +314,19 @@ class RepairSliceImplicitUses(object):
         final_nodes = set(_slice.nodes)
         while True:
             # columns used in the slices
-            cols_used = set([col for _, data in curr_slice.nodes(data=True) for col in data['columns_used']])
+            cols_used = set([
+                col for _, data in curr_slice.nodes(data=True)
+                for col in data['columns_used']
+            ])
             if not cols_used:
                 break
 
             # we need to inspect any node before our current node (i.e. stmts executed before)
             max_slice_node_id = max(curr_slice.nodes)
-            earlier_nodes = [node_id for node_id in self.graph if node_id < max_slice_node_id]
+            earlier_nodes = [
+                node_id for node_id in self.graph
+                if node_id < max_slice_node_id
+            ]
             earlier_graph = self.graph.subgraph(earlier_nodes)
             if not earlier_graph.nodes:
                 break
@@ -313,7 +340,9 @@ class RepairSliceImplicitUses(object):
                 break
 
             defs_needed = cols_used.intersection(earlier_defs)
-            repair_slices = ColumnDefExtractor(earlier_graph)._get_raw_donation_slices(defs_needed)
+            repair_slices = ColumnDefExtractor(
+                earlier_graph
+            )._get_raw_donation_slices(defs_needed)
             if not repair_slices:
                 break
 
@@ -445,8 +474,14 @@ def get_all_donations(graph, database_columns=None, filename=None):
     annotated = annotate_graph(graph)
 
     # potential columns
-    columns_defined = set([col for node_id, data in annotated.nodes(data=True) for col in data['columns_defined']])
-    columns_used = set([col for node_id, data in annotated.nodes(data=True) for col in data['columns_used']])
+    columns_defined = set([
+        col for node_id, data in annotated.nodes(data=True)
+        for col in data['columns_defined']
+    ])
+    columns_used = set([
+        col for node_id, data in annotated.nodes(data=True)
+        for col in data['columns_used']
+    ])
 
     if database_columns is not None:
         columns_defined = columns_defined.intersection(database_columns)
@@ -488,11 +523,16 @@ def main(args):
         pickle.dump(donations, f)
 
 
-
 if __name__ == '__main__':
     parser = ArgumentParser(description='Extract candidate donation slices')
-    parser.add_argument('input_file', type=str, help='File path to pickled networkx graph for data dependencies')
-    parser.add_argument('output_file', type=str, help='File path to pickle output slices')
+    parser.add_argument(
+        'input_file',
+        type=str,
+        help='File path to pickled networkx graph for data dependencies'
+    )
+    parser.add_argument(
+        'output_file', type=str, help='File path to pickle output slices'
+    )
     args = parser.parse_args()
     try:
         main(args)
@@ -500,13 +540,12 @@ if __name__ == '__main__':
         import pdb
         pdb.post_mortem()
 
-
 # Main concerns (in order of priority):
 #      - library code that mutates dataframe without info so no dependency established
-        # * possible solution: given that we're focusing on pandas methods, we could
-        #     look for the call argument 'inplace=True' and if so
-        #     this updates memory location for everything involved here
-        # This should be exposed through graph_builder
+# * possible solution: given that we're focusing on pandas methods, we could
+#     look for the call argument 'inplace=True' and if so
+#     this updates memory location for everything involved here
+# This should be exposed through graph_builder
 #       - need to decide what to do about control-flow
 #      - common prefix traces
 #      - no-op assignments that are indistinguishable given memory location info

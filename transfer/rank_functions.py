@@ -12,6 +12,7 @@ import zss
 from .lift_donations import DonatedFunction
 from .utils import sort_by_values
 
+
 class FunctionDistanceComputer(ABC):
     """
     Pair-wise distance between two functions
@@ -65,18 +66,21 @@ class ZhangShashaTreeDistance(FunctionDistanceComputer):
         elif isinstance(elem, ast.AST):
             return elem
         else:
-            raise ValueError('Unhandled function type {} for tree distance'.format(type(elem)))
+            raise ValueError(
+                'Unhandled function type {} for tree distance'.format(
+                    type(elem)
+                )
+            )
 
     def _distance(self, function_1, function_2):
         ast_1 = self.get_tree(function_1)
         ast_2 = self.get_tree(function_2)
 
         return zss.simple_distance(
-            ast_1, ast_2,
-            self.get_children,
-            self.get_node_label,
+            ast_1, ast_2, self.get_children, self.get_node_label,
             self.label_dist
-            )
+        )
+
 
 # TODO: WRITE THIS AT SOME POINT....
 # class DependencyGraphDistance(FunctionDistanceComputer):
@@ -150,12 +154,17 @@ class SourceCodeStringDistance(FunctionDistanceComputer):
         elif isinstance(elem, ast.AST):
             return ast.dump(elem)
         else:
-            raise ValueError('Unhandled function type {} for string distance'.format(type(elem)))
+            raise ValueError(
+                'Unhandled function type {} for string distance'.format(
+                    type(elem)
+                )
+            )
 
     def _distance(self, function_1, function_2):
         src_1 = self.get_string(function_1)
         src_2 = self.get_string(function_2)
         return self.str_dist_fun(src_1, src_2)
+
 
 def get_distance_computer_by_type(distance_type):
     if distance_type == 'string':
@@ -163,7 +172,10 @@ def get_distance_computer_by_type(distance_type):
     elif distance_type == 'tree':
         return ZhangShashaTreeDistance()
     else:
-        raise Exception('invalid source code distance type (must be one of string or tree)')
+        raise Exception(
+            'invalid source code distance type (must be one of string or tree)'
+        )
+
 
 class LearningDataPreparer(ABC):
     def prepare(self, db):
@@ -222,11 +234,15 @@ class BinaryRelationshipDataPreparer(LearningDataPreparer):
         for query_elem in tqdm.tqdm(query_elems):
 
             if isinstance(query_elem, py2neo.Node):
-                query_rels, query_feats = self._get_relationships_and_features(query_elem, prefix='query-node')
+                query_rels, query_feats = self._get_relationships_and_features(
+                    query_elem, prefix='query-node'
+                )
                 query_fun = self.db.get_function_from_node(query_elem)
             else:
                 query_rels = query_elem
-                query_feats = self._relationships_to_dict(query_rels, prefix='query-node')
+                query_feats = self._relationships_to_dict(
+                    query_rels, prefix='query-node'
+                )
                 query_fun = None
 
             if query_results is None:
@@ -241,7 +257,9 @@ class BinaryRelationshipDataPreparer(LearningDataPreparer):
                 result_nodes = result_nodes.difference(remove_nodes)
 
             for result_node in tqdm.tqdm(result_nodes):
-                result_rels, result_feats = self._get_relationships_and_features(result_node, prefix='result-node')
+                result_rels, result_feats = self._get_relationships_and_features(
+                    result_node, prefix='result-node'
+                )
                 result_fun = self.db.get_function_from_node(result_node)
 
                 row = {}
@@ -252,7 +270,9 @@ class BinaryRelationshipDataPreparer(LearningDataPreparer):
                 ref_result_elems.append(result_node)
 
                 if query_fun is not None:
-                    dist = self.distance_computer.distance(query_fun, result_fun)
+                    dist = self.distance_computer.distance(
+                        query_fun, result_fun
+                    )
                     y_data.append(dist)
 
         if not hasattr(self.vectorizer, 'vocabulary_'):

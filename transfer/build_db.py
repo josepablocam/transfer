@@ -13,16 +13,19 @@ from plpy.analyze.dynamic_trace_events import ExecLine
 
 from .lift_donations import DonatedFunction
 
+
 class NodeTypes(Enum):
     EXTRACTED_FUNCTION = 1
     FUNCTION = 2
     COLUMN = 3
+
 
 class RelationshipTypes(Enum):
     DEFINES = 1
     USES = 2
     CALLS = 3
     WRANGLES_FOR = 4
+
 
 def get_function_full_name(elem):
     if isinstance(elem, str):
@@ -40,12 +43,16 @@ def get_function_full_name(elem):
             code = getattr(fun, '__code__', None)
             co_name = '' if code is None else code.co_name
         except AttributeError:
-            raise ValueError('Unable to compute full_name from {}, provide string of name'.format(elem))
+            raise ValueError(
+                'Unable to compute full_name from {}, provide string of name'.
+                format(elem)
+            )
     full_name = []
     full_name.append('' if modulename is None else modulename + '.')
     full_name.append(co_name if qualname is None else qualname)
-    full_name =  ''.join(full_name)
+    full_name = ''.join(full_name)
     return None if full_name == '' else full_name
+
 
 def get_column_name(elem):
     if isinstance(elem, str):
@@ -54,7 +61,11 @@ def get_column_name(elem):
         assert elem.has_label(NodeTypes.COLUMN.name)
         return elem['name']
     else:
-        raise ValueError('Unable to compute column_name from {}, provide string of name'.format(elem))
+        raise ValueError(
+            'Unable to compute column_name from {}, provide string of name'.
+            format(elem)
+        )
+
 
 def get_wrangles_for(fun, program_graph):
     # use node id for the value associated with the return
@@ -75,6 +86,7 @@ def get_wrangles_for(fun, program_graph):
                     full_names.add(full_name)
     return full_names
 
+
 def get_extracted_function_relationships(fun, program_graph=None):
     assert isinstance(fun, DonatedFunction), 'Can only add extracted functions'
     relationship_tuples = set([])
@@ -90,11 +102,15 @@ def get_extracted_function_relationships(fun, program_graph=None):
             for call in node_data['calls']:
                 full_name = get_function_full_name(call.details)
                 if full_name is not None:
-                    relationship_tuples.add((RelationshipTypes.CALLS, full_name))
+                    relationship_tuples.add(
+                        (RelationshipTypes.CALLS, full_name)
+                    )
 
     if not program_graph is None:
         for full_name in get_wrangles_for(fun, program_graph):
-            relationship_tuples.add((RelationshipTypes.WRANGLES_FOR, full_name))
+            relationship_tuples.add(
+                (RelationshipTypes.WRANGLES_FOR, full_name)
+            )
 
     return relationship_tuples
 
@@ -117,7 +133,9 @@ class FunctionDatabase(object):
         self.selectors = {}
         # setup selectors
         for node_type in NodeTypes:
-            self.selectors[node_type] = py2neo.NodeSelector(self.graph_db).select(node_type.name)
+            self.selectors[node_type] = py2neo.NodeSelector(
+                self.graph_db
+            ).select(node_type.name)
         self._has_started_up = True
 
     def shutdown(self):
@@ -140,21 +158,36 @@ class FunctionDatabase(object):
         if isinstance(target_node, py2neo.Node):
             return target_node
         elif isinstance(target_node, str):
-            if relationship_type in set([RelationshipTypes.DEFINES, RelationshipTypes.USES]):
+            if relationship_type in set([RelationshipTypes.DEFINES,
+                                         RelationshipTypes.USES]):
                 target_node_type = NodeTypes.COLUMN
-            elif relationship_type in set([RelationshipTypes.CALLS, RelationshipTypes.WRANGLES_FOR]):
+            elif relationship_type in set([RelationshipTypes.CALLS,
+                                           RelationshipTypes.WRANGLES_FOR]):
                 target_node_type = NodeTypes.FUNCTION
             else:
-                raise Exception("Need to know target_node_type for relationship type: {}".format(relationship_type))
+                raise Exception(
+                    "Need to know target_node_type for relationship type: {}".
+                    format(relationship_type)
+                )
             return self._get_or_create_node(target_node_type, name=target_node)
         else:
-            raise Exception("Don't know how to convert type {} to py2neo.Node".format(type(target_node)))
+            raise Exception(
+                "Don't know how to convert type {} to py2neo.Node".format(
+                    type(target_node)
+                )
+            )
 
-    def _create_relationship(self, src_node, relationship_type, target_node, **kwargs):
+    def _create_relationship(
+        self, src_node, relationship_type, target_node, **kwargs
+    ):
         assert isinstance(src_node, py2neo.Node)
         # must create target_node if doesn't exist
-        target_node = self._convert_to_target_node(relationship_type, target_node)
-        relation = py2neo.Relationship(src_node, relationship_type.name, target_node, **kwargs)
+        target_node = self._convert_to_target_node(
+            relationship_type, target_node
+        )
+        relation = py2neo.Relationship(
+            src_node, relationship_type.name, target_node, **kwargs
+        )
         self.graph_db.create(relation)
         return relation
 
@@ -167,16 +200,24 @@ class FunctionDatabase(object):
         return '{}_{}'.format(name, ct)
 
     def add_extracted_function(self, fun, program_graph):
-        assert isinstance(fun, DonatedFunction), 'Can only add extracted functions'
+        assert isinstance(
+            fun, DonatedFunction
+        ), 'Can only add extracted functions'
         global_fun_name = self._allocate_global_fun_name(fun.name)
-        extracted_node = self._get_or_create_node(NodeTypes.EXTRACTED_FUNCTION, name=global_fun_name)
+        extracted_node = self._get_or_create_node(
+            NodeTypes.EXTRACTED_FUNCTION, name=global_fun_name
+        )
         _id = self._get_node_id(extracted_node)
         self.id_to_fun[_id] = fun
 
         # relationships to place in database
-        relationship_tuples = get_extracted_function_relationships(fun, program_graph)
+        relationship_tuples = get_extracted_function_relationships(
+            fun, program_graph
+        )
         for relationship_type, end_node in relationship_tuples:
-            self._create_relationship(extracted_node, relationship_type, end_node)
+            self._create_relationship(
+                extracted_node, relationship_type, end_node
+            )
 
         return extracted_node
 
@@ -193,13 +234,17 @@ class FunctionDatabase(object):
                 self.add_extracted_function(f, program_graph=program_graph)
                 self.function_acc.add(tuple(f.cleaning_code))
 
-    def _run_relationship_query(self, start_node, rel_type, end_node, _lambda=None):
+    def _run_relationship_query(
+        self, start_node, rel_type, end_node, _lambda=None
+    ):
         if not self._has_started_up:
             raise Exception('Must start database by running self.startup()')
         if _lambda is None:
             _lambda = lambda x: x
         results = []
-        for rel in self.graph_db.match(start_node=start_node, rel_type=rel_type.name, end_node=end_node):
+        for rel in self.graph_db.match(start_node=start_node,
+                                       rel_type=rel_type.name,
+                                       end_node=end_node):
             results.append(_lambda(rel))
         return results
 
@@ -213,37 +258,49 @@ class FunctionDatabase(object):
         if _lambda is None:
             _lambda = lambda x: x.start_node()
         column_name = get_column_name(column_name)
-        end_node = self._get_selector(NodeTypes.COLUMN).where(name=column_name).first()
+        end_node = self._get_selector(NodeTypes.COLUMN
+                                      ).where(name=column_name).first()
         if end_node is None and column_name is not None:
             return []
-        return self._run_relationship_query(start_node, RelationshipTypes.DEFINES, end_node, _lambda)
+        return self._run_relationship_query(
+            start_node, RelationshipTypes.DEFINES, end_node, _lambda
+        )
 
     def uses(self, column_name, start_node=None, _lambda=None):
         if _lambda is None:
             _lambda = lambda x: x.start_node()
         column_name = get_column_name(column_name)
-        end_node = self._get_selector(NodeTypes.COLUMN).where(name=column_name).first()
+        end_node = self._get_selector(NodeTypes.COLUMN
+                                      ).where(name=column_name).first()
         if end_node is None and column_name is not None:
             return []
-        return self._run_relationship_query(start_node, RelationshipTypes.USES, end_node, _lambda)
+        return self._run_relationship_query(
+            start_node, RelationshipTypes.USES, end_node, _lambda
+        )
 
     def calls(self, fun, start_node=None, _lambda=None):
         if _lambda is None:
             _lambda = lambda x: x.start_node()
         full_name = get_function_full_name(fun) if fun is not None else None
-        end_node = self._get_selector(NodeTypes.FUNCTION).where(name=full_name).first()
+        end_node = self._get_selector(NodeTypes.FUNCTION
+                                      ).where(name=full_name).first()
         if end_node is None and fun is not None:
             return []
-        return self._run_relationship_query(start_node, RelationshipTypes.CALLS, end_node, _lambda)
+        return self._run_relationship_query(
+            start_node, RelationshipTypes.CALLS, end_node, _lambda
+        )
 
     def wrangles_for(self, fun, start_node=None, _lambda=None):
         if _lambda is None:
             _lambda = lambda x: x.start_node()
         full_name = get_function_full_name(fun) if fun is not None else None
-        end_node = self._get_selector(NodeTypes.FUNCTION).where(name=full_name).first()
+        end_node = self._get_selector(NodeTypes.FUNCTION
+                                      ).where(name=full_name).first()
         if end_node is None and fun is not None:
             return []
-        return self._run_relationship_query(start_node, RelationshipTypes.WRANGLES_FOR, end_node, _lambda)
+        return self._run_relationship_query(
+            start_node, RelationshipTypes.WRANGLES_FOR, end_node, _lambda
+        )
 
     def query_by_relationships(self, relationship_tuples):
         if isinstance(relationship_tuples, tuple):
@@ -251,9 +308,9 @@ class FunctionDatabase(object):
         criteria = set(relationship_tuples)
         query_results = set([])
         query_handler = {
-            RelationshipTypes.CALLS:        self.calls,
-            RelationshipTypes.DEFINES:      self.defines,
-            RelationshipTypes.USES:         self.uses,
+            RelationshipTypes.CALLS: self.calls,
+            RelationshipTypes.DEFINES: self.defines,
+            RelationshipTypes.USES: self.uses,
             RelationshipTypes.WRANGLES_FOR: self.wrangles_for,
         }
 
@@ -261,7 +318,9 @@ class FunctionDatabase(object):
             relationship_type, end_node_value = criteria.pop()
             query_fun = query_handler.get(relationship_type, None)
             if query_fun is None:
-                raise ValueError('Invalid relation type: {}'.format(relationship_type))
+                raise ValueError(
+                    'Invalid relation type: {}'.format(relationship_type)
+                )
             query_results.update(query_fun(end_node_value))
 
         return query_results
@@ -269,7 +328,9 @@ class FunctionDatabase(object):
     def get_extracted_function_relationships_from_node(self, node):
         assert node.has_label(NodeTypes.EXTRACTED_FUNCTION.name)
         rels = set([])
-        results = self.graph_db.match(start_node=node, rel_type=None, end_node=None)
+        results = self.graph_db.match(
+            start_node=node, rel_type=None, end_node=None
+        )
         for res in results:
             rel_type = RelationshipTypes[res.type()]
             end_name = res.end_node()['name']
@@ -303,7 +364,9 @@ def main(args):
     db.startup()
 
     for funs_file, graph_file in zip(functions_files, graph_files):
-        assert funs_file.split('_')[:-1] == graph_file.split('_')[:-1], 'Mismatched files'
+        assert funs_file.split('_')[:-1] == graph_file.split(
+            '_'
+        )[:-1], 'Mismatched files'
         print('Populating database with functions from {}'.format(funs_file))
         print('Using graph file:{}'.format(graph_file))
         # functions we extracted
@@ -321,10 +384,26 @@ def main(args):
 
 
 if __name__ == '__main__':
-    parser = ArgumentParser(description='Populate graph database with donated functions')
-    parser.add_argument('functions_file_pattern', type=str, help='Glob pattern to pickled donated function files')
-    parser.add_argument('graph_file_pattern', type=str, help='Glob pattern to pickled program dependency graph files')
-    parser.add_argument('-o', '--output_file', type=str, help='Path to store database', default='boruca.pkl')
+    parser = ArgumentParser(
+        description='Populate graph database with donated functions'
+    )
+    parser.add_argument(
+        'functions_file_pattern',
+        type=str,
+        help='Glob pattern to pickled donated function files'
+    )
+    parser.add_argument(
+        'graph_file_pattern',
+        type=str,
+        help='Glob pattern to pickled program dependency graph files'
+    )
+    parser.add_argument(
+        '-o',
+        '--output_file',
+        type=str,
+        help='Path to store database',
+        default='boruca.pkl'
+    )
     args = parser.parse_args()
 
     try:
