@@ -8,14 +8,21 @@ import pickle
 from transfer.lift_donations import DonatedFunction
 from transfer.utils import print_df, plot_df_table
 
+
 def get_columns_df(results):
     data = []
     for entry in results:
         info = dict(
             input_cols=entry['cols_used'],
             output_cols=entry['cols_defined'],
-            input_types=[col_info['type'] for col_info in entry['cols_used_info'].values()],
-            output_types=[col_info['type'] for col_info in entry['cols_defined_info'].values()],
+            input_types=[
+                col_info['type']
+                for col_info in entry['cols_used_info'].values()
+            ],
+            output_types=[
+                col_info['type']
+                for col_info in entry['cols_defined_info'].values()
+            ],
         )
         data.append(info)
 
@@ -27,6 +34,7 @@ def get_columns_df(results):
         df[col] = df[col].map(lambda x: tuple(sorted(x)))
     return df
 
+
 def cleanup_object_cols_for_plot(df):
     df = df.copy()
     obj_cols = df.columns[df.dtypes == np.dtype('object')]
@@ -34,12 +42,19 @@ def cleanup_object_cols_for_plot(df):
         df[col] = df[col].map(lambda x: '{}'.format(x))
     return df
 
+
 # compare re-definitions vs new derived columns
 def summarize_definition_categories(columns_df):
     df = columns_df.copy()
     df['initialization'] = df['input_cols'].map(len) == 0
-    df['redefinition'] = [not set(i).isdisjoint(o) for i, o in zip(df['input_cols'], df['output_cols'])]
-    df['derivation'] = [not set(i).issuperset(o) for i, o in zip(df['input_cols'], df['output_cols'])]
+    df['redefinition'] = [
+        not set(i).isdisjoint(o)
+        for i, o in zip(df['input_cols'], df['output_cols'])
+    ]
+    df['derivation'] = [
+        not set(i).issuperset(o)
+        for i, o in zip(df['input_cols'], df['output_cols'])
+    ]
     df['derivation'] = df['derivation'] & ~df['initialization']
     output = {}
 
@@ -57,35 +72,50 @@ def summarize_definition_categories(columns_df):
     init_cols = []
     for _, row in inits.iterrows():
         init_cols.extend(row.output_cols)
-    inits_summary = pd.Series(init_cols).value_counts().to_frame(name='count').reset_index()
-    inits_summary = inits_summary.rename(columns={'index':'column'})
+    inits_summary = pd.Series(init_cols).value_counts().to_frame(
+        name='count'
+    ).reset_index()
+    inits_summary = inits_summary.rename(columns={'index': 'column'})
     output['Column Initializations'] = inits_summary
 
     # column redefinitions
     redefs = df[df['redefinition']]
     redefined_cols = []
     for _, row in redefs.iterrows():
-        redefined_cols.extend(set(row.output_cols).intersection(row.input_cols))
-    redefined_summary = pd.Series(redefined_cols).value_counts().to_frame(name='count').reset_index()
-    redefined_summary = redefined_summary.rename(columns={'index':'column'})
+        redefined_cols.extend(
+            set(row.output_cols).intersection(row.input_cols)
+        )
+    redefined_summary = pd.Series(redefined_cols).value_counts().to_frame(
+        name='count'
+    ).reset_index()
+    redefined_summary = redefined_summary.rename(columns={'index': 'column'})
     output['Column Redefinitions'] = redefined_summary
 
     derivs = df[df['derivation']].copy()
-    derivs['derived_cols'] = [set(o).difference(i) for i, o in zip(derivs['input_cols'], derivs['output_cols'])]
-    derivs['derived_cols'] = derivs['derived_cols'].map(lambda x: tuple(sorted(x)))
-    derivs_summary = derivs.groupby(['input_cols', 'derived_cols']).size().to_frame(name='ct').reset_index()
+    derivs['derived_cols'] = [
+        set(o).difference(i)
+        for i, o in zip(derivs['input_cols'], derivs['output_cols'])
+    ]
+    derivs['derived_cols'] = derivs['derived_cols'].map(
+        lambda x: tuple(sorted(x))
+    )
+    derivs_summary = derivs.groupby(['input_cols', 'derived_cols']
+                                    ).size().to_frame(name='ct').reset_index()
     output['Column Derivations'] = derivs_summary
 
     return output
 
+
 def summarize_columns_type_conversions(columns_df):
-    types_df = columns_df.groupby(['input_types', 'output_types']).size().to_frame(name='count').reset_index()
+    types_df = columns_df.groupby(['input_types', 'output_types']
+                                  ).size().to_frame(name='count').reset_index()
     output = {}
     output['Type Conversions'] = types_df
     return output
 
+
 def stat_distribution(results, stat, plot=False):
-    data = {'cols_used_info':[], 'cols_defined_info':[]}
+    data = {'cols_used_info': [], 'cols_defined_info': []}
     for entry in results:
         for group_key, group_vals in data.items():
             for vals in entry[group_key].values():
@@ -109,15 +139,18 @@ def stat_distribution(results, stat, plot=False):
     else:
         return used_stat, defined_stat
 
+
 def mi_distribution(results):
     used, _def, plot = stat_distribution(results, 'mi', plot=True)
     plot.set_title('Distribution of MI')
     return used, _def, plot
 
+
 def count_distribution(results):
     used, _def, plot = stat_distribution(results, 'ct_unique_vals', plot=True)
     plot.set_title('Distribution of Column Unique Value Counts')
     return used, _def, plot
+
 
 def summarize(results):
     plots = []
@@ -140,6 +173,7 @@ def summarize(results):
     _, _, ct_plot = count_distribution(results)
     display(mi_plot)
     display(ct_plot)
+
 
 def main(input_path):
     with open(input_path, 'rb') as f:

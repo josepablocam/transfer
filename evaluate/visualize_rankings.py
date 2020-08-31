@@ -18,10 +18,13 @@ def distribution_corrs(df):
     plt.tight_layout()
     return g
 
+
 def summarize_corrs(df):
-    df_corr = df.groupby('model')[['spearman_corr', 'spearman_pval']].mean().reset_index()
+    df_corr = df.groupby('model')[['spearman_corr',
+                                   'spearman_pval']].mean().reset_index()
     print_df(df_corr)
     return plot_df_table(df_corr)
+
 
 def main(args):
     df = pd.read_pickle(args.input_path)
@@ -45,8 +48,12 @@ def main(args):
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Plot ranking evaluation metrics')
-    parser.add_argument('input_path', type=str, help='Path to pickled evaluation dataframe')
-    parser.add_argument('output_path', type=str, help='Path to save down pdf of results')
+    parser.add_argument(
+        'input_path', type=str, help='Path to pickled evaluation dataframe'
+    )
+    parser.add_argument(
+        'output_path', type=str, help='Path to save down pdf of results'
+    )
     args = parser.parse_args()
     try:
         main(args)

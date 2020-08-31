@@ -1,3 +1,0 @@
-script1.py:  https://www.kaggle.com/kabure/lending-club-exploration-guide  
-script2.py:  https://www.kaggle.com/janiobachmann/lending-club-exploring-risks-tensorflow
-script3.py:  https://www.kaggle.com/evanmiller/python-for-padawans

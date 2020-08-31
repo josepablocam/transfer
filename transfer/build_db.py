@@ -354,8 +354,8 @@ class FunctionDatabase(object):
 
 
 def main(args):
-    functions_files = glob.glob(args.functions_file_pattern)
-    graph_files = glob.glob(args.graph_file_pattern)
+    functions_files = args.function_files
+    graph_files = args.graph_files
 
     if len(functions_files) != len(graph_files):
         raise Exception('Must provide same number of input and graph files')
@@ -388,14 +388,16 @@ if __name__ == '__main__':
         description='Populate graph database with donated functions'
     )
     parser.add_argument(
-        'functions_file_pattern',
+        '--function_files',
         type=str,
-        help='Glob pattern to pickled donated function files'
+        nargs='+',
+        help='Pickled donated function files'
     )
     parser.add_argument(
-        'graph_file_pattern',
+        '--graph_files',
         type=str,
-        help='Glob pattern to pickled program dependency graph files'
+        nargs='+',
+        help='Pickled program dependency graph files'
     )
     parser.add_argument(
         '-o',
