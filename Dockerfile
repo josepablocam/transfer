@@ -29,7 +29,7 @@ RUN pip install -U pip
 ADD . transfer/
 WORKDIR transfer/
 # install transfer, run tests and
-# build up sample database
-RUN bash reproduce.sh
+# download sample data
+RUN bash install.sh
 
 ENTRYPOINT neo4j start && /bin/bash

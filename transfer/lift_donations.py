@@ -3,6 +3,7 @@ import ast
 from collections import defaultdict
 import pickle
 import textwrap
+import re
 
 from astunparse import unparse
 import networkx as nx
@@ -285,11 +286,37 @@ def lower_lifted_rewrites(src):
     lines = src.split("\n")
     rewritten_lines = []
     rewrites = {}
+
+    def replace_rewrites(txt, rewrite_dict):
+        if "_var" not in txt:
+            return txt
+
+        replaced_txt = ""
+        parts = txt.split("_var")
+        for part in parts:
+            var_name = None
+            # capture full name not just prefix
+            while len(part) and part[0].isdigit():
+                if var_name is None:
+                    var_name = "_var"
+                var_name += part[0]
+                part = part[1:]
+            if var_name is None:
+                replaced_txt += part
+            else:
+                replacement = rewrite_dict.get(var_name, None)
+                if replacement is None:
+                    # haven't yet defined
+                    replaced_txt += var_name
+                else:
+                    replaced_txt += replacement
+                replaced_txt += part
+        return replaced_txt
+
     for l in lines:
         lr = l
         # perform any replacements
-        for var_name, var_def in rewrites.items():
-            lr = lr.replace(var_name, var_def)
+        lr = replace_rewrites(lr, rewrites)
         is_lifted_def = lr.strip().startswith("_var")
         if is_lifted_def:
             parts = lr.strip().split("=")

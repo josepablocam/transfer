@@ -355,6 +355,11 @@ class FunctionDatabase(object):
         src = self.get_function_from_node(node).source
         return lower_lifted_rewrites(src)
 
+    def get_executable(self, node):
+        if not node.has_label(NodeTypes.EXTRACTED_FUNCTION.name):
+            raise ValueError('Can only retrieve code for extracted functions')
+        return self.get_function_from_node(node).obj
+
     def functions(self):
         return list(self._get_selector(NodeTypes.FUNCTION))
 
