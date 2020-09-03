@@ -15,7 +15,8 @@ unzip program_data.zip
 neo4j start
 
 # neo4j takes a bit of time to startup
-sleep 5s
+echo "Wait for neo4j to start up"
+sleep 10s
 
 # Build database
 python -m transfer.build_db \
