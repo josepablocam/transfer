@@ -139,6 +139,22 @@ def cleaning_func_22(df):
 ```
 Note that we passed in the python function object `pd.DataFrame.groupby` to the `wrangles_for` call.
 
+* List `transfer` code snippets that make a call to a particular third-party library function.
+
+```
+$ print(db.get_code(db.calls(pd.DataFrame.fillna)[0]))
+def cleaning_func_12(dataset):
+	# core cleaning code
+	import pandas as pd
+	# dataset = pd.read_csv('../input/loan.csv', low_memory=False)
+	dataset = dataset.fillna(0)
+	dataset['grade'] = dataset['grade'].astype('category').cat.codes
+	return dataset
+```
+
+Note that like in `wrangles_for` we pass in the actual python function object to `db.calls`.
+
+* Executable code snippets
 
 A goal of `transfer` is that the code snippets produced are executable. So we can try that out as follows:
 
