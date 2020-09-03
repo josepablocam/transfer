@@ -278,6 +278,29 @@ def graph_to_lines(graph):
     return code
 
 
+# TODO: this is a janky and temporary string-based lowering
+# back to "normal" code, after lifting expressions
+# we should do this on the AST instead
+def lower_lifted_rewrites(src):
+    lines = src.split("\n")
+    rewritten_lines = []
+    rewrites = {}
+    for l in lines:
+        lr = l
+        # perform any replacements
+        for var_name, var_def in rewrites.items():
+            lr = lr.replace(var_name, var_def)
+        is_lifted_def = lr.strip().startswith("_var")
+        if is_lifted_def:
+            parts = lr.strip().split("=")
+            lhs = parts[0].strip()
+            rhs = "=".join(parts[1:]).strip()
+            rewrites[lhs] = rhs
+        else:
+            rewritten_lines.append(lr)
+    return "\n".join(rewritten_lines)
+
+
 ### the donated function class ###
 class DonatedFunction(object):
     def __init__(

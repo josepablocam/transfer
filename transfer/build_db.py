@@ -3,15 +3,16 @@
 
 from argparse import ArgumentParser
 from enum import Enum
-import glob
 import pickle
-import inspect
 
 import networkx as nx
 import py2neo
 from plpy.analyze.dynamic_trace_events import ExecLine
 
-from .lift_donations import DonatedFunction
+from .lift_donations import (
+    DonatedFunction,
+    lower_lifted_rewrites,
+)
 
 
 class NodeTypes(Enum):
@@ -204,8 +205,11 @@ class FunctionDatabase(object):
             fun, DonatedFunction
         ), 'Can only add extracted functions'
         global_fun_name = self._allocate_global_fun_name(fun.name)
+        lines_of_code = len(fun.source.split("\n"))
         extracted_node = self._get_or_create_node(
-            NodeTypes.EXTRACTED_FUNCTION, name=global_fun_name
+            NodeTypes.EXTRACTED_FUNCTION,
+            name=global_fun_name,
+            lines_of_code=lines_of_code,
         )
         _id = self._get_node_id(extracted_node)
         self.id_to_fun[_id] = fun
@@ -246,6 +250,8 @@ class FunctionDatabase(object):
                                        rel_type=rel_type.name,
                                        end_node=end_node):
             results.append(_lambda(rel))
+        # sort by shortest
+        results = sorted(results, key=lambda x: x["lines_of_code"])
         return results
 
     def _get_selector(self, node_type):
@@ -342,6 +348,12 @@ class FunctionDatabase(object):
             raise ValueError('Can only retrieve code for extracted functions')
         _id = self._get_node_id(node)
         return self.id_to_fun[_id]
+
+    def get_code(self, node):
+        if not node.has_label(NodeTypes.EXTRACTED_FUNCTION.name):
+            raise ValueError('Can only retrieve code for extracted functions')
+        src = self.get_function_from_node(node).source
+        return lower_lifted_rewrites(src)
 
     def functions(self):
         return list(self._get_selector(NodeTypes.FUNCTION))
