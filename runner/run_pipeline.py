@@ -115,6 +115,17 @@ def lift_donations(donations_path, script_path, functions_path):
     return subprocess.call(cmd)
 
 
+def cleanup(script_path):
+    script_dir = os.path.dirname(script_path)
+    instr_script = os.path.join(script_dir, "_instrumented.py")
+    if os.path.exists(instr_script):
+        os.remove(instr_script)
+    script_name = os.path.splitext(os.path.split(script_path)[-1])[0]
+    lifted_script = os.path.join(script_dir, script_name + "_lifted.py")
+    if os.path.exists(lifted_script):
+        os.remove(lifted_script)
+
+
 def main(args):
     script_path = args.script_path
     script_dir = os.path.dirname(script_path)
@@ -166,6 +177,8 @@ def main(args):
 
     lift_donations(donations_path, script_path, functions_path)
     exit_with_error_if_file_missing(functions_path)
+
+    cleanup(script_path)
 
 
 if __name__ == '__main__':

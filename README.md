@@ -15,6 +15,8 @@ values, etc.
 `transfer` collects such snippets and organizes them
 into a graph database, where nodes are database columns, library functions, or extracted code snippets, and edges are relationships such as defines, uses, calls, or wrangles for (more detail below).
 
+The snippets are focused on code that modifies an existing column or derives a new column.
+
 # Installation
 The easiest way to install `transfer` is through a docker
 container.
@@ -188,3 +190,28 @@ our goal to have that be the case. Additionally, note that the function executed
 has intermediate steps/variables created by `transfer` during analysis/extraction,
 while the source code printed through `db.get_code` does some string replacement
 to remove these (since they reduce readability).
+
+# Extracting your own functions
+You can extract functions from your own set of scripts (rather than our
+pre-extracted ones) and create a database. To do so, you can run the script
+
+```
+bash extract_demo.sh
+```
+
+Note that this will prompt you for confirmation before deleting your current
+neo4j database (if any). Note that this *cannot* be undone, so make sure you
+want to proceed.
+
+You can modify `extract_demo.sh` to point to your own scripts of interest.
+
+Once the script runs, you can follow the previous portions of the demo
+to interact with `transfer`.
+
+
+# FAQ
+* I'm having issues with query results not returning their corresponding code, etc.
+  - `neo4j` can be a bit annoying some times, particularly because we are using
+  an older version of it. Your best bet is to delete the data storage for `neo4j`
+  (you can get where it is storing info with `neo4j console`), restarting `neo4j`,
+  and rebuilding your database.
