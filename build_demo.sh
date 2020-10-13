@@ -1,12 +1,24 @@
 #!/usr/bin/env bash
+set -e
 
-# Start up the neo4j database
-# used to store snippets/relationships
-neo4j start || exit 1
+# Prompt to delete current neo4j database
+read -p "This demo deletes your current neo4j database, are you sure you want to continue? [y/N] " yn
 
-# neo4j takes a bit of time to startup
-echo "Wait for neo4j to start up"
+
+if [ ${yn} != "y" ]
+then
+  echo "Abort"
+  exit 0
+fi
+
+# Clean up any existing neo4j db
+database_path=$(neo4j start | grep data: | awk {'print $2}')
+neo4j stop
+echo "Deleting neo4j database..."
+rm -rf ${database_path}
+neo4j start
 sleep 10s
+
 
 # Build database
 python -m transfer.build_db \
