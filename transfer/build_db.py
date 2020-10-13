@@ -2,16 +2,24 @@
 # to columns and third party libraries
 
 from argparse import ArgumentParser
+from collections import Counter
 from enum import Enum
 import pickle
 
 import networkx as nx
+import numpy as np
 import py2neo
 from plpy.analyze.dynamic_trace_events import ExecLine
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.cluster import SpectralClustering
 
 from .lift_donations import (
     DonatedFunction,
     lower_lifted_rewrites,
+    rename_lowered_rewrites,
+    remove_table_noops,
+    collect_key_tokens,
 )
 
 
@@ -200,6 +208,27 @@ class FunctionDatabase(object):
         self.fun_counter += 1
         return '{}_{}'.format(name, ct)
 
+    def _get_cleaning_code_signature(self, fun, normalize_names=True):
+        # remove comments
+        cleaning_code = [l for l in fun.cleaning_code if not l.startswith("#")]
+        cleaning_code_str = "\n".join(cleaning_code)
+        # get rid of intermediate rewrite vars
+        lowered = lower_lifted_rewrites(cleaning_code_str)
+        # remove "no-ops"
+        lowered = remove_table_noops(lowered)
+        # remove imports... not critical to function "signature"
+        lowered_lines = lowered.split("\n")
+        lowered_lines = [
+            l for l in lowered_lines if not l.startswith(("import", "from"))
+        ]
+        # normalize variable names
+        lowered = "\n".join(lowered_lines)
+        if normalize_names:
+            lowered = rename_lowered_rewrites(lowered)
+        # extract key tokens as signature
+        key_tokens = collect_key_tokens(lowered)
+        return frozenset(key_tokens)
+
     def add_extracted_function(self, fun, program_graph):
         assert isinstance(
             fun, DonatedFunction
@@ -232,14 +261,38 @@ class FunctionDatabase(object):
             # some functions can be duplicated across programs
             # TODO: should we highlight these somehow? Seems they are useful
             # if multiple programs have them
-            if not tuple(f.cleaning_code) in self.function_acc:
+            fun_signature = self._get_cleaning_code_signature(
+                f,
+                normalize_names=True,
+            )
+            # exact match
+            already_collected = False
+            for other_signature in self.function_acc:
+                # exact match
+                if fun_signature == other_signature:
+                    already_collected = True
+                    break
+                # only difference is import statements
+                diff = fun_signature.symmetric_difference(other_signature)
+                is_import = [l.startswith(("import", "from")) for l in diff]
+                if all(is_import):
+                    already_collected = True
+                    break
+
+            if not already_collected:
                 # we can add some more info if we have the complete program graph
                 # though we can still do useful things without it
                 self.add_extracted_function(f, program_graph=program_graph)
-                self.function_acc.add(tuple(f.cleaning_code))
+                self.function_acc.add(fun_signature)
 
     def _run_relationship_query(
-        self, start_node, rel_type, end_node, _lambda=None
+        self,
+        start_node,
+        rel_type,
+        end_node,
+        _lambda=None,
+        query_for_ranking=None,
+        **rank_kwargs
     ):
         if not self._has_started_up:
             raise Exception('Must start database by running self.startup()')
@@ -250,9 +303,91 @@ class FunctionDatabase(object):
                                        rel_type=rel_type.name,
                                        end_node=end_node):
             results.append(_lambda(rel))
-        # sort by shortest
-        results = sorted(results, key=lambda x: x["lines_of_code"])
+        if query_for_ranking is not None:
+            self.rank_query_results(results, query_for_ranking, **rank_kwargs)
+        else:
+            # sort by shortest
+            results = sorted(results, key=lambda x: x["lines_of_code"])
+
         return results
+
+    def rank_query_results(
+        self, results, query, alpha=0.5, n_clusters=5, per_cluster=3
+    ):
+        """
+        Rank query results using:
+            - a combination (based on alpha) of lines of code and
+            token overlap with the query.
+            We do some "special" preprocessing to get only relevant tokens
+            We remove any result that has zero overlap with the query
+        If there are many results (i.e. more than n_clusters * per_cluster)
+        results, then we cluster results based on:
+            - spectral clustering of the correlation matrix computed
+            from the code fragments tf-idf encoding
+        We then take the top K results per cluster, and sort them based
+        on the score (explained above), and return that set
+        """
+        assert 0 <= alpha <= 1.0
+        assert n_clusters > 1
+        assert per_cluster >= 1
+
+        scored_results = []
+
+        # normalizing constants
+        min_loc = np.inf
+        max_overlap = -np.inf
+
+        for node in results:
+            # lines of code
+            src = self.get_code(node)
+            loc = len(src.split("\n"))
+            func = self.get_function_from_node(node)
+            # token overlap (do not normalize names since otherwise
+            # lose meaningful tokens and replaces with ___id_{#}___ )
+            sig = self._get_cleaning_code_signature(
+                func, normalize_names=False
+            )
+            token_overlap = len(sig.intersection(query))
+            if token_overlap > 0:
+                # we ignore results that have zero token overlap
+                min_loc = min(min_loc, loc)
+                max_overlap = max(max_overlap, token_overlap)
+                scored_results.append((node, (loc, token_overlap)))
+
+        if len(scored_results) <= 1:
+            return [n for n, _ in scored_results]
+
+        # normalize and combine loc/token scores using alpha
+        scored_results = [
+            (n, (min_loc / l) * alpha + (t / max_overlap) * (1 - alpha))
+            for n, (l, t) in scored_results
+        ]
+        scored_results = sorted(
+            scored_results, key=lambda x: x[-1], reverse=True
+        )
+
+        if len(scored_results) <= (n_clusters * per_cluster):
+            return [n for n, _, in scored_results]
+        # take code as string and count
+        code = [self.get_code(n) for n, _ in scored_results]
+        # encode by accounting for token frequency
+        encoded_code = TfidfVectorizer().fit_transform(code)
+        # correlation matrix
+        corr_mat = np.corrcoef(encoded_code.todense())
+        # spectral clusterign
+        clusters = SpectralClustering(
+            n_clusters=n_clusters,
+            affinity="precomputed",
+        ).fit_predict(corr_mat)
+        #  take first K based on score per cluster
+        cluster_cts = Counter()
+        pruned_results = []
+        for c, (elem, _) in zip(clusters, scored_results):
+            if cluster_cts[c] < per_cluster:
+                pruned_results.append(elem)
+                cluster_cts[c] += 1
+
+        return pruned_results
 
     def _get_selector(self, node_type):
         if not self._has_started_up:
@@ -260,7 +395,16 @@ class FunctionDatabase(object):
         return self.selectors[node_type]
 
     # Querying API
-    def defines(self, column_name, start_node=None, _lambda=None):
+    def defines(
+        self,
+        column_name,
+        start_node=None,
+        _lambda=None,
+        rank=False,
+        alpha=0.5,
+        n_clusters=5,
+        per_cluster=3
+    ):
         if _lambda is None:
             _lambda = lambda x: x.start_node()
         column_name = get_column_name(column_name)
@@ -269,10 +413,26 @@ class FunctionDatabase(object):
         if end_node is None and column_name is not None:
             return []
         return self._run_relationship_query(
-            start_node, RelationshipTypes.DEFINES, end_node, _lambda
+            start_node,
+            RelationshipTypes.DEFINES,
+            end_node,
+            _lambda,
+            query_for_ranking=[column_name] if rank else None,
+            alpha=alpha,
+            n_clusters=n_clusters,
+            per_cluster=per_cluster,
         )
 
-    def uses(self, column_name, start_node=None, _lambda=None):
+    def uses(
+        self,
+        column_name,
+        start_node=None,
+        _lambda=None,
+        rank=False,
+        alpha=0.5,
+        n_clusters=5,
+        per_cluster=3
+    ):
         if _lambda is None:
             _lambda = lambda x: x.start_node()
         column_name = get_column_name(column_name)
@@ -281,10 +441,26 @@ class FunctionDatabase(object):
         if end_node is None and column_name is not None:
             return []
         return self._run_relationship_query(
-            start_node, RelationshipTypes.USES, end_node, _lambda
+            start_node,
+            RelationshipTypes.USES,
+            end_node,
+            _lambda,
+            query_for_ranking=[column_name] if rank else None,
+            alpha=alpha,
+            n_clusters=n_clusters,
+            per_cluster=per_cluster,
         )
 
-    def calls(self, fun, start_node=None, _lambda=None):
+    def calls(
+        self,
+        fun,
+        start_node=None,
+        _lambda=None,
+        rank=False,
+        alpha=0.5,
+        n_clusters=5,
+        per_cluster=3
+    ):
         if _lambda is None:
             _lambda = lambda x: x.start_node()
         full_name = get_function_full_name(fun) if fun is not None else None
@@ -293,10 +469,26 @@ class FunctionDatabase(object):
         if end_node is None and fun is not None:
             return []
         return self._run_relationship_query(
-            start_node, RelationshipTypes.CALLS, end_node, _lambda
+            start_node,
+            RelationshipTypes.CALLS,
+            end_node,
+            _lambda,
+            query_for_ranking=full_name.split(".") if rank else None,
+            alpha=alpha,
+            n_clusters=n_clusters,
+            per_cluster=per_cluster,
         )
 
-    def wrangles_for(self, fun, start_node=None, _lambda=None):
+    def wrangles_for(
+        self,
+        fun,
+        start_node=None,
+        _lambda=None,
+        rank=False,
+        alpha=0.5,
+        n_clusters=5,
+        per_cluster=3
+    ):
         if _lambda is None:
             _lambda = lambda x: x.start_node()
         full_name = get_function_full_name(fun) if fun is not None else None
@@ -305,7 +497,41 @@ class FunctionDatabase(object):
         if end_node is None and fun is not None:
             return []
         return self._run_relationship_query(
-            start_node, RelationshipTypes.WRANGLES_FOR, end_node, _lambda
+            start_node,
+            RelationshipTypes.WRANGLES_FOR,
+            end_node,
+            _lambda,
+            query_for_ranking=full_name.split(".") if rank else None,
+            alpha=alpha,
+            n_clusters=n_clusters,
+            per_cluster=per_cluster,
+        )
+
+    def query(self, terms, alpha=0.5, n_clusters=5, per_cluster=3):
+        # defines/calls
+        # uses/wrangles_for
+        results = []
+        processed_terms = []
+        for t in terms:
+            if isinstance(t, str):
+                results.extend(self.defines(t, rank=False))
+                results.extend(self.uses(t, rank=False))
+                processed_terms.append(t)
+            else:
+                # assume it is a function
+                results.extend(self.calls(t, rank=False))
+                results.extend(self.wrangles_for(t, rank=False))
+                full_func_name = get_function_full_name(t)
+                # add in function name tokenized by path
+                processed_terms.extend(full_func_name.split("."))
+        query = set(processed_terms)
+        results = set(results)
+        return self.rank_query_results(
+            results,
+            query,
+            alpha=alpha,
+            n_clusters=n_clusters,
+            per_cluster=per_cluster,
         )
 
     def query_by_relationships(self, relationship_tuples):
@@ -368,6 +594,10 @@ class FunctionDatabase(object):
 
     def columns(self):
         return list(self._get_selector(NodeTypes.COLUMN))
+
+    # TODO: way to combine query results
+    # and then return (rather than have to figure out)
+    # basically should be able to compose these queries
 
 
 def main(args):

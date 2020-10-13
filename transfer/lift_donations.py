@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 import ast
 from collections import defaultdict
+import copy
 import pickle
 import textwrap
 import re
@@ -326,6 +327,139 @@ def lower_lifted_rewrites(src):
         else:
             rewritten_lines.append(lr)
     return "\n".join(rewritten_lines)
+
+
+class IdentifierRenamer(ast.NodeTransformer):
+    def __init__(self):
+        self.ct = 0
+        self.id_map = {}
+
+    def transform(self, src):
+        tree = ast.parse(src)
+        tree = self.visit(tree)
+        return unparse(tree)
+
+    def get_fresh_id(self):
+        _id = "__id_{}__".format(self.ct)
+        self.ct += 1
+        return _id
+
+    def transform_assignment(self, node):
+        node.value = self.visit(node.value)
+        new_targets = []
+        for target in node.targets:
+            new_targets.append(self.visit(target))
+        node.targets = new_targets
+        return node
+
+    def visit_alias(self, node):
+        # import statement
+        if node.asname is not None:
+            name = node.asname
+        else:
+            name = node.name
+        self.id_map[name] = name
+        return node
+
+    def visit_Assign(self, node):
+        return self.transform_assignment(node)
+
+    def visit_AnnAssign(self, node):
+        return self.transform_assignment(node)
+
+    def visit_AugAssign(self, node):
+        return self.transform_assignment(node)
+
+    def visit_Name(self, node):
+        if node.id not in self.id_map:
+            self.id_map[node.id] = self.get_fresh_id()
+        node.id = self.id_map[node.id]
+        return node
+
+
+def rename_lowered_rewrites(src):
+    return IdentifierRenamer().transform(src)
+
+
+# we consider no-op wrapping in
+# calls like pd.Series/pd.DataFrame
+# and thus already going to be a table
+# when the function is called...this
+# is a janky heuristic
+class TableNoOpRemover(ast.NodeTransformer):
+    # assignment must be single function call to
+    # pd.DataFrame/pd.Series
+    # and argument must be unknown source
+    def __init__(self):
+        self.ids = set([])
+
+    def transform(self, src):
+        tree = ast.parse(src)
+        tree = self.visit(tree)
+        return unparse(tree)
+
+    def transform_assignment(self, node):
+        if not isinstance(node.value, ast.Call):
+            return node
+        if len(node.targets) > 1:
+            return node
+
+        func = node.value.func
+        if isinstance(func, ast.Name):
+            func_name = func.id
+        elif isinstance(func, ast.Attribute):
+            func_name = func.attr
+        else:
+            return node
+
+        if not func_name.endswith(("DataFrame", "Series")):
+            return node
+
+        if len(node.value.args) != 1:
+            return node
+
+        if not isinstance(node.value.args[0], ast.Name):
+            return node
+
+        # it's one of our no-ops
+        return None
+
+    def visit_Assign(self, node):
+        return self.transform_assignment(node)
+
+    def visit_AnnAssign(self, node):
+        return self.transform_assignment(node)
+
+    def visit_AugAssign(self, node):
+        return self.transform_assignment(node)
+
+
+def remove_table_noops(src):
+    return TableNoOpRemover().transform(src)
+
+
+class KeyTokenCollector(ast.NodeVisitor):
+    def __init__(self):
+        self.acc = set([])
+
+    def visit_Name(self, node):
+        self.acc.add(node.id.lower())
+
+    def visit_Str(self, node):
+        self.acc.add(node.s.lower())
+
+    def visit_Attribute(self, node):
+        self.acc.add(node.attr.lower())
+        self.visit(node.value)
+
+    def run(self, node):
+        self.visit(node)
+        return self.acc
+
+
+def collect_key_tokens(src):
+    tree = ast.parse(src)
+    return KeyTokenCollector().run(tree)
 
 
 ### the donated function class ###
