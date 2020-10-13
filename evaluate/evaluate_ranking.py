@@ -12,7 +12,7 @@ import sklearn.tree
 import tqdm
 
 from transfer.build_db import *
-from transfer.rank_functions import *
+from transfer.deprecated.rank_functions import *
 from transfer.utils import sort_by_values
 
 
