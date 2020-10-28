@@ -6,8 +6,8 @@ from transfer.build_db import (
 import pickle
 
 
-def start():
-    with open("sample_db.pkl", "rb") as fin:
+def start(path="sample_db.pkl"):
+    with open(path, "rb") as fin:
         db = pickle.load(fin)
     db.startup()
     return db

@@ -312,7 +312,13 @@ class FunctionDatabase(object):
         return results
 
     def rank_query_results(
-        self, results, query, alpha=0.5, n_clusters=5, per_cluster=3
+        self,
+        results,
+        query,
+        alpha=0.5,
+        n_clusters=5,
+        per_cluster=3,
+        random_state=None,
     ):
         """
         Rank query results using:
@@ -378,6 +384,7 @@ class FunctionDatabase(object):
         clusters = SpectralClustering(
             n_clusters=n_clusters,
             affinity="precomputed",
+            random_state=random_state,
         ).fit_predict(corr_mat)
         #  take first K based on score per cluster
         cluster_cts = Counter()
@@ -507,7 +514,14 @@ class FunctionDatabase(object):
             per_cluster=per_cluster,
         )
 
-    def query(self, terms, alpha=0.5, n_clusters=5, per_cluster=3):
+    def query(
+        self,
+        terms,
+        alpha=0.5,
+        n_clusters=5,
+        per_cluster=3,
+        random_state=None,
+    ):
         # defines/calls
         # uses/wrangles_for
         results = []
@@ -532,6 +546,7 @@ class FunctionDatabase(object):
             alpha=alpha,
             n_clusters=n_clusters,
             per_cluster=per_cluster,
+            random_state=random_state,
         )
 
     def query_by_relationships(self, relationship_tuples):
