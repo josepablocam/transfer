@@ -7,10 +7,6 @@ import pandas as pd
 import numpy as np
 from demo import *
 
-df = pd.read_csv("../../demo-data/loan.csv", nrows=1000)
-
-db = start("../../sample_db.pkl")
-
 
 # just utility so we don't clobber original dataframe
 def cp(d):
@@ -27,8 +23,21 @@ def run(db_node):
     return func(cp_df)
 
 
-ALL_FUNCS = db.extracted_functions()
-ALL_CODE_FRAGMENTS = [code(p) for p in ALL_FUNCS]
+db = None
+ALL_FUNCS = None
+ALL_CODE_FRAGMENTS = None
+df = None
+
+
+def init():
+    global db
+    global ALL_FUNCS
+    global ALL_CODE_FRAGMENTS
+    global df
+    db = start("../../sample_db.pkl")
+    ALL_FUNCS = db.extracted_functions()
+    ALL_CODE_FRAGMENTS = [code(p) for p in ALL_FUNCS]
+    df = pd.read_csv("../../demo-data/loan.csv", nrows=1000)
 
 
 def survey_task(
@@ -76,7 +85,7 @@ class Task(object):
         survey_task(db, self.query, n, random_state=random_state)
         print("\n")
         print("# Random fragments (control)")
-        survey_task(db, None, n, max_loc=15, random_state=random_state)
+        survey_task(db, None, n, max_loc=20, random_state=random_state)
 
 
 task1 = Task(
@@ -111,11 +120,11 @@ task5 = Task(
     query=[pd.DataFrame.dropna],
 )
 
-tasks = [task1, task2, task3, task4, task5]
-
 
 def main():
+    init()
     seed = 42
+    tasks = [task1, task2, task3, task4, task5]
     for ix, t in enumerate(tasks):
         t.generate(db, 5, seed + ix)
 

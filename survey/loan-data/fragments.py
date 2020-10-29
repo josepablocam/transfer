@@ -2,26 +2,7 @@
 # Identify non-current loans based on loan_status
 # Transfer fragments (treatment)
 # Fragment 0
-def f0(df):
-    # core cleaning code
-    import pandas as pd
-    # df = pd.read_csv('../input/loan.csv', low_memory=False)
-    df = df.loc[(df['loan_status'] != 'Current')]
-    return df
-
-
-# Fragment 1
-def f1(df):
-    # core cleaning code
-    import pandas as pd
-    # df = pd.read_csv('../input/loan.csv')
-    df = df[((df.loan_status == 'Fully Paid') |
-             (df.loan_status == 'Charged Off'))]
-    return df
-
-
-# Fragment 2
-def f2(data):
+def f0(data):
     # core cleaning code
     import pandas as pd
     # data = pd.read_csv('../input/loan.csv', parse_dates=True)
@@ -29,200 +10,82 @@ def f2(data):
     return data
 
 
-# Fragment 3
-def f3(df):
-    # core cleaning code
-    import numpy as np
-    import pandas as pd
-    # df = pd.read_csv('../input/loan.csv', low_memory=False)
-    df['good_loan'] = np.where(((
-        (df.loan_status == 'Fully Paid') | (df.loan_status == 'Current')
-    ) | (
-        df.loan_status == 'Does not meet the credit policy. Status:Fully Paid'
-    )), 1, 0)
-    return df
-
-
-# Fragment 4
-def f4(df_loan):
-    # core cleaning code
-    import pandas as pd
-    # df_loan = pd.read_csv('../input/loan.csv', low_memory=False)
-    df_loan.loc[((
-        df_loan.loan_status ==
-        'Does not meet the credit policy. Status:Fully Paid'
-    ), 'loan_status')] = 'NMCP Fully Paid'
-    df_loan.loc[((
-        df_loan.loan_status ==
-        'Does not meet the credit policy. Status:Charged Off'
-    ), 'loan_status')] = 'NMCP Charged Off'
-    return df_loan
-
-
-# Random fragments (control)
-# Fragment 0
-def f0(df):
-    # core cleaning code
-    import pandas as pd
-    # df = pd.read_csv('../input/loan.csv', usecols=['loan_amnt', 'addr_state'])
-    statePop = {
-        'CA': 39144818,
-        'TX': 27469144,
-        'FL': 20271878,
-        'NY': 19795791,
-        'IL': 12859995,
-        'PA': 12802503,
-        'OH': 11613423,
-        'GA': 10214860,
-        'NC': 10042802,
-        'MI': 9922576,
-        'NJ': 8958013,
-        'VA': 8382993,
-        'WA': 7170351,
-        'AZ': 6828065,
-        'MA': 6794422,
-        'IN': 6619680,
-        'TN': 6600299,
-        'MO': 6083672,
-        'MD': 6006401,
-        'WI': 5771337,
-        'MN': 5489594,
-        'CO': 5456574,
-        'SC': 4896146,
-        'AL': 4858979,
-        'LA': 4670724,
-        'KY': 4425092,
-        'OR': 4028977,
-        'OK': 3911338,
-        'CT': 3890886,
-        'IA': 3123899,
-        'UT': 2995919,
-        'MS': 2992333,
-        'AK': 2978204,
-        'KS': 2911641,
-        'NV': 2890845,
-        'NM': 2085109,
-        'NE': 1896190,
-        'WV': 1844128,
-        'ID': 1654930,
-        'HI': 1431603,
-        'NH': 1330608,
-        'ME': 1329328,
-        'RI': 1053298,
-        'MT': 1032949,
-        'DE': 945934,
-        'SD': 858469,
-        'ND': 756927,
-        'AK': 738432,
-        'DC': 672228,
-        'VT': 626042,
-        'WY': 586107
-    }
-    statePopdf = pd.DataFrame.from_dict(statePop, orient='index').reset_index()
-    perStatedf = df.groupby(
-        'addr_state', as_index=False
-    ).sum().sort_values(
-        by='loan_amnt', ascending=False
-    )
-    perStatedf = pd.merge(perStatedf, statePopdf, on=['State'], how='inner')
-    perStatedf['PerCaptia'] = (perStatedf.loan_amt / perStatedf.Pop)
-    return perStatedf
-
-
 # Fragment 1
 def f1(df):
     # core cleaning code
     import pandas as pd
-    # df = pd.read_csv('../input/loan.csv')
-    df = df[((df.loan_status == 'Fully Paid') |
-             (df.loan_status == 'Charged Off'))]
-    df = df[(df['pymnt_plan'] == 'n')]
-    df = df[(df['application_type'] == 'INDIVIDUAL')]
-    df1 = df.drop(
-        columns=[
-            'policy_code', 'next_pymnt_d', 'out_prncp', 'out_prncp_inv',
-            'pymnt_plan', 'initial_list_status', 'member_id', 'id', 'url',
-            'application_type', 'grade', 'annual_inc_joint', 'dti_joint'
-        ]
-    )
-    df1 = df1.drop(
-        columns=[
-            'verification_status_joint', 'open_acc_6m', 'open_il_6m',
-            'open_il_12m', 'open_il_24m', 'mths_since_rcnt_il', 'total_bal_il',
-            'il_util', 'open_rv_12m', 'open_rv_24m', 'max_bal_bc', 'all_util',
-            'inq_fi', 'total_cu_tl', 'inq_last_12m'
-        ]
-    )
-    df1 = df1.drop(columns=['mths_since_last_major_derog'])
-    df1['revol_util_nan'] = (pd.isnull(df1.revol_util) * 1)
-    return df1
+    # df = pd.read_csv('../input/loan.csv', low_memory=False)
+    df = df.loc[(df['loan_status'] != 'Current')]
+    return df
 
 
 # Fragment 2
 def f2(df):
     # core cleaning code
     import pandas as pd
-    from sklearn.preprocessing import LabelEncoder, OneHotEncoder
     # df = pd.read_csv('../input/loan.csv')
     df = df[((df.loan_status == 'Fully Paid') |
              (df.loan_status == 'Charged Off'))]
-    df = df[(df['pymnt_plan'] == 'n')]
-    df = df[(df['application_type'] == 'INDIVIDUAL')]
-    df1 = df.drop(
-        columns=[
-            'policy_code', 'next_pymnt_d', 'out_prncp', 'out_prncp_inv',
-            'pymnt_plan', 'initial_list_status', 'member_id', 'id', 'url',
-            'application_type', 'grade', 'annual_inc_joint', 'dti_joint'
-        ]
-    )
-    terms = []
-    df1.term = terms
-    df1 = df1.drop(
-        columns=[
-            'verification_status_joint', 'open_acc_6m', 'open_il_6m',
-            'open_il_12m', 'open_il_24m', 'mths_since_rcnt_il', 'total_bal_il',
-            'il_util', 'open_rv_12m', 'open_rv_24m', 'max_bal_bc', 'all_util',
-            'inq_fi', 'total_cu_tl', 'inq_last_12m'
-        ]
-    )
-    return df1
+    return df
 
 
 # Fragment 3
-def f3(df):
+def f3(dataset):
     # core cleaning code
     import pandas as pd
-    import numpy as np
-    # df = pd.read_csv('../input/loan.csv')
-    df = df[((df.loan_status == 'Fully Paid') |
-             (df.loan_status == 'Charged Off'))]
-    df = df[(df['pymnt_plan'] == 'n')]
-    df = df[(df['application_type'] == 'INDIVIDUAL')]
-    df1 = df.drop(
-        columns=[
-            'policy_code', 'next_pymnt_d', 'out_prncp', 'out_prncp_inv',
-            'pymnt_plan', 'initial_list_status', 'member_id', 'id', 'url',
-            'application_type', 'grade', 'annual_inc_joint', 'dti_joint'
-        ]
-    )
-    df1 = df1.drop(
-        columns=[
-            'verification_status_joint', 'open_acc_6m', 'open_il_6m',
-            'open_il_12m', 'open_il_24m', 'mths_since_rcnt_il', 'total_bal_il',
-            'il_util', 'open_rv_12m', 'open_rv_24m', 'max_bal_bc', 'all_util',
-            'inq_fi', 'total_cu_tl', 'inq_last_12m'
-        ]
-    )
-    df1 = df1.drop(columns=['mths_since_last_major_derog'])
-    df1.tot_cur_bal = df1.tot_cur_bal.replace(np.nan, 0)
-    return df1
+    # dataset = pd.read_csv('../input/loan.csv', low_memory=False)
+    dataset = dataset.fillna(0)
+    dataset['loan_status'] = dataset['loan_status'].astype(
+        'category'
+    ).cat.codes
+    return dataset
 
 
 # Fragment 4
 def f4(df):
     # core cleaning code
     import pandas as pd
-    import numpy as np
+    badLoan = [
+        'Charged Off', 'Default', 'Late (31-120 days)', 'Late (16-30 days)',
+        'In Grace Period',
+        'Does not meet the credit policy. Status:Charged Off'
+    ]
+    # df = pd.read_csv('../input/loan.csv', usecols=['loan_status', 'addr_state'])
+    df['isBad'] = [(1 if (x in badLoan) else 0) for x in df.loan_status]
+    return df
+
+
+# Random fragments (control)
+# Fragment 0
+def f0(loan):
+    # core cleaning code
+    import pandas as pd
+    # loan = pd.read_csv('../input/loan.csv')
+    del_cols = [
+        'id', 'member_id', 'policy_code', 'url', 'zip_code', 'addr_state',
+        'pymnt_plan', 'emp_title', 'application_type', 'acc_now_delinq',
+        'title', 'collections_12_mths_ex_med', 'collection_recovery_fee'
+    ]
+    loan = loan.drop(del_cols, axis=1)
+    loan = loan[(loan['loan_status'] != 'Current')]
+    loan.loc[((loan['emp_length'] == '< 1 year'), 'empl_exp')] = 'inexp'
+    loan.loc[((loan['emp_length'] == '1 year'), 'empl_exp')] = 'new'
+    loan.loc[((loan['emp_length'] == '2 years'), 'empl_exp')] = 'new'
+    loan.loc[((loan['emp_length'] == '3 years'), 'empl_exp')] = 'new'
+    loan.loc[((loan['emp_length'] == '4 years'), 'empl_exp')] = 'intermed'
+    loan.loc[((loan['emp_length'] == '5 years'), 'empl_exp')] = 'intermed'
+    loan.loc[((loan['emp_length'] == '6 years'), 'empl_exp')] = 'intermed'
+    loan.loc[((loan['emp_length'] == '7 years'), 'empl_exp')] = 'seasoned'
+    loan.loc[((loan['emp_length'] == '8 years'), 'empl_exp')] = 'seasoned'
+    loan.loc[((loan['emp_length'] == '9 years'), 'empl_exp')] = 'seasoned'
+    loan.loc[((loan['emp_length'] == 'n/a'), 'empl_exp')] = 'unknown'
+    return loan
+
+
+# Fragment 1
+def f1(df):
+    # core cleaning code
+    import pandas as pd
     # df = pd.read_csv('../input/loan.csv', low_memory=False)
     df = df.rename(
         columns={
@@ -233,7 +96,46 @@ def f4(df):
             'annual_inc': 'annual_income'
         }
     )
-    df['loan_condition'] = np.nan
+    group_dates = df.groupby(['complete_date', 'region'], as_index=False).sum()
+    group_dates = group_dates.groupby(['issue_d', 'region'],
+                                      as_index=False).sum()
+    group_dates = group_dates.groupby(['issue_d', 'region'],
+                                      as_index=False).sum()
+    group_dates['loan_amount'] = (group_dates['loan_amount'] / 1000)
+    by_loan_amount = df.groupby(['region', 'addr_state'],
+                                as_index=False).loan_amount.sum()
+    return by_loan_amount
+
+
+# Fragment 2
+def f2(dataset):
+    # core cleaning code
+    import pandas as pd
+    # dataset = pd.read_csv('../input/loan.csv', low_memory=False)
+    dataset = dataset.fillna(0)
+    dataset['verification_status_joint'] = dataset[
+        'verification_status_joint'].astype('category').cat.codes
+    return dataset
+
+
+# Fragment 3
+def f3(dataset):
+    # core cleaning code
+    import pandas as pd
+    # dataset = pd.read_csv('../input/loan.csv', low_memory=False)
+    dataset = dataset.fillna(0)
+    dataset['loan_status'] = dataset['loan_status'].astype(
+        'category'
+    ).cat.codes
+    return dataset
+
+
+# Fragment 4
+def f4(df):
+    # core cleaning code
+    import pandas as pd
+    # df = pd.read_csv('../input/loan.csv', low_memory=False)
+    df = df.loc[(df['loan_status'] != 'Current')]
     return df
 
 
@@ -250,16 +152,7 @@ def f0(df_loan):
 
 
 # Fragment 1
-def f1(data):
-    # core cleaning code
-    import pandas as pd
-    # data = pd.read_csv('../input/loan.csv', low_memory=False)
-    data['emp_length'] = data['emp_length'].astype(int)
-    return data
-
-
-# Fragment 2
-def f2(df):
+def f1(df):
     # core cleaning code
     import pandas as pd
     # df = pd.read_csv('../input/loan.csv', low_memory=False)
@@ -275,13 +168,22 @@ def f2(df):
     return df
 
 
+# Fragment 2
+def f2(data):
+    # core cleaning code
+    import pandas as pd
+    # data = pd.read_csv('../input/loan.csv', low_memory=False)
+    data['emp_length'] = data['emp_length'].astype(int)
+    return data
+
+
 # Fragment 3
 def f3(dataset):
     # core cleaning code
     import pandas as pd
     # dataset = pd.read_csv('../input/loan.csv', low_memory=False)
     dataset = dataset.fillna(0)
-    dataset['initial_list_status'] = dataset['initial_list_status'].astype(
+    dataset['application_type'] = dataset['application_type'].astype(
         'category'
     ).cat.codes
     return dataset
@@ -293,14 +195,37 @@ def f4(dataset):
     import pandas as pd
     # dataset = pd.read_csv('../input/loan.csv', low_memory=False)
     dataset = dataset.fillna(0)
-    dataset['verification_status_joint'] = dataset[
-        'verification_status_joint'].astype('category').cat.codes
+    dataset['loan_status'] = dataset['loan_status'].astype(
+        'category'
+    ).cat.codes
     return dataset
 
 
 # Random fragments (control)
 # Fragment 0
-def f0(df):
+def f0(loan):
+    # core cleaning code
+    import numpy as np
+    import pandas as pd
+    # loan = pd.read_csv('../input/loan.csv', low_memory=False)
+    loan['title'] = np.where(loan['title'].isnull(), 0, loan['title'])
+    return loan
+
+
+# Fragment 1
+def f1(dataset):
+    # core cleaning code
+    import pandas as pd
+    # dataset = pd.read_csv('../input/loan.csv', low_memory=False)
+    dataset = dataset.fillna(0)
+    dataset['verification_status'] = dataset['verification_status'].astype(
+        'category'
+    ).cat.codes
+    return dataset
+
+
+# Fragment 2
+def f2(df):
     # core cleaning code
     import pandas as pd
     # df = pd.read_csv('../input/loan.csv', low_memory=False)
@@ -313,52 +238,21 @@ def f0(df):
             'annual_inc': 'annual_income'
         }
     )
-    complete_df = df.copy()
-    complete_df[col] = complete_df[col].fillna(0)
-    complete_df[col] = complete_df[col]
-    complete_df[col].fillna = complete_df[col].fillna
-    complete_df[col] = complete_df[col].fillna(0)
-    complete_df['last_pymnt_d'] = complete_df.groupby('region')[
-        'last_pymnt_d'].transform((lambda x: x.fillna(x.mode)))
-    return complete_df
+    group_dates = df.groupby(['complete_date', 'region'], as_index=False).sum()
+    group_dates = group_dates.groupby(['issue_d', 'region'],
+                                      as_index=False).sum()
+    group_dates = group_dates.groupby(['issue_d', 'region'],
+                                      as_index=False).sum()
+    group_dates['loan_amount'] = (group_dates['loan_amount'] / 1000)
+    by_loan_amount = df.groupby(['region', 'addr_state'],
+                                as_index=False).loan_amount.sum()
+    by_interest_rate = df.groupby(['region', 'addr_state'],
+                                  as_index=False).interest_rate.mean()
+    return by_interest_rate
 
 
-# Fragment 1
-def f1(df):
-    # core cleaning code
-    import pandas as pd
-    from sklearn.preprocessing import Imputer
-    # df = pd.read_csv('../input/loan.csv')
-    df = df[((df.loan_status == 'Fully Paid') |
-             (df.loan_status == 'Charged Off'))]
-    df = df[(df['pymnt_plan'] == 'n')]
-    df = df[(df['application_type'] == 'INDIVIDUAL')]
-    df1 = df.drop(
-        columns=[
-            'policy_code', 'next_pymnt_d', 'out_prncp', 'out_prncp_inv',
-            'pymnt_plan', 'initial_list_status', 'member_id', 'id', 'url',
-            'application_type', 'grade', 'annual_inc_joint', 'dti_joint'
-        ]
-    )
-    df1 = df1.drop(
-        columns=[
-            'verification_status_joint', 'open_acc_6m', 'open_il_6m',
-            'open_il_12m', 'open_il_24m', 'mths_since_rcnt_il', 'total_bal_il',
-            'il_util', 'open_rv_12m', 'open_rv_24m', 'max_bal_bc', 'all_util',
-            'inq_fi', 'total_cu_tl', 'inq_last_12m'
-        ]
-    )
-    df1 = df1.drop(columns=['mths_since_last_major_derog'])
-    imp = Imputer(strategy='most_frequent')
-    msld = imp.fit_transform(
-        df1.mths_since_last_delinq.values.reshape((-1), 1)
-    )
-    df1.mths_since_last_delinq = msld
-    return df1
-
-
-# Fragment 2
-def f2(df):
+# Fragment 3
+def f3(df):
     # core cleaning code
     import pandas as pd
     # df = pd.read_csv('../input/loan.csv', usecols=['loan_amnt', 'addr_state'])
@@ -419,19 +313,11 @@ def f2(df):
     return statePopdf
 
 
-# Fragment 3
-def f3(data):
-    # core cleaning code
-    import pandas as pd
-    # data = pd.read_csv('../input/loan.csv', low_memory=False)
-    data.earliest_cr_line = pd.to_datetime(data.earliest_cr_line)
-    return data
-
-
 # Fragment 4
 def f4(df):
     # core cleaning code
     import pandas as pd
+    from sklearn.preprocessing import LabelEncoder, OneHotEncoder
     # df = pd.read_csv('../input/loan.csv')
     df = df[((df.loan_status == 'Fully Paid') |
              (df.loan_status == 'Charged Off'))]
@@ -453,7 +339,14 @@ def f4(df):
         ]
     )
     df1 = df1.drop(columns=['mths_since_last_major_derog'])
-    df1['revol_util_nan'] = (pd.isnull(df1.revol_util) * 1)
+    lbl_enc = LabelEncoder()
+    df1[(x + '_old')] = df[x]
+    df1[x] = lbl_enc.fit_transform(df1[x])
+    df1[(x + '_old')] = df[x]
+    df1[x] = df1[x]
+    df1[x] = lbl_enc.fit_transform(df1[x])
+    df1.earliest_cr_line = pd.to_datetime(df1.earliest_cr_line, format='%b-%Y')
+    df1['earliest_cr_line_month'] = df1.earliest_cr_line.dt.month
     return df1
 
 
@@ -465,35 +358,35 @@ def f0(df_loan):
     # core cleaning code
     import pandas as pd
     # df_loan = pd.read_csv('../input/loan.csv', low_memory=False)
-    df_loan['issue_d'] = pd.to_datetime(df_loan['issue_d'])
-    return df_loan
-
-
-# Fragment 1
-def f1(df_loan):
-    # core cleaning code
-    import pandas as pd
-    # df_loan = pd.read_csv('../input/loan.csv', low_memory=False)
     (df_loan['issue_month'],
      df_loan['issue_year']) = df_loan['issue_d'].str.split('-', 1).str
     return df_loan
 
 
-# Fragment 2
-def f2(data):
+# Fragment 1
+def f1(data):
     # core cleaning code
     import pandas as pd
-    # data = pd.read_csv('../input/loan.csv', low_memory=False)
-    data.earliest_cr_line = pd.to_datetime(data.earliest_cr_line)
+    # data = pd.read_csv('../input/loan.csv')
+    data['issue_dt'] = pd.to_datetime(data.issue_d)
     return data
+
+
+# Fragment 2
+def f2(df_loan):
+    # core cleaning code
+    import pandas as pd
+    # df_loan = pd.read_csv('../input/loan.csv', low_memory=False)
+    df_loan['issue_d'] = pd.to_datetime(df_loan['issue_d'])
+    return df_loan
 
 
 # Fragment 3
 def f3(data):
     # core cleaning code
     import pandas as pd
-    # data = pd.read_csv('../input/loan.csv')
-    data['issue_dt'] = pd.to_datetime(data.issue_d)
+    # data = pd.read_csv('../input/loan.csv', low_memory=False)
+    data.earliest_cr_line = pd.to_datetime(data.earliest_cr_line)
     return data
 
 
@@ -517,71 +410,93 @@ def f4(df):
 
 # Random fragments (control)
 # Fragment 0
-def f0(loan):
-    # core cleaning code
-    import pandas as pd
-    # loan = pd.read_csv('../input/loan.csv')
-    del_cols = [
-        'id', 'member_id', 'policy_code', 'url', 'zip_code', 'addr_state',
-        'pymnt_plan', 'emp_title', 'application_type', 'acc_now_delinq',
-        'title', 'collections_12_mths_ex_med', 'collection_recovery_fee'
-    ]
-    loan = loan.drop(del_cols, axis=1)
-    loan = loan[(loan['loan_status'] != 'Current')]
-    loan = loan.drop('emp_length', axis=1)
-    loan['target'] = 0
-    return loan
-
-
-# Fragment 1
-def f1(data):
-    # core cleaning code
-    import numpy as np
-    import pandas as pd
-    # data = pd.read_csv('../input/loan.csv', parse_dates=True)
-    data = data[(data.loan_status != 'Fully Paid')]
-    data = data[(
-        data.loan_status !=
-        'Does not meet the credit policy. Status:Fully Paid'
-    )]
-    data.emp_length = data.emp_length.replace(np.nan, 0)
-    return data
-
-
-# Fragment 2
-def f2(loan):
-    # core cleaning code
-    import pandas as pd
-    # loan = pd.read_csv('../input/loan.csv', low_memory=False)
-    loan['tot_coll_amt'] = loan['tot_coll_amt'].fillna(
-        loan['tot_coll_amt'].median()
-    )
-    return loan
-
-
-# Fragment 3
-def f3(data):
-    # core cleaning code
-    import numpy as np
-    import pandas as pd
-    # data = pd.read_csv('../input/loan.csv', parse_dates=True)
-    data = data[(data.loan_status != 'Fully Paid')]
-    data = data[(
-        data.loan_status !=
-        'Does not meet the credit policy. Status:Fully Paid'
-    )]
-    data['rating'] = np.where((data.loan_status != 'Current'), 1, 0)
-    return data
-
-
-# Fragment 4
-def f4(dataset):
+def f0(dataset):
     # core cleaning code
     import pandas as pd
     # dataset = pd.read_csv('../input/loan.csv', low_memory=False)
     dataset = dataset.fillna(0)
     dataset['term'] = dataset['term'].astype('category').cat.codes
     return dataset
+
+
+# Fragment 1
+def f1(df):
+    # core cleaning code
+    import pandas as pd
+    # df = pd.read_csv('../input/loan.csv')
+    df = df[((df.loan_status == 'Fully Paid') |
+             (df.loan_status == 'Charged Off'))]
+    df = df[(df['pymnt_plan'] == 'n')]
+    df = df[(df['application_type'] == 'INDIVIDUAL')]
+    df1 = df.drop(
+        columns=[
+            'policy_code', 'next_pymnt_d', 'out_prncp', 'out_prncp_inv',
+            'pymnt_plan', 'initial_list_status', 'member_id', 'id', 'url',
+            'application_type', 'grade', 'annual_inc_joint', 'dti_joint'
+        ]
+    )
+    emp_lengths = []
+    df1.emp_length = emp_lengths
+    return df1
+
+
+# Fragment 2
+def f2(df):
+    # core cleaning code
+    import pandas as pd
+    # df = pd.read_csv('../input/loan.csv', low_memory=False)
+    df = df.rename(
+        columns={
+            'loan_amnt': 'loan_amount',
+            'funded_amnt': 'funded_amount',
+            'funded_amnt_inv': 'investor_funds',
+            'int_rate': 'interest_rate',
+            'annual_inc': 'annual_income'
+        }
+    )
+    group_dates = df.groupby(['complete_date', 'region'], as_index=False).sum()
+    group_dates = group_dates.groupby(['issue_d', 'region'],
+                                      as_index=False).sum()
+    return group_dates
+
+
+# Fragment 3
+def f3(dataset):
+    # core cleaning code
+    import numpy as np
+    import pandas as pd
+    # dataset = pd.read_csv('../input/loan.csv', low_memory=False)
+    dataset = dataset.fillna(0)
+    dataset['loan_status'] = dataset['loan_status'].astype(
+        'category'
+    ).cat.codes
+    non_numerics = [
+        x for x in dataset.columns if (
+            not ((dataset[x].dtype == np.float64) or
+                 (dataset[x].dtype == np.int8) or
+                 (dataset[x].dtype == np.int64))
+        )
+    ]
+    df = dataset
+    return df
+
+
+# Fragment 4
+def f4(data):
+    # core cleaning code
+    import numpy as np
+    import pandas as pd
+    # data = pd.read_csv('../input/loan.csv')
+    data_1 = pd.DataFrame(data)
+    category_one_data = data_1[(data_1.loan_status == 'Fully Paid')]
+    category_two_data = data_1[(data_1.loan_status == 'Charged Off')]
+    new_data = np.vstack((category_one_data, category_two_data))
+    new_data = new_data[(slice(None, None, None), slice(2, (-30), None))]
+    new_data_df = pd.DataFrame(new_data)
+    title = new_data_df[19]
+    title = pd.DataFrame(title)
+    title.columns = ['Title']
+    return title
 
 
 # Task 4
@@ -612,7 +527,9 @@ def f2(loan):
     # core cleaning code
     import pandas as pd
     # loan = pd.read_csv('../input/loan.csv', low_memory=False)
-    loan['revol_util'] = loan['revol_util'].fillna(loan['revol_util'].median())
+    loan['total_rev_hi_lim'] = loan['total_rev_hi_lim'].fillna(
+        loan['total_rev_hi_lim'].median()
+    )
     return loan
 
 
@@ -621,8 +538,8 @@ def f3(loan):
     # core cleaning code
     import pandas as pd
     # loan = pd.read_csv('../input/loan.csv', low_memory=False)
-    loan['tot_cur_bal'] = loan['tot_cur_bal'].fillna(
-        loan['tot_cur_bal'].median()
+    loan['tot_coll_amt'] = loan['tot_coll_amt'].fillna(
+        loan['tot_coll_amt'].median()
     )
     return loan
 
@@ -642,51 +559,123 @@ def f4(loan):
 
 # Random fragments (control)
 # Fragment 0
-def f0(data):
+def f0():
     # core cleaning code
     import pandas as pd
-    # data = pd.read_csv('../input/loan.csv', low_memory=False)
-    data.earliest_cr_line = pd.to_datetime(data.earliest_cr_line)
-    return data
+    statePop = {
+        'CA': 39144818,
+        'TX': 27469144,
+        'FL': 20271878,
+        'NY': 19795791,
+        'IL': 12859995,
+        'PA': 12802503,
+        'OH': 11613423,
+        'GA': 10214860,
+        'NC': 10042802,
+        'MI': 9922576,
+        'NJ': 8958013,
+        'VA': 8382993,
+        'WA': 7170351,
+        'AZ': 6828065,
+        'MA': 6794422,
+        'IN': 6619680,
+        'TN': 6600299,
+        'MO': 6083672,
+        'MD': 6006401,
+        'WI': 5771337,
+        'MN': 5489594,
+        'CO': 5456574,
+        'SC': 4896146,
+        'AL': 4858979,
+        'LA': 4670724,
+        'KY': 4425092,
+        'OR': 4028977,
+        'OK': 3911338,
+        'CT': 3890886,
+        'IA': 3123899,
+        'UT': 2995919,
+        'MS': 2992333,
+        'AK': 2978204,
+        'KS': 2911641,
+        'NV': 2890845,
+        'NM': 2085109,
+        'NE': 1896190,
+        'WV': 1844128,
+        'ID': 1654930,
+        'HI': 1431603,
+        'NH': 1330608,
+        'ME': 1329328,
+        'RI': 1053298,
+        'MT': 1032949,
+        'DE': 945934,
+        'SD': 858469,
+        'ND': 756927,
+        'AK': 738432,
+        'DC': 672228,
+        'VT': 626042,
+        'WY': 586107
+    }
+    statePopdf = pd.DataFrame.from_dict(statePop, orient='index').reset_index()
+    statePopdf.columns = ['State', 'Pop']
+    return statePopdf
 
 
 # Fragment 1
-def f1(loan):
+def f1(data):
     # core cleaning code
+    import numpy as np
     import pandas as pd
-    # loan = pd.read_csv('../input/loan.csv', low_memory=False)
-    loan['annual_inc'] = loan['annual_inc'].fillna(loan['annual_inc'].median())
-    return loan
+    # data = pd.read_csv('../input/loan.csv', parse_dates=True)
+    data = data[(data.loan_status != 'Fully Paid')]
+    data = data[(
+        data.loan_status !=
+        'Does not meet the credit policy. Status:Fully Paid'
+    )]
+    data['recovery'] = np.where((data.recoveries != 0.0), 1, 0)
+    return data
 
 
 # Fragment 2
-def f2(loan):
+def f2(df):
     # core cleaning code
     import pandas as pd
-    # loan = pd.read_csv('../input/loan.csv', low_memory=False)
-    loan['total_rev_hi_lim'] = loan['total_rev_hi_lim'].fillna(
-        loan['total_rev_hi_lim'].median()
-    )
-    return loan
+    # df = pd.read_csv('../input/loan.csv')
+    new_df = df[(df['addr_state'] == x)]
+    new_df['weighted'] = ((new_df['int_rate'] / 100) * new_df['funded_amnt'])
+    return new_df
 
 
 # Fragment 3
 def f3(data):
     # core cleaning code
+    import numpy as np
     import pandas as pd
-    # data = pd.read_csv('../input/loan.csv', low_memory=False)
-    data['emp_length'] = data['emp_length'].astype(int)
+    # data = pd.read_csv('../input/loan.csv', parse_dates=True)
+    data = data[(data.loan_status != 'Fully Paid')]
+    data = data[(
+        data.loan_status !=
+        'Does not meet the credit policy. Status:Fully Paid'
+    )]
+    data[e] = data[e].replace(np.nan, 0)
+    data[e] = data[e]
+    data[e].replace = data[e].replace
+    np.nan = np.nan
+    data[e] = data[e].replace(np.nan, 0)
+    data.loc[(data.mths_since_last_delinq.notnull(), 'delinq')] = 1
+    data.loc[(data.mths_since_last_delinq.isnull(), 'delinq')] = 0
     return data
 
 
 # Fragment 4
-def f4(df):
+def f4(loan):
     # core cleaning code
+    import numpy as np
     import pandas as pd
-    # df = pd.read_csv('../input/loan.csv')
-    df = df[((df.loan_status == 'Fully Paid') |
-             (df.loan_status == 'Charged Off'))]
-    return df
+    # loan = pd.read_csv('../input/loan.csv', low_memory=False)
+    loan['total_acc'] = np.where(
+        loan['total_acc'].isnull(), 0, loan['total_acc']
+    )
+    return loan
 
 
 # Task 5
@@ -884,66 +873,193 @@ def f4(df):
 
 # Random fragments (control)
 # Fragment 0
-def f0(loan):
+def f0(df):
     # core cleaning code
-    import numpy as np
     import pandas as pd
-    # loan = pd.read_csv('../input/loan.csv', low_memory=False)
-    loan['acc_now_delinq'] = np.where(
-        loan['acc_now_delinq'].isnull(), 0, loan['acc_now_delinq']
+    from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+    # df = pd.read_csv('../input/loan.csv')
+    df = df[((df.loan_status == 'Fully Paid') |
+             (df.loan_status == 'Charged Off'))]
+    df = df[(df['pymnt_plan'] == 'n')]
+    df = df[(df['application_type'] == 'INDIVIDUAL')]
+    df1 = df.drop(
+        columns=[
+            'policy_code', 'next_pymnt_d', 'out_prncp', 'out_prncp_inv',
+            'pymnt_plan', 'initial_list_status', 'member_id', 'id', 'url',
+            'application_type', 'grade', 'annual_inc_joint', 'dti_joint'
+        ]
     )
-    return loan
+    df1 = df1.drop(
+        columns=[
+            'verification_status_joint', 'open_acc_6m', 'open_il_6m',
+            'open_il_12m', 'open_il_24m', 'mths_since_rcnt_il', 'total_bal_il',
+            'il_util', 'open_rv_12m', 'open_rv_24m', 'max_bal_bc', 'all_util',
+            'inq_fi', 'total_cu_tl', 'inq_last_12m'
+        ]
+    )
+    df1 = df1.drop(columns=['mths_since_last_major_derog'])
+    lbl_enc = LabelEncoder()
+    df1[(x + '_old')] = df[x]
+    df1[x] = lbl_enc.fit_transform(df1[x])
+    df1[(x + '_old')] = df[x]
+    df1[x] = df1[x]
+    df1[x] = lbl_enc.fit_transform(df1[x])
+    df1.earliest_cr_line = pd.to_datetime(df1.earliest_cr_line, format='%b-%Y')
+    df1['earliest_cr_line_month'] = df1.earliest_cr_line.dt.month
+    return df1
 
 
 # Fragment 1
-def f1(data):
+def f1(df):
     # core cleaning code
     import pandas as pd
-    # data = pd.read_csv('../input/loan.csv', low_memory=False)
-    data.earliest_cr_line = pd.to_datetime(data.earliest_cr_line)
-    s = pd.value_counts(data['earliest_cr_line']).to_frame().reset_index()
-    s['month'] = s['date'].dt.month
-    return s
+    # df = pd.read_csv('../input/loan.csv', usecols=['loan_amnt', 'addr_state'])
+    perStatedf = df.groupby(
+        'addr_state', as_index=False
+    ).count().sort_values(
+        by='loan_amnt', ascending=False
+    )
+    statePop = {
+        'CA': 39144818,
+        'TX': 27469144,
+        'FL': 20271878,
+        'NY': 19795791,
+        'IL': 12859995,
+        'PA': 12802503,
+        'OH': 11613423,
+        'GA': 10214860,
+        'NC': 10042802,
+        'MI': 9922576,
+        'NJ': 8958013,
+        'VA': 8382993,
+        'WA': 7170351,
+        'AZ': 6828065,
+        'MA': 6794422,
+        'IN': 6619680,
+        'TN': 6600299,
+        'MO': 6083672,
+        'MD': 6006401,
+        'WI': 5771337,
+        'MN': 5489594,
+        'CO': 5456574,
+        'SC': 4896146,
+        'AL': 4858979,
+        'LA': 4670724,
+        'KY': 4425092,
+        'OR': 4028977,
+        'OK': 3911338,
+        'CT': 3890886,
+        'IA': 3123899,
+        'UT': 2995919,
+        'MS': 2992333,
+        'AK': 2978204,
+        'KS': 2911641,
+        'NV': 2890845,
+        'NM': 2085109,
+        'NE': 1896190,
+        'WV': 1844128,
+        'ID': 1654930,
+        'HI': 1431603,
+        'NH': 1330608,
+        'ME': 1329328,
+        'RI': 1053298,
+        'MT': 1032949,
+        'DE': 945934,
+        'SD': 858469,
+        'ND': 756927,
+        'AK': 738432,
+        'DC': 672228,
+        'VT': 626042,
+        'WY': 586107
+    }
+    return pd.DataFrame.from_dict(statePop, orient='index')
 
 
 # Fragment 2
-def f2(dataset):
+def f2():
     # core cleaning code
-    import numpy as np
     import pandas as pd
-    # dataset = pd.read_csv('../input/loan.csv', low_memory=False)
-    dataset = dataset.fillna(0)
-    dataset['last_credit_pull_d'] = pd.to_datetime(
-        dataset['last_credit_pull_d']
-    )
-    dataset['last_credit_pull_d'] = (
-        (dataset['last_credit_pull_d'] - dataset['last_credit_pull_d'].min()) /
-        np.timedelta64(1, 'D')
-    )
-    return dataset
+    statePop = {
+        'CA': 39144818,
+        'TX': 27469144,
+        'FL': 20271878,
+        'NY': 19795791,
+        'IL': 12859995,
+        'PA': 12802503,
+        'OH': 11613423,
+        'GA': 10214860,
+        'NC': 10042802,
+        'MI': 9922576,
+        'NJ': 8958013,
+        'VA': 8382993,
+        'WA': 7170351,
+        'AZ': 6828065,
+        'MA': 6794422,
+        'IN': 6619680,
+        'TN': 6600299,
+        'MO': 6083672,
+        'MD': 6006401,
+        'WI': 5771337,
+        'MN': 5489594,
+        'CO': 5456574,
+        'SC': 4896146,
+        'AL': 4858979,
+        'LA': 4670724,
+        'KY': 4425092,
+        'OR': 4028977,
+        'OK': 3911338,
+        'CT': 3890886,
+        'IA': 3123899,
+        'UT': 2995919,
+        'MS': 2992333,
+        'AK': 2978204,
+        'KS': 2911641,
+        'NV': 2890845,
+        'NM': 2085109,
+        'NE': 1896190,
+        'WV': 1844128,
+        'ID': 1654930,
+        'HI': 1431603,
+        'NH': 1330608,
+        'ME': 1329328,
+        'RI': 1053298,
+        'MT': 1032949,
+        'DE': 945934,
+        'SD': 858469,
+        'ND': 756927,
+        'AK': 738432,
+        'DC': 672228,
+        'VT': 626042,
+        'WY': 586107
+    }
+    return pd.DataFrame.from_dict(statePop, orient='index')
 
 
 # Fragment 3
-def f3(ld):
+def f3(data):
     # core cleaning code
     import pandas as pd
-    # ld = pd.read_csv('../input/loan.csv', low_memory=False, parse_dates=True)
-    pct_full = (ld.count() / len(ld))
-    names = list(pct_full[(pct_full > 0.75)].index)
-    loan = ld[names]
-    loan['issue_year'] = loan.issue_d.str[slice(4, None, None)]
-    return loan
+    # data = pd.read_csv('../input/loan.csv', low_memory=False)
+    data.issue_d = pd.Series(data.issue_d).str.replace('-2015', '')
+    return data
 
 
 # Fragment 4
-def f4(df):
+def f4(data):
     # core cleaning code
+    import numpy as np
     import pandas as pd
-    # df = pd.read_csv('../input/loan.csv', usecols=['loan_status', 'addr_state'])
-    perStatedf = df.groupby(
-        'addr_state', as_index=False
-    ).sum().sort_values(
-        by='isBad', ascending=False
-    )
-    perStatedf.columns = ['State', 'badLoans']
-    return perStatedf
+    # data = pd.read_csv('../input/loan.csv')
+    data_1 = pd.DataFrame(data)
+    category_one_data = data_1[(data_1.loan_status == 'Fully Paid')]
+    category_two_data = data_1[(data_1.loan_status == 'Charged Off')]
+    new_data_copy = np.vstack((category_one_data, category_two_data))
+    new_data_copy = pd.DataFrame(new_data_copy)
+    data_2 = new_data_copy
+    col_nos = []
+    i = 0
+    i = (i + 1)
+    data_2 = data_2.drop(data_2.columns[col_nos], axis=1)
+    rename_1 = range(0, 49)
+    data_2.columns = rename_1
+    return data_2

@@ -1,0 +1,1167 @@
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%"><span></span><span style="color: #408080; font-style: italic"># Task 1</span>
+<span style="color: #408080; font-style: italic"># Identify non-current loans based on loan_status</span>
+<span style="color: #408080; font-style: italic"># Transfer fragments (treatment)</span>
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 0</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f0</span>(data):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># data = pd.read_csv(&#39;../input/loan.csv&#39;, parse_dates=True)</span>
+    data <span style="color: #666666">=</span> data[(data<span style="color: #666666">.</span>loan_status <span style="color: #666666">!=</span> <span style="color: #BA2121">&#39;Fully Paid&#39;</span>)]
+    <span style="color: #008000; font-weight: bold">return</span> data
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 1</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f1</span>(df):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># df = pd.read_csv(&#39;../input/loan.csv&#39;, low_memory=False)</span>
+    df <span style="color: #666666">=</span> df<span style="color: #666666">.</span>loc[(df[<span style="color: #BA2121">&#39;loan_status&#39;</span>] <span style="color: #666666">!=</span> <span style="color: #BA2121">&#39;Current&#39;</span>)]
+    <span style="color: #008000; font-weight: bold">return</span> df
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 2</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f2</span>(df):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># df = pd.read_csv(&#39;../input/loan.csv&#39;)</span>
+    df <span style="color: #666666">=</span> df[((df<span style="color: #666666">.</span>loan_status <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;Fully Paid&#39;</span>) <span style="color: #666666">|</span>
+             (df<span style="color: #666666">.</span>loan_status <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;Charged Off&#39;</span>))]
+    <span style="color: #008000; font-weight: bold">return</span> df
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 3</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f3</span>(dataset):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># dataset = pd.read_csv(&#39;../input/loan.csv&#39;, low_memory=False)</span>
+    dataset <span style="color: #666666">=</span> dataset<span style="color: #666666">.</span>fillna(<span style="color: #666666">0</span>)
+    dataset[<span style="color: #BA2121">&#39;loan_status&#39;</span>] <span style="color: #666666">=</span> dataset[<span style="color: #BA2121">&#39;loan_status&#39;</span>]<span style="color: #666666">.</span>astype(
+        <span style="color: #BA2121">&#39;category&#39;</span>
+    )<span style="color: #666666">.</span>cat<span style="color: #666666">.</span>codes
+    <span style="color: #008000; font-weight: bold">return</span> dataset
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 4</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f4</span>(df):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    badLoan <span style="color: #666666">=</span> [
+        <span style="color: #BA2121">&#39;Charged Off&#39;</span>, <span style="color: #BA2121">&#39;Default&#39;</span>, <span style="color: #BA2121">&#39;Late (31-120 days)&#39;</span>, <span style="color: #BA2121">&#39;Late (16-30 days)&#39;</span>,
+        <span style="color: #BA2121">&#39;In Grace Period&#39;</span>,
+        <span style="color: #BA2121">&#39;Does not meet the credit policy. Status:Charged Off&#39;</span>
+    ]
+    <span style="color: #408080; font-style: italic"># df = pd.read_csv(&#39;../input/loan.csv&#39;, usecols=[&#39;loan_status&#39;, &#39;addr_state&#39;])</span>
+    df[<span style="color: #BA2121">&#39;isBad&#39;</span>] <span style="color: #666666">=</span> [(<span style="color: #666666">1</span> <span style="color: #008000; font-weight: bold">if</span> (x <span style="color: #AA22FF; font-weight: bold">in</span> badLoan) <span style="color: #008000; font-weight: bold">else</span> <span style="color: #666666">0</span>) <span style="color: #008000; font-weight: bold">for</span> x <span style="color: #AA22FF; font-weight: bold">in</span> df<span style="color: #666666">.</span>loan_status]
+    <span style="color: #008000; font-weight: bold">return</span> df
+
+
+<span style="color: #408080; font-style: italic"># Random fragments (control)</span>
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 0</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f0</span>(loan):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># loan = pd.read_csv(&#39;../input/loan.csv&#39;)</span>
+    del_cols <span style="color: #666666">=</span> [
+        <span style="color: #BA2121">&#39;id&#39;</span>, <span style="color: #BA2121">&#39;member_id&#39;</span>, <span style="color: #BA2121">&#39;policy_code&#39;</span>, <span style="color: #BA2121">&#39;url&#39;</span>, <span style="color: #BA2121">&#39;zip_code&#39;</span>, <span style="color: #BA2121">&#39;addr_state&#39;</span>,
+        <span style="color: #BA2121">&#39;pymnt_plan&#39;</span>, <span style="color: #BA2121">&#39;emp_title&#39;</span>, <span style="color: #BA2121">&#39;application_type&#39;</span>, <span style="color: #BA2121">&#39;acc_now_delinq&#39;</span>,
+        <span style="color: #BA2121">&#39;title&#39;</span>, <span style="color: #BA2121">&#39;collections_12_mths_ex_med&#39;</span>, <span style="color: #BA2121">&#39;collection_recovery_fee&#39;</span>
+    ]
+    loan <span style="color: #666666">=</span> loan<span style="color: #666666">.</span>drop(del_cols, axis<span style="color: #666666">=1</span>)
+    loan <span style="color: #666666">=</span> loan[(loan[<span style="color: #BA2121">&#39;loan_status&#39;</span>] <span style="color: #666666">!=</span> <span style="color: #BA2121">&#39;Current&#39;</span>)]
+    loan<span style="color: #666666">.</span>loc[((loan[<span style="color: #BA2121">&#39;emp_length&#39;</span>] <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;&lt; 1 year&#39;</span>), <span style="color: #BA2121">&#39;empl_exp&#39;</span>)] <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;inexp&#39;</span>
+    loan<span style="color: #666666">.</span>loc[((loan[<span style="color: #BA2121">&#39;emp_length&#39;</span>] <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;1 year&#39;</span>), <span style="color: #BA2121">&#39;empl_exp&#39;</span>)] <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;new&#39;</span>
+    loan<span style="color: #666666">.</span>loc[((loan[<span style="color: #BA2121">&#39;emp_length&#39;</span>] <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;2 years&#39;</span>), <span style="color: #BA2121">&#39;empl_exp&#39;</span>)] <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;new&#39;</span>
+    loan<span style="color: #666666">.</span>loc[((loan[<span style="color: #BA2121">&#39;emp_length&#39;</span>] <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;3 years&#39;</span>), <span style="color: #BA2121">&#39;empl_exp&#39;</span>)] <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;new&#39;</span>
+    loan<span style="color: #666666">.</span>loc[((loan[<span style="color: #BA2121">&#39;emp_length&#39;</span>] <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;4 years&#39;</span>), <span style="color: #BA2121">&#39;empl_exp&#39;</span>)] <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;intermed&#39;</span>
+    loan<span style="color: #666666">.</span>loc[((loan[<span style="color: #BA2121">&#39;emp_length&#39;</span>] <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;5 years&#39;</span>), <span style="color: #BA2121">&#39;empl_exp&#39;</span>)] <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;intermed&#39;</span>
+    loan<span style="color: #666666">.</span>loc[((loan[<span style="color: #BA2121">&#39;emp_length&#39;</span>] <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;6 years&#39;</span>), <span style="color: #BA2121">&#39;empl_exp&#39;</span>)] <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;intermed&#39;</span>
+    loan<span style="color: #666666">.</span>loc[((loan[<span style="color: #BA2121">&#39;emp_length&#39;</span>] <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;7 years&#39;</span>), <span style="color: #BA2121">&#39;empl_exp&#39;</span>)] <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;seasoned&#39;</span>
+    loan<span style="color: #666666">.</span>loc[((loan[<span style="color: #BA2121">&#39;emp_length&#39;</span>] <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;8 years&#39;</span>), <span style="color: #BA2121">&#39;empl_exp&#39;</span>)] <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;seasoned&#39;</span>
+    loan<span style="color: #666666">.</span>loc[((loan[<span style="color: #BA2121">&#39;emp_length&#39;</span>] <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;9 years&#39;</span>), <span style="color: #BA2121">&#39;empl_exp&#39;</span>)] <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;seasoned&#39;</span>
+    loan<span style="color: #666666">.</span>loc[((loan[<span style="color: #BA2121">&#39;emp_length&#39;</span>] <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;n/a&#39;</span>), <span style="color: #BA2121">&#39;empl_exp&#39;</span>)] <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;unknown&#39;</span>
+    <span style="color: #008000; font-weight: bold">return</span> loan
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 1</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f1</span>(df):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># df = pd.read_csv(&#39;../input/loan.csv&#39;, low_memory=False)</span>
+    df <span style="color: #666666">=</span> df<span style="color: #666666">.</span>rename(
+        columns<span style="color: #666666">=</span>{
+            <span style="color: #BA2121">&#39;loan_amnt&#39;</span>: <span style="color: #BA2121">&#39;loan_amount&#39;</span>,
+            <span style="color: #BA2121">&#39;funded_amnt&#39;</span>: <span style="color: #BA2121">&#39;funded_amount&#39;</span>,
+            <span style="color: #BA2121">&#39;funded_amnt_inv&#39;</span>: <span style="color: #BA2121">&#39;investor_funds&#39;</span>,
+            <span style="color: #BA2121">&#39;int_rate&#39;</span>: <span style="color: #BA2121">&#39;interest_rate&#39;</span>,
+            <span style="color: #BA2121">&#39;annual_inc&#39;</span>: <span style="color: #BA2121">&#39;annual_income&#39;</span>
+        }
+    )
+    group_dates <span style="color: #666666">=</span> df<span style="color: #666666">.</span>groupby([<span style="color: #BA2121">&#39;complete_date&#39;</span>, <span style="color: #BA2121">&#39;region&#39;</span>], as_index<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">False</span>)<span style="color: #666666">.</span>sum()
+    group_dates <span style="color: #666666">=</span> group_dates<span style="color: #666666">.</span>groupby([<span style="color: #BA2121">&#39;issue_d&#39;</span>, <span style="color: #BA2121">&#39;region&#39;</span>],
+                                      as_index<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">False</span>)<span style="color: #666666">.</span>sum()
+    group_dates <span style="color: #666666">=</span> group_dates<span style="color: #666666">.</span>groupby([<span style="color: #BA2121">&#39;issue_d&#39;</span>, <span style="color: #BA2121">&#39;region&#39;</span>],
+                                      as_index<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">False</span>)<span style="color: #666666">.</span>sum()
+    group_dates[<span style="color: #BA2121">&#39;loan_amount&#39;</span>] <span style="color: #666666">=</span> (group_dates[<span style="color: #BA2121">&#39;loan_amount&#39;</span>] <span style="color: #666666">/</span> <span style="color: #666666">1000</span>)
+    by_loan_amount <span style="color: #666666">=</span> df<span style="color: #666666">.</span>groupby([<span style="color: #BA2121">&#39;region&#39;</span>, <span style="color: #BA2121">&#39;addr_state&#39;</span>],
+                                as_index<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">False</span>)<span style="color: #666666">.</span>loan_amount<span style="color: #666666">.</span>sum()
+    <span style="color: #008000; font-weight: bold">return</span> by_loan_amount
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 2</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f2</span>(dataset):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># dataset = pd.read_csv(&#39;../input/loan.csv&#39;, low_memory=False)</span>
+    dataset <span style="color: #666666">=</span> dataset<span style="color: #666666">.</span>fillna(<span style="color: #666666">0</span>)
+    dataset[<span style="color: #BA2121">&#39;verification_status_joint&#39;</span>] <span style="color: #666666">=</span> dataset[
+        <span style="color: #BA2121">&#39;verification_status_joint&#39;</span>]<span style="color: #666666">.</span>astype(<span style="color: #BA2121">&#39;category&#39;</span>)<span style="color: #666666">.</span>cat<span style="color: #666666">.</span>codes
+    <span style="color: #008000; font-weight: bold">return</span> dataset
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 3</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f3</span>(dataset):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># dataset = pd.read_csv(&#39;../input/loan.csv&#39;, low_memory=False)</span>
+    dataset <span style="color: #666666">=</span> dataset<span style="color: #666666">.</span>fillna(<span style="color: #666666">0</span>)
+    dataset[<span style="color: #BA2121">&#39;loan_status&#39;</span>] <span style="color: #666666">=</span> dataset[<span style="color: #BA2121">&#39;loan_status&#39;</span>]<span style="color: #666666">.</span>astype(
+        <span style="color: #BA2121">&#39;category&#39;</span>
+    )<span style="color: #666666">.</span>cat<span style="color: #666666">.</span>codes
+    <span style="color: #008000; font-weight: bold">return</span> dataset
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 4</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f4</span>(df):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># df = pd.read_csv(&#39;../input/loan.csv&#39;, low_memory=False)</span>
+    df <span style="color: #666666">=</span> df<span style="color: #666666">.</span>loc[(df[<span style="color: #BA2121">&#39;loan_status&#39;</span>] <span style="color: #666666">!=</span> <span style="color: #BA2121">&#39;Current&#39;</span>)]
+    <span style="color: #008000; font-weight: bold">return</span> df
+
+
+<span style="color: #408080; font-style: italic"># Task 2</span>
+<span style="color: #408080; font-style: italic"># Round the interest rate column (`int_rate`) to nearest integer</span>
+<span style="color: #408080; font-style: italic"># Transfer fragments (treatment)</span>
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 0</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f0</span>(df_loan):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># df_loan = pd.read_csv(&#39;../input/loan.csv&#39;, low_memory=False)</span>
+    df_loan[<span style="color: #BA2121">&#39;int_round&#39;</span>] <span style="color: #666666">=</span> df_loan[<span style="color: #BA2121">&#39;int_rate&#39;</span>]<span style="color: #666666">.</span>round(<span style="color: #666666">0</span>)<span style="color: #666666">.</span>astype(<span style="color: #008000">int</span>)
+    <span style="color: #008000; font-weight: bold">return</span> df_loan
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 1</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f1</span>(df):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># df = pd.read_csv(&#39;../input/loan.csv&#39;, low_memory=False)</span>
+    df <span style="color: #666666">=</span> df<span style="color: #666666">.</span>rename(
+        columns<span style="color: #666666">=</span>{
+            <span style="color: #BA2121">&#39;loan_amnt&#39;</span>: <span style="color: #BA2121">&#39;loan_amount&#39;</span>,
+            <span style="color: #BA2121">&#39;funded_amnt&#39;</span>: <span style="color: #BA2121">&#39;funded_amount&#39;</span>,
+            <span style="color: #BA2121">&#39;funded_amnt_inv&#39;</span>: <span style="color: #BA2121">&#39;investor_funds&#39;</span>,
+            <span style="color: #BA2121">&#39;int_rate&#39;</span>: <span style="color: #BA2121">&#39;interest_rate&#39;</span>,
+            <span style="color: #BA2121">&#39;annual_inc&#39;</span>: <span style="color: #BA2121">&#39;annual_income&#39;</span>
+        }
+    )
+    <span style="color: #008000; font-weight: bold">return</span> df
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 2</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f2</span>(data):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># data = pd.read_csv(&#39;../input/loan.csv&#39;, low_memory=False)</span>
+    data[<span style="color: #BA2121">&#39;emp_length&#39;</span>] <span style="color: #666666">=</span> data[<span style="color: #BA2121">&#39;emp_length&#39;</span>]<span style="color: #666666">.</span>astype(<span style="color: #008000">int</span>)
+    <span style="color: #008000; font-weight: bold">return</span> data
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 3</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f3</span>(dataset):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># dataset = pd.read_csv(&#39;../input/loan.csv&#39;, low_memory=False)</span>
+    dataset <span style="color: #666666">=</span> dataset<span style="color: #666666">.</span>fillna(<span style="color: #666666">0</span>)
+    dataset[<span style="color: #BA2121">&#39;application_type&#39;</span>] <span style="color: #666666">=</span> dataset[<span style="color: #BA2121">&#39;application_type&#39;</span>]<span style="color: #666666">.</span>astype(
+        <span style="color: #BA2121">&#39;category&#39;</span>
+    )<span style="color: #666666">.</span>cat<span style="color: #666666">.</span>codes
+    <span style="color: #008000; font-weight: bold">return</span> dataset
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 4</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f4</span>(dataset):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># dataset = pd.read_csv(&#39;../input/loan.csv&#39;, low_memory=False)</span>
+    dataset <span style="color: #666666">=</span> dataset<span style="color: #666666">.</span>fillna(<span style="color: #666666">0</span>)
+    dataset[<span style="color: #BA2121">&#39;loan_status&#39;</span>] <span style="color: #666666">=</span> dataset[<span style="color: #BA2121">&#39;loan_status&#39;</span>]<span style="color: #666666">.</span>astype(
+        <span style="color: #BA2121">&#39;category&#39;</span>
+    )<span style="color: #666666">.</span>cat<span style="color: #666666">.</span>codes
+    <span style="color: #008000; font-weight: bold">return</span> dataset
+
+
+<span style="color: #408080; font-style: italic"># Random fragments (control)</span>
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 0</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f0</span>(loan):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">numpy</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">np</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># loan = pd.read_csv(&#39;../input/loan.csv&#39;, low_memory=False)</span>
+    loan[<span style="color: #BA2121">&#39;title&#39;</span>] <span style="color: #666666">=</span> np<span style="color: #666666">.</span>where(loan[<span style="color: #BA2121">&#39;title&#39;</span>]<span style="color: #666666">.</span>isnull(), <span style="color: #666666">0</span>, loan[<span style="color: #BA2121">&#39;title&#39;</span>])
+    <span style="color: #008000; font-weight: bold">return</span> loan
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 1</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f1</span>(dataset):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># dataset = pd.read_csv(&#39;../input/loan.csv&#39;, low_memory=False)</span>
+    dataset <span style="color: #666666">=</span> dataset<span style="color: #666666">.</span>fillna(<span style="color: #666666">0</span>)
+    dataset[<span style="color: #BA2121">&#39;verification_status&#39;</span>] <span style="color: #666666">=</span> dataset[<span style="color: #BA2121">&#39;verification_status&#39;</span>]<span style="color: #666666">.</span>astype(
+        <span style="color: #BA2121">&#39;category&#39;</span>
+    )<span style="color: #666666">.</span>cat<span style="color: #666666">.</span>codes
+    <span style="color: #008000; font-weight: bold">return</span> dataset
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 2</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f2</span>(df):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># df = pd.read_csv(&#39;../input/loan.csv&#39;, low_memory=False)</span>
+    df <span style="color: #666666">=</span> df<span style="color: #666666">.</span>rename(
+        columns<span style="color: #666666">=</span>{
+            <span style="color: #BA2121">&#39;loan_amnt&#39;</span>: <span style="color: #BA2121">&#39;loan_amount&#39;</span>,
+            <span style="color: #BA2121">&#39;funded_amnt&#39;</span>: <span style="color: #BA2121">&#39;funded_amount&#39;</span>,
+            <span style="color: #BA2121">&#39;funded_amnt_inv&#39;</span>: <span style="color: #BA2121">&#39;investor_funds&#39;</span>,
+            <span style="color: #BA2121">&#39;int_rate&#39;</span>: <span style="color: #BA2121">&#39;interest_rate&#39;</span>,
+            <span style="color: #BA2121">&#39;annual_inc&#39;</span>: <span style="color: #BA2121">&#39;annual_income&#39;</span>
+        }
+    )
+    group_dates <span style="color: #666666">=</span> df<span style="color: #666666">.</span>groupby([<span style="color: #BA2121">&#39;complete_date&#39;</span>, <span style="color: #BA2121">&#39;region&#39;</span>], as_index<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">False</span>)<span style="color: #666666">.</span>sum()
+    group_dates <span style="color: #666666">=</span> group_dates<span style="color: #666666">.</span>groupby([<span style="color: #BA2121">&#39;issue_d&#39;</span>, <span style="color: #BA2121">&#39;region&#39;</span>],
+                                      as_index<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">False</span>)<span style="color: #666666">.</span>sum()
+    group_dates <span style="color: #666666">=</span> group_dates<span style="color: #666666">.</span>groupby([<span style="color: #BA2121">&#39;issue_d&#39;</span>, <span style="color: #BA2121">&#39;region&#39;</span>],
+                                      as_index<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">False</span>)<span style="color: #666666">.</span>sum()
+    group_dates[<span style="color: #BA2121">&#39;loan_amount&#39;</span>] <span style="color: #666666">=</span> (group_dates[<span style="color: #BA2121">&#39;loan_amount&#39;</span>] <span style="color: #666666">/</span> <span style="color: #666666">1000</span>)
+    by_loan_amount <span style="color: #666666">=</span> df<span style="color: #666666">.</span>groupby([<span style="color: #BA2121">&#39;region&#39;</span>, <span style="color: #BA2121">&#39;addr_state&#39;</span>],
+                                as_index<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">False</span>)<span style="color: #666666">.</span>loan_amount<span style="color: #666666">.</span>sum()
+    by_interest_rate <span style="color: #666666">=</span> df<span style="color: #666666">.</span>groupby([<span style="color: #BA2121">&#39;region&#39;</span>, <span style="color: #BA2121">&#39;addr_state&#39;</span>],
+                                  as_index<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">False</span>)<span style="color: #666666">.</span>interest_rate<span style="color: #666666">.</span>mean()
+    <span style="color: #008000; font-weight: bold">return</span> by_interest_rate
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 3</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f3</span>(df):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># df = pd.read_csv(&#39;../input/loan.csv&#39;, usecols=[&#39;loan_amnt&#39;, &#39;addr_state&#39;])</span>
+    statePop <span style="color: #666666">=</span> {
+        <span style="color: #BA2121">&#39;CA&#39;</span>: <span style="color: #666666">39144818</span>,
+        <span style="color: #BA2121">&#39;TX&#39;</span>: <span style="color: #666666">27469144</span>,
+        <span style="color: #BA2121">&#39;FL&#39;</span>: <span style="color: #666666">20271878</span>,
+        <span style="color: #BA2121">&#39;NY&#39;</span>: <span style="color: #666666">19795791</span>,
+        <span style="color: #BA2121">&#39;IL&#39;</span>: <span style="color: #666666">12859995</span>,
+        <span style="color: #BA2121">&#39;PA&#39;</span>: <span style="color: #666666">12802503</span>,
+        <span style="color: #BA2121">&#39;OH&#39;</span>: <span style="color: #666666">11613423</span>,
+        <span style="color: #BA2121">&#39;GA&#39;</span>: <span style="color: #666666">10214860</span>,
+        <span style="color: #BA2121">&#39;NC&#39;</span>: <span style="color: #666666">10042802</span>,
+        <span style="color: #BA2121">&#39;MI&#39;</span>: <span style="color: #666666">9922576</span>,
+        <span style="color: #BA2121">&#39;NJ&#39;</span>: <span style="color: #666666">8958013</span>,
+        <span style="color: #BA2121">&#39;VA&#39;</span>: <span style="color: #666666">8382993</span>,
+        <span style="color: #BA2121">&#39;WA&#39;</span>: <span style="color: #666666">7170351</span>,
+        <span style="color: #BA2121">&#39;AZ&#39;</span>: <span style="color: #666666">6828065</span>,
+        <span style="color: #BA2121">&#39;MA&#39;</span>: <span style="color: #666666">6794422</span>,
+        <span style="color: #BA2121">&#39;IN&#39;</span>: <span style="color: #666666">6619680</span>,
+        <span style="color: #BA2121">&#39;TN&#39;</span>: <span style="color: #666666">6600299</span>,
+        <span style="color: #BA2121">&#39;MO&#39;</span>: <span style="color: #666666">6083672</span>,
+        <span style="color: #BA2121">&#39;MD&#39;</span>: <span style="color: #666666">6006401</span>,
+        <span style="color: #BA2121">&#39;WI&#39;</span>: <span style="color: #666666">5771337</span>,
+        <span style="color: #BA2121">&#39;MN&#39;</span>: <span style="color: #666666">5489594</span>,
+        <span style="color: #BA2121">&#39;CO&#39;</span>: <span style="color: #666666">5456574</span>,
+        <span style="color: #BA2121">&#39;SC&#39;</span>: <span style="color: #666666">4896146</span>,
+        <span style="color: #BA2121">&#39;AL&#39;</span>: <span style="color: #666666">4858979</span>,
+        <span style="color: #BA2121">&#39;LA&#39;</span>: <span style="color: #666666">4670724</span>,
+        <span style="color: #BA2121">&#39;KY&#39;</span>: <span style="color: #666666">4425092</span>,
+        <span style="color: #BA2121">&#39;OR&#39;</span>: <span style="color: #666666">4028977</span>,
+        <span style="color: #BA2121">&#39;OK&#39;</span>: <span style="color: #666666">3911338</span>,
+        <span style="color: #BA2121">&#39;CT&#39;</span>: <span style="color: #666666">3890886</span>,
+        <span style="color: #BA2121">&#39;IA&#39;</span>: <span style="color: #666666">3123899</span>,
+        <span style="color: #BA2121">&#39;UT&#39;</span>: <span style="color: #666666">2995919</span>,
+        <span style="color: #BA2121">&#39;MS&#39;</span>: <span style="color: #666666">2992333</span>,
+        <span style="color: #BA2121">&#39;AK&#39;</span>: <span style="color: #666666">2978204</span>,
+        <span style="color: #BA2121">&#39;KS&#39;</span>: <span style="color: #666666">2911641</span>,
+        <span style="color: #BA2121">&#39;NV&#39;</span>: <span style="color: #666666">2890845</span>,
+        <span style="color: #BA2121">&#39;NM&#39;</span>: <span style="color: #666666">2085109</span>,
+        <span style="color: #BA2121">&#39;NE&#39;</span>: <span style="color: #666666">1896190</span>,
+        <span style="color: #BA2121">&#39;WV&#39;</span>: <span style="color: #666666">1844128</span>,
+        <span style="color: #BA2121">&#39;ID&#39;</span>: <span style="color: #666666">1654930</span>,
+        <span style="color: #BA2121">&#39;HI&#39;</span>: <span style="color: #666666">1431603</span>,
+        <span style="color: #BA2121">&#39;NH&#39;</span>: <span style="color: #666666">1330608</span>,
+        <span style="color: #BA2121">&#39;ME&#39;</span>: <span style="color: #666666">1329328</span>,
+        <span style="color: #BA2121">&#39;RI&#39;</span>: <span style="color: #666666">1053298</span>,
+        <span style="color: #BA2121">&#39;MT&#39;</span>: <span style="color: #666666">1032949</span>,
+        <span style="color: #BA2121">&#39;DE&#39;</span>: <span style="color: #666666">945934</span>,
+        <span style="color: #BA2121">&#39;SD&#39;</span>: <span style="color: #666666">858469</span>,
+        <span style="color: #BA2121">&#39;ND&#39;</span>: <span style="color: #666666">756927</span>,
+        <span style="color: #BA2121">&#39;AK&#39;</span>: <span style="color: #666666">738432</span>,
+        <span style="color: #BA2121">&#39;DC&#39;</span>: <span style="color: #666666">672228</span>,
+        <span style="color: #BA2121">&#39;VT&#39;</span>: <span style="color: #666666">626042</span>,
+        <span style="color: #BA2121">&#39;WY&#39;</span>: <span style="color: #666666">586107</span>
+    }
+    statePopdf <span style="color: #666666">=</span> pd<span style="color: #666666">.</span>DataFrame<span style="color: #666666">.</span>from_dict(statePop, orient<span style="color: #666666">=</span><span style="color: #BA2121">&#39;index&#39;</span>)<span style="color: #666666">.</span>reset_index()
+    <span style="color: #008000; font-weight: bold">return</span> statePopdf
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 4</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f4</span>(df):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">sklearn.preprocessing</span> <span style="color: #008000; font-weight: bold">import</span> LabelEncoder, OneHotEncoder
+    <span style="color: #408080; font-style: italic"># df = pd.read_csv(&#39;../input/loan.csv&#39;)</span>
+    df <span style="color: #666666">=</span> df[((df<span style="color: #666666">.</span>loan_status <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;Fully Paid&#39;</span>) <span style="color: #666666">|</span>
+             (df<span style="color: #666666">.</span>loan_status <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;Charged Off&#39;</span>))]
+    df <span style="color: #666666">=</span> df[(df[<span style="color: #BA2121">&#39;pymnt_plan&#39;</span>] <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;n&#39;</span>)]
+    df <span style="color: #666666">=</span> df[(df[<span style="color: #BA2121">&#39;application_type&#39;</span>] <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;INDIVIDUAL&#39;</span>)]
+    df1 <span style="color: #666666">=</span> df<span style="color: #666666">.</span>drop(
+        columns<span style="color: #666666">=</span>[
+            <span style="color: #BA2121">&#39;policy_code&#39;</span>, <span style="color: #BA2121">&#39;next_pymnt_d&#39;</span>, <span style="color: #BA2121">&#39;out_prncp&#39;</span>, <span style="color: #BA2121">&#39;out_prncp_inv&#39;</span>,
+            <span style="color: #BA2121">&#39;pymnt_plan&#39;</span>, <span style="color: #BA2121">&#39;initial_list_status&#39;</span>, <span style="color: #BA2121">&#39;member_id&#39;</span>, <span style="color: #BA2121">&#39;id&#39;</span>, <span style="color: #BA2121">&#39;url&#39;</span>,
+            <span style="color: #BA2121">&#39;application_type&#39;</span>, <span style="color: #BA2121">&#39;grade&#39;</span>, <span style="color: #BA2121">&#39;annual_inc_joint&#39;</span>, <span style="color: #BA2121">&#39;dti_joint&#39;</span>
+        ]
+    )
+    df1 <span style="color: #666666">=</span> df1<span style="color: #666666">.</span>drop(
+        columns<span style="color: #666666">=</span>[
+            <span style="color: #BA2121">&#39;verification_status_joint&#39;</span>, <span style="color: #BA2121">&#39;open_acc_6m&#39;</span>, <span style="color: #BA2121">&#39;open_il_6m&#39;</span>,
+            <span style="color: #BA2121">&#39;open_il_12m&#39;</span>, <span style="color: #BA2121">&#39;open_il_24m&#39;</span>, <span style="color: #BA2121">&#39;mths_since_rcnt_il&#39;</span>, <span style="color: #BA2121">&#39;total_bal_il&#39;</span>,
+            <span style="color: #BA2121">&#39;il_util&#39;</span>, <span style="color: #BA2121">&#39;open_rv_12m&#39;</span>, <span style="color: #BA2121">&#39;open_rv_24m&#39;</span>, <span style="color: #BA2121">&#39;max_bal_bc&#39;</span>, <span style="color: #BA2121">&#39;all_util&#39;</span>,
+            <span style="color: #BA2121">&#39;inq_fi&#39;</span>, <span style="color: #BA2121">&#39;total_cu_tl&#39;</span>, <span style="color: #BA2121">&#39;inq_last_12m&#39;</span>
+        ]
+    )
+    df1 <span style="color: #666666">=</span> df1<span style="color: #666666">.</span>drop(columns<span style="color: #666666">=</span>[<span style="color: #BA2121">&#39;mths_since_last_major_derog&#39;</span>])
+    lbl_enc <span style="color: #666666">=</span> LabelEncoder()
+    df1[(x <span style="color: #666666">+</span> <span style="color: #BA2121">&#39;_old&#39;</span>)] <span style="color: #666666">=</span> df[x]
+    df1[x] <span style="color: #666666">=</span> lbl_enc<span style="color: #666666">.</span>fit_transform(df1[x])
+    df1[(x <span style="color: #666666">+</span> <span style="color: #BA2121">&#39;_old&#39;</span>)] <span style="color: #666666">=</span> df[x]
+    df1[x] <span style="color: #666666">=</span> df1[x]
+    df1[x] <span style="color: #666666">=</span> lbl_enc<span style="color: #666666">.</span>fit_transform(df1[x])
+    df1<span style="color: #666666">.</span>earliest_cr_line <span style="color: #666666">=</span> pd<span style="color: #666666">.</span>to_datetime(df1<span style="color: #666666">.</span>earliest_cr_line, <span style="color: #008000">format</span><span style="color: #666666">=</span><span style="color: #BA2121">&#39;%b-%Y&#39;</span>)
+    df1[<span style="color: #BA2121">&#39;earliest_cr_line_month&#39;</span>] <span style="color: #666666">=</span> df1<span style="color: #666666">.</span>earliest_cr_line<span style="color: #666666">.</span>dt<span style="color: #666666">.</span>month
+    <span style="color: #008000; font-weight: bold">return</span> df1
+
+
+<span style="color: #408080; font-style: italic"># Task 3</span>
+<span style="color: #408080; font-style: italic"># Compute the issue month and year associated with each loan</span>
+<span style="color: #408080; font-style: italic"># Transfer fragments (treatment)</span>
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 0</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f0</span>(df_loan):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># df_loan = pd.read_csv(&#39;../input/loan.csv&#39;, low_memory=False)</span>
+    (df_loan[<span style="color: #BA2121">&#39;issue_month&#39;</span>],
+     df_loan[<span style="color: #BA2121">&#39;issue_year&#39;</span>]) <span style="color: #666666">=</span> df_loan[<span style="color: #BA2121">&#39;issue_d&#39;</span>]<span style="color: #666666">.</span>str<span style="color: #666666">.</span>split(<span style="color: #BA2121">&#39;-&#39;</span>, <span style="color: #666666">1</span>)<span style="color: #666666">.</span>str
+    <span style="color: #008000; font-weight: bold">return</span> df_loan
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 1</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f1</span>(data):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># data = pd.read_csv(&#39;../input/loan.csv&#39;)</span>
+    data[<span style="color: #BA2121">&#39;issue_dt&#39;</span>] <span style="color: #666666">=</span> pd<span style="color: #666666">.</span>to_datetime(data<span style="color: #666666">.</span>issue_d)
+    <span style="color: #008000; font-weight: bold">return</span> data
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 2</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f2</span>(df_loan):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># df_loan = pd.read_csv(&#39;../input/loan.csv&#39;, low_memory=False)</span>
+    df_loan[<span style="color: #BA2121">&#39;issue_d&#39;</span>] <span style="color: #666666">=</span> pd<span style="color: #666666">.</span>to_datetime(df_loan[<span style="color: #BA2121">&#39;issue_d&#39;</span>])
+    <span style="color: #008000; font-weight: bold">return</span> df_loan
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 3</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f3</span>(data):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># data = pd.read_csv(&#39;../input/loan.csv&#39;, low_memory=False)</span>
+    data<span style="color: #666666">.</span>earliest_cr_line <span style="color: #666666">=</span> pd<span style="color: #666666">.</span>to_datetime(data<span style="color: #666666">.</span>earliest_cr_line)
+    <span style="color: #008000; font-weight: bold">return</span> data
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 4</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f4</span>(df):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># df = pd.read_csv(&#39;../input/loan.csv&#39;, low_memory=False)</span>
+    df <span style="color: #666666">=</span> df<span style="color: #666666">.</span>rename(
+        columns<span style="color: #666666">=</span>{
+            <span style="color: #BA2121">&#39;loan_amnt&#39;</span>: <span style="color: #BA2121">&#39;loan_amount&#39;</span>,
+            <span style="color: #BA2121">&#39;funded_amnt&#39;</span>: <span style="color: #BA2121">&#39;funded_amount&#39;</span>,
+            <span style="color: #BA2121">&#39;funded_amnt_inv&#39;</span>: <span style="color: #BA2121">&#39;investor_funds&#39;</span>,
+            <span style="color: #BA2121">&#39;int_rate&#39;</span>: <span style="color: #BA2121">&#39;interest_rate&#39;</span>,
+            <span style="color: #BA2121">&#39;annual_inc&#39;</span>: <span style="color: #BA2121">&#39;annual_income&#39;</span>
+        }
+    )
+    df[<span style="color: #BA2121">&#39;complete_date&#39;</span>] <span style="color: #666666">=</span> pd<span style="color: #666666">.</span>to_datetime(df[<span style="color: #BA2121">&#39;issue_d&#39;</span>])
+    <span style="color: #008000; font-weight: bold">return</span> df
+
+
+<span style="color: #408080; font-style: italic"># Random fragments (control)</span>
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 0</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f0</span>(dataset):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># dataset = pd.read_csv(&#39;../input/loan.csv&#39;, low_memory=False)</span>
+    dataset <span style="color: #666666">=</span> dataset<span style="color: #666666">.</span>fillna(<span style="color: #666666">0</span>)
+    dataset[<span style="color: #BA2121">&#39;term&#39;</span>] <span style="color: #666666">=</span> dataset[<span style="color: #BA2121">&#39;term&#39;</span>]<span style="color: #666666">.</span>astype(<span style="color: #BA2121">&#39;category&#39;</span>)<span style="color: #666666">.</span>cat<span style="color: #666666">.</span>codes
+    <span style="color: #008000; font-weight: bold">return</span> dataset
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 1</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f1</span>(df):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># df = pd.read_csv(&#39;../input/loan.csv&#39;)</span>
+    df <span style="color: #666666">=</span> df[((df<span style="color: #666666">.</span>loan_status <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;Fully Paid&#39;</span>) <span style="color: #666666">|</span>
+             (df<span style="color: #666666">.</span>loan_status <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;Charged Off&#39;</span>))]
+    df <span style="color: #666666">=</span> df[(df[<span style="color: #BA2121">&#39;pymnt_plan&#39;</span>] <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;n&#39;</span>)]
+    df <span style="color: #666666">=</span> df[(df[<span style="color: #BA2121">&#39;application_type&#39;</span>] <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;INDIVIDUAL&#39;</span>)]
+    df1 <span style="color: #666666">=</span> df<span style="color: #666666">.</span>drop(
+        columns<span style="color: #666666">=</span>[
+            <span style="color: #BA2121">&#39;policy_code&#39;</span>, <span style="color: #BA2121">&#39;next_pymnt_d&#39;</span>, <span style="color: #BA2121">&#39;out_prncp&#39;</span>, <span style="color: #BA2121">&#39;out_prncp_inv&#39;</span>,
+            <span style="color: #BA2121">&#39;pymnt_plan&#39;</span>, <span style="color: #BA2121">&#39;initial_list_status&#39;</span>, <span style="color: #BA2121">&#39;member_id&#39;</span>, <span style="color: #BA2121">&#39;id&#39;</span>, <span style="color: #BA2121">&#39;url&#39;</span>,
+            <span style="color: #BA2121">&#39;application_type&#39;</span>, <span style="color: #BA2121">&#39;grade&#39;</span>, <span style="color: #BA2121">&#39;annual_inc_joint&#39;</span>, <span style="color: #BA2121">&#39;dti_joint&#39;</span>
+        ]
+    )
+    emp_lengths <span style="color: #666666">=</span> []
+    df1<span style="color: #666666">.</span>emp_length <span style="color: #666666">=</span> emp_lengths
+    <span style="color: #008000; font-weight: bold">return</span> df1
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 2</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f2</span>(df):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># df = pd.read_csv(&#39;../input/loan.csv&#39;, low_memory=False)</span>
+    df <span style="color: #666666">=</span> df<span style="color: #666666">.</span>rename(
+        columns<span style="color: #666666">=</span>{
+            <span style="color: #BA2121">&#39;loan_amnt&#39;</span>: <span style="color: #BA2121">&#39;loan_amount&#39;</span>,
+            <span style="color: #BA2121">&#39;funded_amnt&#39;</span>: <span style="color: #BA2121">&#39;funded_amount&#39;</span>,
+            <span style="color: #BA2121">&#39;funded_amnt_inv&#39;</span>: <span style="color: #BA2121">&#39;investor_funds&#39;</span>,
+            <span style="color: #BA2121">&#39;int_rate&#39;</span>: <span style="color: #BA2121">&#39;interest_rate&#39;</span>,
+            <span style="color: #BA2121">&#39;annual_inc&#39;</span>: <span style="color: #BA2121">&#39;annual_income&#39;</span>
+        }
+    )
+    group_dates <span style="color: #666666">=</span> df<span style="color: #666666">.</span>groupby([<span style="color: #BA2121">&#39;complete_date&#39;</span>, <span style="color: #BA2121">&#39;region&#39;</span>], as_index<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">False</span>)<span style="color: #666666">.</span>sum()
+    group_dates <span style="color: #666666">=</span> group_dates<span style="color: #666666">.</span>groupby([<span style="color: #BA2121">&#39;issue_d&#39;</span>, <span style="color: #BA2121">&#39;region&#39;</span>],
+                                      as_index<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">False</span>)<span style="color: #666666">.</span>sum()
+    <span style="color: #008000; font-weight: bold">return</span> group_dates
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 3</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f3</span>(dataset):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">numpy</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">np</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># dataset = pd.read_csv(&#39;../input/loan.csv&#39;, low_memory=False)</span>
+    dataset <span style="color: #666666">=</span> dataset<span style="color: #666666">.</span>fillna(<span style="color: #666666">0</span>)
+    dataset[<span style="color: #BA2121">&#39;loan_status&#39;</span>] <span style="color: #666666">=</span> dataset[<span style="color: #BA2121">&#39;loan_status&#39;</span>]<span style="color: #666666">.</span>astype(
+        <span style="color: #BA2121">&#39;category&#39;</span>
+    )<span style="color: #666666">.</span>cat<span style="color: #666666">.</span>codes
+    non_numerics <span style="color: #666666">=</span> [
+        x <span style="color: #008000; font-weight: bold">for</span> x <span style="color: #AA22FF; font-weight: bold">in</span> dataset<span style="color: #666666">.</span>columns <span style="color: #008000; font-weight: bold">if</span> (
+            <span style="color: #AA22FF; font-weight: bold">not</span> ((dataset[x]<span style="color: #666666">.</span>dtype <span style="color: #666666">==</span> np<span style="color: #666666">.</span>float64) <span style="color: #AA22FF; font-weight: bold">or</span>
+                 (dataset[x]<span style="color: #666666">.</span>dtype <span style="color: #666666">==</span> np<span style="color: #666666">.</span>int8) <span style="color: #AA22FF; font-weight: bold">or</span>
+                 (dataset[x]<span style="color: #666666">.</span>dtype <span style="color: #666666">==</span> np<span style="color: #666666">.</span>int64))
+        )
+    ]
+    df <span style="color: #666666">=</span> dataset
+    <span style="color: #008000; font-weight: bold">return</span> df
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 4</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f4</span>(data):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">numpy</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">np</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># data = pd.read_csv(&#39;../input/loan.csv&#39;)</span>
+    data_1 <span style="color: #666666">=</span> pd<span style="color: #666666">.</span>DataFrame(data)
+    category_one_data <span style="color: #666666">=</span> data_1[(data_1<span style="color: #666666">.</span>loan_status <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;Fully Paid&#39;</span>)]
+    category_two_data <span style="color: #666666">=</span> data_1[(data_1<span style="color: #666666">.</span>loan_status <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;Charged Off&#39;</span>)]
+    new_data <span style="color: #666666">=</span> np<span style="color: #666666">.</span>vstack((category_one_data, category_two_data))
+    new_data <span style="color: #666666">=</span> new_data[(<span style="color: #008000">slice</span>(<span style="color: #008000; font-weight: bold">None</span>, <span style="color: #008000; font-weight: bold">None</span>, <span style="color: #008000; font-weight: bold">None</span>), <span style="color: #008000">slice</span>(<span style="color: #666666">2</span>, (<span style="color: #666666">-30</span>), <span style="color: #008000; font-weight: bold">None</span>))]
+    new_data_df <span style="color: #666666">=</span> pd<span style="color: #666666">.</span>DataFrame(new_data)
+    title <span style="color: #666666">=</span> new_data_df[<span style="color: #666666">19</span>]
+    title <span style="color: #666666">=</span> pd<span style="color: #666666">.</span>DataFrame(title)
+    title<span style="color: #666666">.</span>columns <span style="color: #666666">=</span> [<span style="color: #BA2121">&#39;Title&#39;</span>]
+    <span style="color: #008000; font-weight: bold">return</span> title
+
+
+<span style="color: #408080; font-style: italic"># Task 4</span>
+<span style="color: #408080; font-style: italic"># Fill in missing values in the months since last delinquency column (`mths_since_last_delinq`)</span>
+<span style="color: #408080; font-style: italic"># Transfer fragments (treatment)</span>
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 0</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f0</span>(df):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># df = pd.read_csv(&#39;../input/loan.csv&#39;, low_memory=False)</span>
+    df<span style="color: #666666">.</span>mths_since_last_delinq <span style="color: #666666">=</span> df<span style="color: #666666">.</span>mths_since_last_delinq<span style="color: #666666">.</span>fillna(
+        df<span style="color: #666666">.</span>mths_since_last_delinq<span style="color: #666666">.</span>median()
+    )
+    <span style="color: #008000; font-weight: bold">return</span> df
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 1</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f1</span>(loan):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># loan = pd.read_csv(&#39;../input/loan.csv&#39;, low_memory=False)</span>
+    loan[<span style="color: #BA2121">&#39;annual_inc&#39;</span>] <span style="color: #666666">=</span> loan[<span style="color: #BA2121">&#39;annual_inc&#39;</span>]<span style="color: #666666">.</span>fillna(loan[<span style="color: #BA2121">&#39;annual_inc&#39;</span>]<span style="color: #666666">.</span>median())
+    <span style="color: #008000; font-weight: bold">return</span> loan
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 2</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f2</span>(loan):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># loan = pd.read_csv(&#39;../input/loan.csv&#39;, low_memory=False)</span>
+    loan[<span style="color: #BA2121">&#39;total_rev_hi_lim&#39;</span>] <span style="color: #666666">=</span> loan[<span style="color: #BA2121">&#39;total_rev_hi_lim&#39;</span>]<span style="color: #666666">.</span>fillna(
+        loan[<span style="color: #BA2121">&#39;total_rev_hi_lim&#39;</span>]<span style="color: #666666">.</span>median()
+    )
+    <span style="color: #008000; font-weight: bold">return</span> loan
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 3</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f3</span>(loan):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># loan = pd.read_csv(&#39;../input/loan.csv&#39;, low_memory=False)</span>
+    loan[<span style="color: #BA2121">&#39;tot_coll_amt&#39;</span>] <span style="color: #666666">=</span> loan[<span style="color: #BA2121">&#39;tot_coll_amt&#39;</span>]<span style="color: #666666">.</span>fillna(
+        loan[<span style="color: #BA2121">&#39;tot_coll_amt&#39;</span>]<span style="color: #666666">.</span>median()
+    )
+    <span style="color: #008000; font-weight: bold">return</span> loan
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 4</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f4</span>(loan):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">numpy</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">np</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># loan = pd.read_csv(&#39;../input/loan.csv&#39;, low_memory=False)</span>
+    loan[<span style="color: #BA2121">&#39;mths_since_last_delinq&#39;</span>] <span style="color: #666666">=</span> np<span style="color: #666666">.</span>where(
+        loan[<span style="color: #BA2121">&#39;mths_since_last_delinq&#39;</span>]<span style="color: #666666">.</span>isnull(), <span style="color: #666666">188</span>,
+        loan[<span style="color: #BA2121">&#39;mths_since_last_delinq&#39;</span>]
+    )
+    <span style="color: #008000; font-weight: bold">return</span> loan
+
+
+<span style="color: #408080; font-style: italic"># Random fragments (control)</span>
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 0</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f0</span>():
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    statePop <span style="color: #666666">=</span> {
+        <span style="color: #BA2121">&#39;CA&#39;</span>: <span style="color: #666666">39144818</span>,
+        <span style="color: #BA2121">&#39;TX&#39;</span>: <span style="color: #666666">27469144</span>,
+        <span style="color: #BA2121">&#39;FL&#39;</span>: <span style="color: #666666">20271878</span>,
+        <span style="color: #BA2121">&#39;NY&#39;</span>: <span style="color: #666666">19795791</span>,
+        <span style="color: #BA2121">&#39;IL&#39;</span>: <span style="color: #666666">12859995</span>,
+        <span style="color: #BA2121">&#39;PA&#39;</span>: <span style="color: #666666">12802503</span>,
+        <span style="color: #BA2121">&#39;OH&#39;</span>: <span style="color: #666666">11613423</span>,
+        <span style="color: #BA2121">&#39;GA&#39;</span>: <span style="color: #666666">10214860</span>,
+        <span style="color: #BA2121">&#39;NC&#39;</span>: <span style="color: #666666">10042802</span>,
+        <span style="color: #BA2121">&#39;MI&#39;</span>: <span style="color: #666666">9922576</span>,
+        <span style="color: #BA2121">&#39;NJ&#39;</span>: <span style="color: #666666">8958013</span>,
+        <span style="color: #BA2121">&#39;VA&#39;</span>: <span style="color: #666666">8382993</span>,
+        <span style="color: #BA2121">&#39;WA&#39;</span>: <span style="color: #666666">7170351</span>,
+        <span style="color: #BA2121">&#39;AZ&#39;</span>: <span style="color: #666666">6828065</span>,
+        <span style="color: #BA2121">&#39;MA&#39;</span>: <span style="color: #666666">6794422</span>,
+        <span style="color: #BA2121">&#39;IN&#39;</span>: <span style="color: #666666">6619680</span>,
+        <span style="color: #BA2121">&#39;TN&#39;</span>: <span style="color: #666666">6600299</span>,
+        <span style="color: #BA2121">&#39;MO&#39;</span>: <span style="color: #666666">6083672</span>,
+        <span style="color: #BA2121">&#39;MD&#39;</span>: <span style="color: #666666">6006401</span>,
+        <span style="color: #BA2121">&#39;WI&#39;</span>: <span style="color: #666666">5771337</span>,
+        <span style="color: #BA2121">&#39;MN&#39;</span>: <span style="color: #666666">5489594</span>,
+        <span style="color: #BA2121">&#39;CO&#39;</span>: <span style="color: #666666">5456574</span>,
+        <span style="color: #BA2121">&#39;SC&#39;</span>: <span style="color: #666666">4896146</span>,
+        <span style="color: #BA2121">&#39;AL&#39;</span>: <span style="color: #666666">4858979</span>,
+        <span style="color: #BA2121">&#39;LA&#39;</span>: <span style="color: #666666">4670724</span>,
+        <span style="color: #BA2121">&#39;KY&#39;</span>: <span style="color: #666666">4425092</span>,
+        <span style="color: #BA2121">&#39;OR&#39;</span>: <span style="color: #666666">4028977</span>,
+        <span style="color: #BA2121">&#39;OK&#39;</span>: <span style="color: #666666">3911338</span>,
+        <span style="color: #BA2121">&#39;CT&#39;</span>: <span style="color: #666666">3890886</span>,
+        <span style="color: #BA2121">&#39;IA&#39;</span>: <span style="color: #666666">3123899</span>,
+        <span style="color: #BA2121">&#39;UT&#39;</span>: <span style="color: #666666">2995919</span>,
+        <span style="color: #BA2121">&#39;MS&#39;</span>: <span style="color: #666666">2992333</span>,
+        <span style="color: #BA2121">&#39;AK&#39;</span>: <span style="color: #666666">2978204</span>,
+        <span style="color: #BA2121">&#39;KS&#39;</span>: <span style="color: #666666">2911641</span>,
+        <span style="color: #BA2121">&#39;NV&#39;</span>: <span style="color: #666666">2890845</span>,
+        <span style="color: #BA2121">&#39;NM&#39;</span>: <span style="color: #666666">2085109</span>,
+        <span style="color: #BA2121">&#39;NE&#39;</span>: <span style="color: #666666">1896190</span>,
+        <span style="color: #BA2121">&#39;WV&#39;</span>: <span style="color: #666666">1844128</span>,
+        <span style="color: #BA2121">&#39;ID&#39;</span>: <span style="color: #666666">1654930</span>,
+        <span style="color: #BA2121">&#39;HI&#39;</span>: <span style="color: #666666">1431603</span>,
+        <span style="color: #BA2121">&#39;NH&#39;</span>: <span style="color: #666666">1330608</span>,
+        <span style="color: #BA2121">&#39;ME&#39;</span>: <span style="color: #666666">1329328</span>,
+        <span style="color: #BA2121">&#39;RI&#39;</span>: <span style="color: #666666">1053298</span>,
+        <span style="color: #BA2121">&#39;MT&#39;</span>: <span style="color: #666666">1032949</span>,
+        <span style="color: #BA2121">&#39;DE&#39;</span>: <span style="color: #666666">945934</span>,
+        <span style="color: #BA2121">&#39;SD&#39;</span>: <span style="color: #666666">858469</span>,
+        <span style="color: #BA2121">&#39;ND&#39;</span>: <span style="color: #666666">756927</span>,
+        <span style="color: #BA2121">&#39;AK&#39;</span>: <span style="color: #666666">738432</span>,
+        <span style="color: #BA2121">&#39;DC&#39;</span>: <span style="color: #666666">672228</span>,
+        <span style="color: #BA2121">&#39;VT&#39;</span>: <span style="color: #666666">626042</span>,
+        <span style="color: #BA2121">&#39;WY&#39;</span>: <span style="color: #666666">586107</span>
+    }
+    statePopdf <span style="color: #666666">=</span> pd<span style="color: #666666">.</span>DataFrame<span style="color: #666666">.</span>from_dict(statePop, orient<span style="color: #666666">=</span><span style="color: #BA2121">&#39;index&#39;</span>)<span style="color: #666666">.</span>reset_index()
+    statePopdf<span style="color: #666666">.</span>columns <span style="color: #666666">=</span> [<span style="color: #BA2121">&#39;State&#39;</span>, <span style="color: #BA2121">&#39;Pop&#39;</span>]
+    <span style="color: #008000; font-weight: bold">return</span> statePopdf
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 1</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f1</span>(data):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">numpy</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">np</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># data = pd.read_csv(&#39;../input/loan.csv&#39;, parse_dates=True)</span>
+    data <span style="color: #666666">=</span> data[(data<span style="color: #666666">.</span>loan_status <span style="color: #666666">!=</span> <span style="color: #BA2121">&#39;Fully Paid&#39;</span>)]
+    data <span style="color: #666666">=</span> data[(
+        data<span style="color: #666666">.</span>loan_status <span style="color: #666666">!=</span>
+        <span style="color: #BA2121">&#39;Does not meet the credit policy. Status:Fully Paid&#39;</span>
+    )]
+    data[<span style="color: #BA2121">&#39;recovery&#39;</span>] <span style="color: #666666">=</span> np<span style="color: #666666">.</span>where((data<span style="color: #666666">.</span>recoveries <span style="color: #666666">!=</span> <span style="color: #666666">0.0</span>), <span style="color: #666666">1</span>, <span style="color: #666666">0</span>)
+    <span style="color: #008000; font-weight: bold">return</span> data
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 2</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f2</span>(df):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># df = pd.read_csv(&#39;../input/loan.csv&#39;)</span>
+    new_df <span style="color: #666666">=</span> df[(df[<span style="color: #BA2121">&#39;addr_state&#39;</span>] <span style="color: #666666">==</span> x)]
+    new_df[<span style="color: #BA2121">&#39;weighted&#39;</span>] <span style="color: #666666">=</span> ((new_df[<span style="color: #BA2121">&#39;int_rate&#39;</span>] <span style="color: #666666">/</span> <span style="color: #666666">100</span>) <span style="color: #666666">*</span> new_df[<span style="color: #BA2121">&#39;funded_amnt&#39;</span>])
+    <span style="color: #008000; font-weight: bold">return</span> new_df
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 3</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f3</span>(data):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">numpy</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">np</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># data = pd.read_csv(&#39;../input/loan.csv&#39;, parse_dates=True)</span>
+    data <span style="color: #666666">=</span> data[(data<span style="color: #666666">.</span>loan_status <span style="color: #666666">!=</span> <span style="color: #BA2121">&#39;Fully Paid&#39;</span>)]
+    data <span style="color: #666666">=</span> data[(
+        data<span style="color: #666666">.</span>loan_status <span style="color: #666666">!=</span>
+        <span style="color: #BA2121">&#39;Does not meet the credit policy. Status:Fully Paid&#39;</span>
+    )]
+    data[e] <span style="color: #666666">=</span> data[e]<span style="color: #666666">.</span>replace(np<span style="color: #666666">.</span>nan, <span style="color: #666666">0</span>)
+    data[e] <span style="color: #666666">=</span> data[e]
+    data[e]<span style="color: #666666">.</span>replace <span style="color: #666666">=</span> data[e]<span style="color: #666666">.</span>replace
+    np<span style="color: #666666">.</span>nan <span style="color: #666666">=</span> np<span style="color: #666666">.</span>nan
+    data[e] <span style="color: #666666">=</span> data[e]<span style="color: #666666">.</span>replace(np<span style="color: #666666">.</span>nan, <span style="color: #666666">0</span>)
+    data<span style="color: #666666">.</span>loc[(data<span style="color: #666666">.</span>mths_since_last_delinq<span style="color: #666666">.</span>notnull(), <span style="color: #BA2121">&#39;delinq&#39;</span>)] <span style="color: #666666">=</span> <span style="color: #666666">1</span>
+    data<span style="color: #666666">.</span>loc[(data<span style="color: #666666">.</span>mths_since_last_delinq<span style="color: #666666">.</span>isnull(), <span style="color: #BA2121">&#39;delinq&#39;</span>)] <span style="color: #666666">=</span> <span style="color: #666666">0</span>
+    <span style="color: #008000; font-weight: bold">return</span> data
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 4</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f4</span>(loan):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">numpy</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">np</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># loan = pd.read_csv(&#39;../input/loan.csv&#39;, low_memory=False)</span>
+    loan[<span style="color: #BA2121">&#39;total_acc&#39;</span>] <span style="color: #666666">=</span> np<span style="color: #666666">.</span>where(
+        loan[<span style="color: #BA2121">&#39;total_acc&#39;</span>]<span style="color: #666666">.</span>isnull(), <span style="color: #666666">0</span>, loan[<span style="color: #BA2121">&#39;total_acc&#39;</span>]
+    )
+    <span style="color: #008000; font-weight: bold">return</span> loan
+
+
+<span style="color: #408080; font-style: italic"># Task 5</span>
+<span style="color: #408080; font-style: italic"># Drop columns with many missing values</span>
+<span style="color: #408080; font-style: italic"># Transfer fragments (treatment)</span>
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 0</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f0</span>(df):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># df = pd.read_csv(&#39;../input/loan.csv&#39;)</span>
+    df <span style="color: #666666">=</span> df<span style="color: #666666">.</span>drop([
+        <span style="color: #BA2121">&#39;id&#39;</span>, <span style="color: #BA2121">&#39;member_id&#39;</span>, <span style="color: #BA2121">&#39;funded_amnt&#39;</span>, <span style="color: #BA2121">&#39;funded_amnt_inv&#39;</span>, <span style="color: #BA2121">&#39;sub_grade&#39;</span>,
+        <span style="color: #BA2121">&#39;emp_title&#39;</span>, <span style="color: #BA2121">&#39;issue_d&#39;</span>, <span style="color: #BA2121">&#39;zip_code&#39;</span>, <span style="color: #BA2121">&#39;out_prncp&#39;</span>, <span style="color: #BA2121">&#39;out_prncp_inv&#39;</span>,
+        <span style="color: #BA2121">&#39;total_pymnt&#39;</span>, <span style="color: #BA2121">&#39;total_pymnt_inv&#39;</span>, <span style="color: #BA2121">&#39;total_rec_prncp&#39;</span>, <span style="color: #BA2121">&#39;total_rec_int&#39;</span>,
+        <span style="color: #BA2121">&#39;total_rec_late_fee&#39;</span>, <span style="color: #BA2121">&#39;recoveries&#39;</span>, <span style="color: #BA2121">&#39;collection_recovery_fee&#39;</span>,
+        <span style="color: #BA2121">&#39;last_pymnt_d&#39;</span>, <span style="color: #BA2121">&#39;last_pymnt_amnt&#39;</span>, <span style="color: #BA2121">&#39;desc&#39;</span>, <span style="color: #BA2121">&#39;url&#39;</span>, <span style="color: #BA2121">&#39;title&#39;</span>,
+        <span style="color: #BA2121">&#39;initial_list_status&#39;</span>, <span style="color: #BA2121">&#39;pymnt_plan&#39;</span>, <span style="color: #BA2121">&#39;policy_code&#39;</span>, <span style="color: #BA2121">&#39;application_type&#39;</span>,
+        <span style="color: #BA2121">&#39;earliest_cr_line&#39;</span>, <span style="color: #BA2121">&#39;last_credit_pull_d&#39;</span>, <span style="color: #BA2121">&#39;next_pymnt_d&#39;</span>, <span style="color: #BA2121">&#39;addr_state&#39;</span>
+    ],
+                 axis<span style="color: #666666">=1</span>)
+    df <span style="color: #666666">=</span> df<span style="color: #666666">.</span>dropna(thresh<span style="color: #666666">=</span>(<span style="color: #008000">len</span>(df) <span style="color: #666666">/</span> <span style="color: #666666">2</span>), axis<span style="color: #666666">=1</span>)
+    <span style="color: #008000; font-weight: bold">return</span> df
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 1</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f1</span>(df):
+    <span style="color: #408080; font-style: italic"># additional context code from user definitions</span>
+
+    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">status_binary</span>(text):
+        <span style="color: #008000; font-weight: bold">if</span> (text <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;Fully Paid&#39;</span>):
+            <span style="color: #008000; font-weight: bold">return</span> <span style="color: #666666">0</span>
+        <span style="color: #008000; font-weight: bold">elif</span> ((text <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;Current&#39;</span>) <span style="color: #AA22FF; font-weight: bold">or</span> (text <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;Issued&#39;</span>)):
+            <span style="color: #008000; font-weight: bold">return</span> (<span style="color: #666666">-1</span>)
+        <span style="color: #008000; font-weight: bold">else</span>:
+            <span style="color: #008000; font-weight: bold">return</span> <span style="color: #666666">1</span>
+
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># df = pd.read_csv(&#39;../input/loan.csv&#39;)</span>
+    df <span style="color: #666666">=</span> df<span style="color: #666666">.</span>drop([
+        <span style="color: #BA2121">&#39;id&#39;</span>, <span style="color: #BA2121">&#39;member_id&#39;</span>, <span style="color: #BA2121">&#39;funded_amnt&#39;</span>, <span style="color: #BA2121">&#39;funded_amnt_inv&#39;</span>, <span style="color: #BA2121">&#39;sub_grade&#39;</span>,
+        <span style="color: #BA2121">&#39;emp_title&#39;</span>, <span style="color: #BA2121">&#39;issue_d&#39;</span>, <span style="color: #BA2121">&#39;zip_code&#39;</span>, <span style="color: #BA2121">&#39;out_prncp&#39;</span>, <span style="color: #BA2121">&#39;out_prncp_inv&#39;</span>,
+        <span style="color: #BA2121">&#39;total_pymnt&#39;</span>, <span style="color: #BA2121">&#39;total_pymnt_inv&#39;</span>, <span style="color: #BA2121">&#39;total_rec_prncp&#39;</span>, <span style="color: #BA2121">&#39;total_rec_int&#39;</span>,
+        <span style="color: #BA2121">&#39;total_rec_late_fee&#39;</span>, <span style="color: #BA2121">&#39;recoveries&#39;</span>, <span style="color: #BA2121">&#39;collection_recovery_fee&#39;</span>,
+        <span style="color: #BA2121">&#39;last_pymnt_d&#39;</span>, <span style="color: #BA2121">&#39;last_pymnt_amnt&#39;</span>, <span style="color: #BA2121">&#39;desc&#39;</span>, <span style="color: #BA2121">&#39;url&#39;</span>, <span style="color: #BA2121">&#39;title&#39;</span>,
+        <span style="color: #BA2121">&#39;initial_list_status&#39;</span>, <span style="color: #BA2121">&#39;pymnt_plan&#39;</span>, <span style="color: #BA2121">&#39;policy_code&#39;</span>, <span style="color: #BA2121">&#39;application_type&#39;</span>,
+        <span style="color: #BA2121">&#39;earliest_cr_line&#39;</span>, <span style="color: #BA2121">&#39;last_credit_pull_d&#39;</span>, <span style="color: #BA2121">&#39;next_pymnt_d&#39;</span>, <span style="color: #BA2121">&#39;addr_state&#39;</span>
+    ],
+                 axis<span style="color: #666666">=1</span>)
+    df <span style="color: #666666">=</span> df<span style="color: #666666">.</span>dropna(thresh<span style="color: #666666">=</span>(<span style="color: #008000">len</span>(df) <span style="color: #666666">/</span> <span style="color: #666666">2</span>), axis<span style="color: #666666">=1</span>)
+    df <span style="color: #666666">=</span> df<span style="color: #666666">.</span>dropna()
+    df[<span style="color: #BA2121">&#39;loan_status&#39;</span>] <span style="color: #666666">=</span> df[<span style="color: #BA2121">&#39;loan_status&#39;</span>]<span style="color: #666666">.</span>apply(status_binary)
+    <span style="color: #008000; font-weight: bold">return</span> df
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 2</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f2</span>(df):
+    <span style="color: #408080; font-style: italic"># additional context code from user definitions</span>
+
+    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">status_binary</span>(text):
+        <span style="color: #008000; font-weight: bold">if</span> (text <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;Fully Paid&#39;</span>):
+            <span style="color: #008000; font-weight: bold">return</span> <span style="color: #666666">0</span>
+        <span style="color: #008000; font-weight: bold">elif</span> ((text <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;Current&#39;</span>) <span style="color: #AA22FF; font-weight: bold">or</span> (text <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;Issued&#39;</span>)):
+            <span style="color: #008000; font-weight: bold">return</span> (<span style="color: #666666">-1</span>)
+        <span style="color: #008000; font-weight: bold">else</span>:
+            <span style="color: #008000; font-weight: bold">return</span> <span style="color: #666666">1</span>
+
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># df = pd.read_csv(&#39;../input/loan.csv&#39;)</span>
+    df <span style="color: #666666">=</span> df<span style="color: #666666">.</span>drop([
+        <span style="color: #BA2121">&#39;id&#39;</span>, <span style="color: #BA2121">&#39;member_id&#39;</span>, <span style="color: #BA2121">&#39;funded_amnt&#39;</span>, <span style="color: #BA2121">&#39;funded_amnt_inv&#39;</span>, <span style="color: #BA2121">&#39;sub_grade&#39;</span>,
+        <span style="color: #BA2121">&#39;emp_title&#39;</span>, <span style="color: #BA2121">&#39;issue_d&#39;</span>, <span style="color: #BA2121">&#39;zip_code&#39;</span>, <span style="color: #BA2121">&#39;out_prncp&#39;</span>, <span style="color: #BA2121">&#39;out_prncp_inv&#39;</span>,
+        <span style="color: #BA2121">&#39;total_pymnt&#39;</span>, <span style="color: #BA2121">&#39;total_pymnt_inv&#39;</span>, <span style="color: #BA2121">&#39;total_rec_prncp&#39;</span>, <span style="color: #BA2121">&#39;total_rec_int&#39;</span>,
+        <span style="color: #BA2121">&#39;total_rec_late_fee&#39;</span>, <span style="color: #BA2121">&#39;recoveries&#39;</span>, <span style="color: #BA2121">&#39;collection_recovery_fee&#39;</span>,
+        <span style="color: #BA2121">&#39;last_pymnt_d&#39;</span>, <span style="color: #BA2121">&#39;last_pymnt_amnt&#39;</span>, <span style="color: #BA2121">&#39;desc&#39;</span>, <span style="color: #BA2121">&#39;url&#39;</span>, <span style="color: #BA2121">&#39;title&#39;</span>,
+        <span style="color: #BA2121">&#39;initial_list_status&#39;</span>, <span style="color: #BA2121">&#39;pymnt_plan&#39;</span>, <span style="color: #BA2121">&#39;policy_code&#39;</span>, <span style="color: #BA2121">&#39;application_type&#39;</span>,
+        <span style="color: #BA2121">&#39;earliest_cr_line&#39;</span>, <span style="color: #BA2121">&#39;last_credit_pull_d&#39;</span>, <span style="color: #BA2121">&#39;next_pymnt_d&#39;</span>, <span style="color: #BA2121">&#39;addr_state&#39;</span>
+    ],
+                 axis<span style="color: #666666">=1</span>)
+    df <span style="color: #666666">=</span> df<span style="color: #666666">.</span>dropna(thresh<span style="color: #666666">=</span>(<span style="color: #008000">len</span>(df) <span style="color: #666666">/</span> <span style="color: #666666">2</span>), axis<span style="color: #666666">=1</span>)
+    df <span style="color: #666666">=</span> df<span style="color: #666666">.</span>dropna()
+    df[<span style="color: #BA2121">&#39;loan_status&#39;</span>] <span style="color: #666666">=</span> df[<span style="color: #BA2121">&#39;loan_status&#39;</span>]<span style="color: #666666">.</span>apply(status_binary)
+    df <span style="color: #666666">=</span> df[(df[<span style="color: #BA2121">&#39;loan_status&#39;</span>] <span style="color: #666666">!=</span> (<span style="color: #666666">-1</span>))]
+    dummy_df <span style="color: #666666">=</span> pd<span style="color: #666666">.</span>get_dummies(
+        df[[<span style="color: #BA2121">&#39;home_ownership&#39;</span>, <span style="color: #BA2121">&#39;verification_status&#39;</span>, <span style="color: #BA2121">&#39;purpose&#39;</span>, <span style="color: #BA2121">&#39;term&#39;</span>]]
+    )
+    <span style="color: #008000; font-weight: bold">return</span> dummy_df
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 3</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f3</span>(df):
+    <span style="color: #408080; font-style: italic"># additional context code from user definitions</span>
+
+    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">status_binary</span>(text):
+        <span style="color: #008000; font-weight: bold">if</span> (text <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;Fully Paid&#39;</span>):
+            <span style="color: #008000; font-weight: bold">return</span> <span style="color: #666666">0</span>
+        <span style="color: #008000; font-weight: bold">elif</span> ((text <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;Current&#39;</span>) <span style="color: #AA22FF; font-weight: bold">or</span> (text <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;Issued&#39;</span>)):
+            <span style="color: #008000; font-weight: bold">return</span> (<span style="color: #666666">-1</span>)
+        <span style="color: #008000; font-weight: bold">else</span>:
+            <span style="color: #008000; font-weight: bold">return</span> <span style="color: #666666">1</span>
+
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># df = pd.read_csv(&#39;../input/loan.csv&#39;)</span>
+    df <span style="color: #666666">=</span> df<span style="color: #666666">.</span>drop([
+        <span style="color: #BA2121">&#39;id&#39;</span>, <span style="color: #BA2121">&#39;member_id&#39;</span>, <span style="color: #BA2121">&#39;funded_amnt&#39;</span>, <span style="color: #BA2121">&#39;funded_amnt_inv&#39;</span>, <span style="color: #BA2121">&#39;sub_grade&#39;</span>,
+        <span style="color: #BA2121">&#39;emp_title&#39;</span>, <span style="color: #BA2121">&#39;issue_d&#39;</span>, <span style="color: #BA2121">&#39;zip_code&#39;</span>, <span style="color: #BA2121">&#39;out_prncp&#39;</span>, <span style="color: #BA2121">&#39;out_prncp_inv&#39;</span>,
+        <span style="color: #BA2121">&#39;total_pymnt&#39;</span>, <span style="color: #BA2121">&#39;total_pymnt_inv&#39;</span>, <span style="color: #BA2121">&#39;total_rec_prncp&#39;</span>, <span style="color: #BA2121">&#39;total_rec_int&#39;</span>,
+        <span style="color: #BA2121">&#39;total_rec_late_fee&#39;</span>, <span style="color: #BA2121">&#39;recoveries&#39;</span>, <span style="color: #BA2121">&#39;collection_recovery_fee&#39;</span>,
+        <span style="color: #BA2121">&#39;last_pymnt_d&#39;</span>, <span style="color: #BA2121">&#39;last_pymnt_amnt&#39;</span>, <span style="color: #BA2121">&#39;desc&#39;</span>, <span style="color: #BA2121">&#39;url&#39;</span>, <span style="color: #BA2121">&#39;title&#39;</span>,
+        <span style="color: #BA2121">&#39;initial_list_status&#39;</span>, <span style="color: #BA2121">&#39;pymnt_plan&#39;</span>, <span style="color: #BA2121">&#39;policy_code&#39;</span>, <span style="color: #BA2121">&#39;application_type&#39;</span>,
+        <span style="color: #BA2121">&#39;earliest_cr_line&#39;</span>, <span style="color: #BA2121">&#39;last_credit_pull_d&#39;</span>, <span style="color: #BA2121">&#39;next_pymnt_d&#39;</span>, <span style="color: #BA2121">&#39;addr_state&#39;</span>
+    ],
+                 axis<span style="color: #666666">=1</span>)
+    df <span style="color: #666666">=</span> df<span style="color: #666666">.</span>dropna(thresh<span style="color: #666666">=</span>(<span style="color: #008000">len</span>(df) <span style="color: #666666">/</span> <span style="color: #666666">2</span>), axis<span style="color: #666666">=1</span>)
+    df <span style="color: #666666">=</span> df<span style="color: #666666">.</span>dropna()
+    df[<span style="color: #BA2121">&#39;loan_status&#39;</span>] <span style="color: #666666">=</span> df[<span style="color: #BA2121">&#39;loan_status&#39;</span>]<span style="color: #666666">.</span>apply(status_binary)
+    df <span style="color: #666666">=</span> df[(df[<span style="color: #BA2121">&#39;loan_status&#39;</span>] <span style="color: #666666">!=</span> (<span style="color: #666666">-1</span>))]
+    dummy_df <span style="color: #666666">=</span> pd<span style="color: #666666">.</span>get_dummies(
+        df[[<span style="color: #BA2121">&#39;home_ownership&#39;</span>, <span style="color: #BA2121">&#39;verification_status&#39;</span>, <span style="color: #BA2121">&#39;purpose&#39;</span>, <span style="color: #BA2121">&#39;term&#39;</span>]]
+    )
+    df <span style="color: #666666">=</span> df<span style="color: #666666">.</span>drop([<span style="color: #BA2121">&#39;home_ownership&#39;</span>, <span style="color: #BA2121">&#39;verification_status&#39;</span>, <span style="color: #BA2121">&#39;purpose&#39;</span>, <span style="color: #BA2121">&#39;term&#39;</span>],
+                 axis<span style="color: #666666">=1</span>)
+    df <span style="color: #666666">=</span> pd<span style="color: #666666">.</span>concat([df, dummy_df], axis<span style="color: #666666">=1</span>)
+    <span style="color: #008000; font-weight: bold">return</span> df
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 4</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f4</span>(df):
+    <span style="color: #408080; font-style: italic"># additional context code from user definitions</span>
+
+    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">status_binary</span>(text):
+        <span style="color: #008000; font-weight: bold">if</span> (text <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;Fully Paid&#39;</span>):
+            <span style="color: #008000; font-weight: bold">return</span> <span style="color: #666666">0</span>
+        <span style="color: #008000; font-weight: bold">elif</span> ((text <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;Current&#39;</span>) <span style="color: #AA22FF; font-weight: bold">or</span> (text <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;Issued&#39;</span>)):
+            <span style="color: #008000; font-weight: bold">return</span> (<span style="color: #666666">-1</span>)
+        <span style="color: #008000; font-weight: bold">else</span>:
+            <span style="color: #008000; font-weight: bold">return</span> <span style="color: #666666">1</span>
+
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># df = pd.read_csv(&#39;../input/loan.csv&#39;)</span>
+    df <span style="color: #666666">=</span> df<span style="color: #666666">.</span>drop([
+        <span style="color: #BA2121">&#39;id&#39;</span>, <span style="color: #BA2121">&#39;member_id&#39;</span>, <span style="color: #BA2121">&#39;funded_amnt&#39;</span>, <span style="color: #BA2121">&#39;funded_amnt_inv&#39;</span>, <span style="color: #BA2121">&#39;sub_grade&#39;</span>,
+        <span style="color: #BA2121">&#39;emp_title&#39;</span>, <span style="color: #BA2121">&#39;issue_d&#39;</span>, <span style="color: #BA2121">&#39;zip_code&#39;</span>, <span style="color: #BA2121">&#39;out_prncp&#39;</span>, <span style="color: #BA2121">&#39;out_prncp_inv&#39;</span>,
+        <span style="color: #BA2121">&#39;total_pymnt&#39;</span>, <span style="color: #BA2121">&#39;total_pymnt_inv&#39;</span>, <span style="color: #BA2121">&#39;total_rec_prncp&#39;</span>, <span style="color: #BA2121">&#39;total_rec_int&#39;</span>,
+        <span style="color: #BA2121">&#39;total_rec_late_fee&#39;</span>, <span style="color: #BA2121">&#39;recoveries&#39;</span>, <span style="color: #BA2121">&#39;collection_recovery_fee&#39;</span>,
+        <span style="color: #BA2121">&#39;last_pymnt_d&#39;</span>, <span style="color: #BA2121">&#39;last_pymnt_amnt&#39;</span>, <span style="color: #BA2121">&#39;desc&#39;</span>, <span style="color: #BA2121">&#39;url&#39;</span>, <span style="color: #BA2121">&#39;title&#39;</span>,
+        <span style="color: #BA2121">&#39;initial_list_status&#39;</span>, <span style="color: #BA2121">&#39;pymnt_plan&#39;</span>, <span style="color: #BA2121">&#39;policy_code&#39;</span>, <span style="color: #BA2121">&#39;application_type&#39;</span>,
+        <span style="color: #BA2121">&#39;earliest_cr_line&#39;</span>, <span style="color: #BA2121">&#39;last_credit_pull_d&#39;</span>, <span style="color: #BA2121">&#39;next_pymnt_d&#39;</span>, <span style="color: #BA2121">&#39;addr_state&#39;</span>
+    ],
+                 axis<span style="color: #666666">=1</span>)
+    df <span style="color: #666666">=</span> df<span style="color: #666666">.</span>dropna(thresh<span style="color: #666666">=</span>(<span style="color: #008000">len</span>(df) <span style="color: #666666">/</span> <span style="color: #666666">2</span>), axis<span style="color: #666666">=1</span>)
+    df <span style="color: #666666">=</span> df<span style="color: #666666">.</span>dropna()
+    df[<span style="color: #BA2121">&#39;loan_status&#39;</span>] <span style="color: #666666">=</span> df[<span style="color: #BA2121">&#39;loan_status&#39;</span>]<span style="color: #666666">.</span>apply(status_binary)
+    df <span style="color: #666666">=</span> df[(df[<span style="color: #BA2121">&#39;loan_status&#39;</span>] <span style="color: #666666">!=</span> (<span style="color: #666666">-1</span>))]
+    dummy_df <span style="color: #666666">=</span> pd<span style="color: #666666">.</span>get_dummies(
+        df[[<span style="color: #BA2121">&#39;home_ownership&#39;</span>, <span style="color: #BA2121">&#39;verification_status&#39;</span>, <span style="color: #BA2121">&#39;purpose&#39;</span>, <span style="color: #BA2121">&#39;term&#39;</span>]]
+    )
+    df <span style="color: #666666">=</span> df<span style="color: #666666">.</span>drop([<span style="color: #BA2121">&#39;home_ownership&#39;</span>, <span style="color: #BA2121">&#39;verification_status&#39;</span>, <span style="color: #BA2121">&#39;purpose&#39;</span>, <span style="color: #BA2121">&#39;term&#39;</span>],
+                 axis<span style="color: #666666">=1</span>)
+    df <span style="color: #666666">=</span> pd<span style="color: #666666">.</span>concat([df, dummy_df], axis<span style="color: #666666">=1</span>)
+    mapping_dict <span style="color: #666666">=</span> {
+        <span style="color: #BA2121">&#39;emp_length&#39;</span>: {
+            <span style="color: #BA2121">&#39;10+ years&#39;</span>: <span style="color: #666666">10</span>,
+            <span style="color: #BA2121">&#39;9 years&#39;</span>: <span style="color: #666666">9</span>,
+            <span style="color: #BA2121">&#39;8 years&#39;</span>: <span style="color: #666666">8</span>,
+            <span style="color: #BA2121">&#39;7 years&#39;</span>: <span style="color: #666666">7</span>,
+            <span style="color: #BA2121">&#39;6 years&#39;</span>: <span style="color: #666666">6</span>,
+            <span style="color: #BA2121">&#39;5 years&#39;</span>: <span style="color: #666666">5</span>,
+            <span style="color: #BA2121">&#39;4 years&#39;</span>: <span style="color: #666666">4</span>,
+            <span style="color: #BA2121">&#39;3 years&#39;</span>: <span style="color: #666666">3</span>,
+            <span style="color: #BA2121">&#39;2 years&#39;</span>: <span style="color: #666666">2</span>,
+            <span style="color: #BA2121">&#39;1 year&#39;</span>: <span style="color: #666666">1</span>,
+            <span style="color: #BA2121">&#39;&lt; 1 year&#39;</span>: <span style="color: #666666">0</span>,
+            <span style="color: #BA2121">&#39;n/a&#39;</span>: <span style="color: #666666">0</span>
+        },
+        <span style="color: #BA2121">&#39;grade&#39;</span>: {
+            <span style="color: #BA2121">&#39;A&#39;</span>: <span style="color: #666666">1</span>,
+            <span style="color: #BA2121">&#39;B&#39;</span>: <span style="color: #666666">2</span>,
+            <span style="color: #BA2121">&#39;C&#39;</span>: <span style="color: #666666">3</span>,
+            <span style="color: #BA2121">&#39;D&#39;</span>: <span style="color: #666666">4</span>,
+            <span style="color: #BA2121">&#39;E&#39;</span>: <span style="color: #666666">5</span>,
+            <span style="color: #BA2121">&#39;F&#39;</span>: <span style="color: #666666">6</span>,
+            <span style="color: #BA2121">&#39;G&#39;</span>: <span style="color: #666666">7</span>
+        }
+    }
+    df <span style="color: #666666">=</span> df<span style="color: #666666">.</span>replace(mapping_dict)
+    <span style="color: #008000; font-weight: bold">return</span> df
+
+
+<span style="color: #408080; font-style: italic"># Random fragments (control)</span>
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 0</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f0</span>(df):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">sklearn.preprocessing</span> <span style="color: #008000; font-weight: bold">import</span> LabelEncoder, OneHotEncoder
+    <span style="color: #408080; font-style: italic"># df = pd.read_csv(&#39;../input/loan.csv&#39;)</span>
+    df <span style="color: #666666">=</span> df[((df<span style="color: #666666">.</span>loan_status <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;Fully Paid&#39;</span>) <span style="color: #666666">|</span>
+             (df<span style="color: #666666">.</span>loan_status <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;Charged Off&#39;</span>))]
+    df <span style="color: #666666">=</span> df[(df[<span style="color: #BA2121">&#39;pymnt_plan&#39;</span>] <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;n&#39;</span>)]
+    df <span style="color: #666666">=</span> df[(df[<span style="color: #BA2121">&#39;application_type&#39;</span>] <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;INDIVIDUAL&#39;</span>)]
+    df1 <span style="color: #666666">=</span> df<span style="color: #666666">.</span>drop(
+        columns<span style="color: #666666">=</span>[
+            <span style="color: #BA2121">&#39;policy_code&#39;</span>, <span style="color: #BA2121">&#39;next_pymnt_d&#39;</span>, <span style="color: #BA2121">&#39;out_prncp&#39;</span>, <span style="color: #BA2121">&#39;out_prncp_inv&#39;</span>,
+            <span style="color: #BA2121">&#39;pymnt_plan&#39;</span>, <span style="color: #BA2121">&#39;initial_list_status&#39;</span>, <span style="color: #BA2121">&#39;member_id&#39;</span>, <span style="color: #BA2121">&#39;id&#39;</span>, <span style="color: #BA2121">&#39;url&#39;</span>,
+            <span style="color: #BA2121">&#39;application_type&#39;</span>, <span style="color: #BA2121">&#39;grade&#39;</span>, <span style="color: #BA2121">&#39;annual_inc_joint&#39;</span>, <span style="color: #BA2121">&#39;dti_joint&#39;</span>
+        ]
+    )
+    df1 <span style="color: #666666">=</span> df1<span style="color: #666666">.</span>drop(
+        columns<span style="color: #666666">=</span>[
+            <span style="color: #BA2121">&#39;verification_status_joint&#39;</span>, <span style="color: #BA2121">&#39;open_acc_6m&#39;</span>, <span style="color: #BA2121">&#39;open_il_6m&#39;</span>,
+            <span style="color: #BA2121">&#39;open_il_12m&#39;</span>, <span style="color: #BA2121">&#39;open_il_24m&#39;</span>, <span style="color: #BA2121">&#39;mths_since_rcnt_il&#39;</span>, <span style="color: #BA2121">&#39;total_bal_il&#39;</span>,
+            <span style="color: #BA2121">&#39;il_util&#39;</span>, <span style="color: #BA2121">&#39;open_rv_12m&#39;</span>, <span style="color: #BA2121">&#39;open_rv_24m&#39;</span>, <span style="color: #BA2121">&#39;max_bal_bc&#39;</span>, <span style="color: #BA2121">&#39;all_util&#39;</span>,
+            <span style="color: #BA2121">&#39;inq_fi&#39;</span>, <span style="color: #BA2121">&#39;total_cu_tl&#39;</span>, <span style="color: #BA2121">&#39;inq_last_12m&#39;</span>
+        ]
+    )
+    df1 <span style="color: #666666">=</span> df1<span style="color: #666666">.</span>drop(columns<span style="color: #666666">=</span>[<span style="color: #BA2121">&#39;mths_since_last_major_derog&#39;</span>])
+    lbl_enc <span style="color: #666666">=</span> LabelEncoder()
+    df1[(x <span style="color: #666666">+</span> <span style="color: #BA2121">&#39;_old&#39;</span>)] <span style="color: #666666">=</span> df[x]
+    df1[x] <span style="color: #666666">=</span> lbl_enc<span style="color: #666666">.</span>fit_transform(df1[x])
+    df1[(x <span style="color: #666666">+</span> <span style="color: #BA2121">&#39;_old&#39;</span>)] <span style="color: #666666">=</span> df[x]
+    df1[x] <span style="color: #666666">=</span> df1[x]
+    df1[x] <span style="color: #666666">=</span> lbl_enc<span style="color: #666666">.</span>fit_transform(df1[x])
+    df1<span style="color: #666666">.</span>earliest_cr_line <span style="color: #666666">=</span> pd<span style="color: #666666">.</span>to_datetime(df1<span style="color: #666666">.</span>earliest_cr_line, <span style="color: #008000">format</span><span style="color: #666666">=</span><span style="color: #BA2121">&#39;%b-%Y&#39;</span>)
+    df1[<span style="color: #BA2121">&#39;earliest_cr_line_month&#39;</span>] <span style="color: #666666">=</span> df1<span style="color: #666666">.</span>earliest_cr_line<span style="color: #666666">.</span>dt<span style="color: #666666">.</span>month
+    <span style="color: #008000; font-weight: bold">return</span> df1
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 1</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f1</span>(df):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># df = pd.read_csv(&#39;../input/loan.csv&#39;, usecols=[&#39;loan_amnt&#39;, &#39;addr_state&#39;])</span>
+    perStatedf <span style="color: #666666">=</span> df<span style="color: #666666">.</span>groupby(
+        <span style="color: #BA2121">&#39;addr_state&#39;</span>, as_index<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">False</span>
+    )<span style="color: #666666">.</span>count()<span style="color: #666666">.</span>sort_values(
+        by<span style="color: #666666">=</span><span style="color: #BA2121">&#39;loan_amnt&#39;</span>, ascending<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">False</span>
+    )
+    statePop <span style="color: #666666">=</span> {
+        <span style="color: #BA2121">&#39;CA&#39;</span>: <span style="color: #666666">39144818</span>,
+        <span style="color: #BA2121">&#39;TX&#39;</span>: <span style="color: #666666">27469144</span>,
+        <span style="color: #BA2121">&#39;FL&#39;</span>: <span style="color: #666666">20271878</span>,
+        <span style="color: #BA2121">&#39;NY&#39;</span>: <span style="color: #666666">19795791</span>,
+        <span style="color: #BA2121">&#39;IL&#39;</span>: <span style="color: #666666">12859995</span>,
+        <span style="color: #BA2121">&#39;PA&#39;</span>: <span style="color: #666666">12802503</span>,
+        <span style="color: #BA2121">&#39;OH&#39;</span>: <span style="color: #666666">11613423</span>,
+        <span style="color: #BA2121">&#39;GA&#39;</span>: <span style="color: #666666">10214860</span>,
+        <span style="color: #BA2121">&#39;NC&#39;</span>: <span style="color: #666666">10042802</span>,
+        <span style="color: #BA2121">&#39;MI&#39;</span>: <span style="color: #666666">9922576</span>,
+        <span style="color: #BA2121">&#39;NJ&#39;</span>: <span style="color: #666666">8958013</span>,
+        <span style="color: #BA2121">&#39;VA&#39;</span>: <span style="color: #666666">8382993</span>,
+        <span style="color: #BA2121">&#39;WA&#39;</span>: <span style="color: #666666">7170351</span>,
+        <span style="color: #BA2121">&#39;AZ&#39;</span>: <span style="color: #666666">6828065</span>,
+        <span style="color: #BA2121">&#39;MA&#39;</span>: <span style="color: #666666">6794422</span>,
+        <span style="color: #BA2121">&#39;IN&#39;</span>: <span style="color: #666666">6619680</span>,
+        <span style="color: #BA2121">&#39;TN&#39;</span>: <span style="color: #666666">6600299</span>,
+        <span style="color: #BA2121">&#39;MO&#39;</span>: <span style="color: #666666">6083672</span>,
+        <span style="color: #BA2121">&#39;MD&#39;</span>: <span style="color: #666666">6006401</span>,
+        <span style="color: #BA2121">&#39;WI&#39;</span>: <span style="color: #666666">5771337</span>,
+        <span style="color: #BA2121">&#39;MN&#39;</span>: <span style="color: #666666">5489594</span>,
+        <span style="color: #BA2121">&#39;CO&#39;</span>: <span style="color: #666666">5456574</span>,
+        <span style="color: #BA2121">&#39;SC&#39;</span>: <span style="color: #666666">4896146</span>,
+        <span style="color: #BA2121">&#39;AL&#39;</span>: <span style="color: #666666">4858979</span>,
+        <span style="color: #BA2121">&#39;LA&#39;</span>: <span style="color: #666666">4670724</span>,
+        <span style="color: #BA2121">&#39;KY&#39;</span>: <span style="color: #666666">4425092</span>,
+        <span style="color: #BA2121">&#39;OR&#39;</span>: <span style="color: #666666">4028977</span>,
+        <span style="color: #BA2121">&#39;OK&#39;</span>: <span style="color: #666666">3911338</span>,
+        <span style="color: #BA2121">&#39;CT&#39;</span>: <span style="color: #666666">3890886</span>,
+        <span style="color: #BA2121">&#39;IA&#39;</span>: <span style="color: #666666">3123899</span>,
+        <span style="color: #BA2121">&#39;UT&#39;</span>: <span style="color: #666666">2995919</span>,
+        <span style="color: #BA2121">&#39;MS&#39;</span>: <span style="color: #666666">2992333</span>,
+        <span style="color: #BA2121">&#39;AK&#39;</span>: <span style="color: #666666">2978204</span>,
+        <span style="color: #BA2121">&#39;KS&#39;</span>: <span style="color: #666666">2911641</span>,
+        <span style="color: #BA2121">&#39;NV&#39;</span>: <span style="color: #666666">2890845</span>,
+        <span style="color: #BA2121">&#39;NM&#39;</span>: <span style="color: #666666">2085109</span>,
+        <span style="color: #BA2121">&#39;NE&#39;</span>: <span style="color: #666666">1896190</span>,
+        <span style="color: #BA2121">&#39;WV&#39;</span>: <span style="color: #666666">1844128</span>,
+        <span style="color: #BA2121">&#39;ID&#39;</span>: <span style="color: #666666">1654930</span>,
+        <span style="color: #BA2121">&#39;HI&#39;</span>: <span style="color: #666666">1431603</span>,
+        <span style="color: #BA2121">&#39;NH&#39;</span>: <span style="color: #666666">1330608</span>,
+        <span style="color: #BA2121">&#39;ME&#39;</span>: <span style="color: #666666">1329328</span>,
+        <span style="color: #BA2121">&#39;RI&#39;</span>: <span style="color: #666666">1053298</span>,
+        <span style="color: #BA2121">&#39;MT&#39;</span>: <span style="color: #666666">1032949</span>,
+        <span style="color: #BA2121">&#39;DE&#39;</span>: <span style="color: #666666">945934</span>,
+        <span style="color: #BA2121">&#39;SD&#39;</span>: <span style="color: #666666">858469</span>,
+        <span style="color: #BA2121">&#39;ND&#39;</span>: <span style="color: #666666">756927</span>,
+        <span style="color: #BA2121">&#39;AK&#39;</span>: <span style="color: #666666">738432</span>,
+        <span style="color: #BA2121">&#39;DC&#39;</span>: <span style="color: #666666">672228</span>,
+        <span style="color: #BA2121">&#39;VT&#39;</span>: <span style="color: #666666">626042</span>,
+        <span style="color: #BA2121">&#39;WY&#39;</span>: <span style="color: #666666">586107</span>
+    }
+    <span style="color: #008000; font-weight: bold">return</span> pd<span style="color: #666666">.</span>DataFrame<span style="color: #666666">.</span>from_dict(statePop, orient<span style="color: #666666">=</span><span style="color: #BA2121">&#39;index&#39;</span>)
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 2</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f2</span>():
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    statePop <span style="color: #666666">=</span> {
+        <span style="color: #BA2121">&#39;CA&#39;</span>: <span style="color: #666666">39144818</span>,
+        <span style="color: #BA2121">&#39;TX&#39;</span>: <span style="color: #666666">27469144</span>,
+        <span style="color: #BA2121">&#39;FL&#39;</span>: <span style="color: #666666">20271878</span>,
+        <span style="color: #BA2121">&#39;NY&#39;</span>: <span style="color: #666666">19795791</span>,
+        <span style="color: #BA2121">&#39;IL&#39;</span>: <span style="color: #666666">12859995</span>,
+        <span style="color: #BA2121">&#39;PA&#39;</span>: <span style="color: #666666">12802503</span>,
+        <span style="color: #BA2121">&#39;OH&#39;</span>: <span style="color: #666666">11613423</span>,
+        <span style="color: #BA2121">&#39;GA&#39;</span>: <span style="color: #666666">10214860</span>,
+        <span style="color: #BA2121">&#39;NC&#39;</span>: <span style="color: #666666">10042802</span>,
+        <span style="color: #BA2121">&#39;MI&#39;</span>: <span style="color: #666666">9922576</span>,
+        <span style="color: #BA2121">&#39;NJ&#39;</span>: <span style="color: #666666">8958013</span>,
+        <span style="color: #BA2121">&#39;VA&#39;</span>: <span style="color: #666666">8382993</span>,
+        <span style="color: #BA2121">&#39;WA&#39;</span>: <span style="color: #666666">7170351</span>,
+        <span style="color: #BA2121">&#39;AZ&#39;</span>: <span style="color: #666666">6828065</span>,
+        <span style="color: #BA2121">&#39;MA&#39;</span>: <span style="color: #666666">6794422</span>,
+        <span style="color: #BA2121">&#39;IN&#39;</span>: <span style="color: #666666">6619680</span>,
+        <span style="color: #BA2121">&#39;TN&#39;</span>: <span style="color: #666666">6600299</span>,
+        <span style="color: #BA2121">&#39;MO&#39;</span>: <span style="color: #666666">6083672</span>,
+        <span style="color: #BA2121">&#39;MD&#39;</span>: <span style="color: #666666">6006401</span>,
+        <span style="color: #BA2121">&#39;WI&#39;</span>: <span style="color: #666666">5771337</span>,
+        <span style="color: #BA2121">&#39;MN&#39;</span>: <span style="color: #666666">5489594</span>,
+        <span style="color: #BA2121">&#39;CO&#39;</span>: <span style="color: #666666">5456574</span>,
+        <span style="color: #BA2121">&#39;SC&#39;</span>: <span style="color: #666666">4896146</span>,
+        <span style="color: #BA2121">&#39;AL&#39;</span>: <span style="color: #666666">4858979</span>,
+        <span style="color: #BA2121">&#39;LA&#39;</span>: <span style="color: #666666">4670724</span>,
+        <span style="color: #BA2121">&#39;KY&#39;</span>: <span style="color: #666666">4425092</span>,
+        <span style="color: #BA2121">&#39;OR&#39;</span>: <span style="color: #666666">4028977</span>,
+        <span style="color: #BA2121">&#39;OK&#39;</span>: <span style="color: #666666">3911338</span>,
+        <span style="color: #BA2121">&#39;CT&#39;</span>: <span style="color: #666666">3890886</span>,
+        <span style="color: #BA2121">&#39;IA&#39;</span>: <span style="color: #666666">3123899</span>,
+        <span style="color: #BA2121">&#39;UT&#39;</span>: <span style="color: #666666">2995919</span>,
+        <span style="color: #BA2121">&#39;MS&#39;</span>: <span style="color: #666666">2992333</span>,
+        <span style="color: #BA2121">&#39;AK&#39;</span>: <span style="color: #666666">2978204</span>,
+        <span style="color: #BA2121">&#39;KS&#39;</span>: <span style="color: #666666">2911641</span>,
+        <span style="color: #BA2121">&#39;NV&#39;</span>: <span style="color: #666666">2890845</span>,
+        <span style="color: #BA2121">&#39;NM&#39;</span>: <span style="color: #666666">2085109</span>,
+        <span style="color: #BA2121">&#39;NE&#39;</span>: <span style="color: #666666">1896190</span>,
+        <span style="color: #BA2121">&#39;WV&#39;</span>: <span style="color: #666666">1844128</span>,
+        <span style="color: #BA2121">&#39;ID&#39;</span>: <span style="color: #666666">1654930</span>,
+        <span style="color: #BA2121">&#39;HI&#39;</span>: <span style="color: #666666">1431603</span>,
+        <span style="color: #BA2121">&#39;NH&#39;</span>: <span style="color: #666666">1330608</span>,
+        <span style="color: #BA2121">&#39;ME&#39;</span>: <span style="color: #666666">1329328</span>,
+        <span style="color: #BA2121">&#39;RI&#39;</span>: <span style="color: #666666">1053298</span>,
+        <span style="color: #BA2121">&#39;MT&#39;</span>: <span style="color: #666666">1032949</span>,
+        <span style="color: #BA2121">&#39;DE&#39;</span>: <span style="color: #666666">945934</span>,
+        <span style="color: #BA2121">&#39;SD&#39;</span>: <span style="color: #666666">858469</span>,
+        <span style="color: #BA2121">&#39;ND&#39;</span>: <span style="color: #666666">756927</span>,
+        <span style="color: #BA2121">&#39;AK&#39;</span>: <span style="color: #666666">738432</span>,
+        <span style="color: #BA2121">&#39;DC&#39;</span>: <span style="color: #666666">672228</span>,
+        <span style="color: #BA2121">&#39;VT&#39;</span>: <span style="color: #666666">626042</span>,
+        <span style="color: #BA2121">&#39;WY&#39;</span>: <span style="color: #666666">586107</span>
+    }
+    <span style="color: #008000; font-weight: bold">return</span> pd<span style="color: #666666">.</span>DataFrame<span style="color: #666666">.</span>from_dict(statePop, orient<span style="color: #666666">=</span><span style="color: #BA2121">&#39;index&#39;</span>)
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 3</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f3</span>(data):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># data = pd.read_csv(&#39;../input/loan.csv&#39;, low_memory=False)</span>
+    data<span style="color: #666666">.</span>issue_d <span style="color: #666666">=</span> pd<span style="color: #666666">.</span>Series(data<span style="color: #666666">.</span>issue_d)<span style="color: #666666">.</span>str<span style="color: #666666">.</span>replace(<span style="color: #BA2121">&#39;-2015&#39;</span>, <span style="color: #BA2121">&#39;&#39;</span>)
+    <span style="color: #008000; font-weight: bold">return</span> data
+
+
+</pre>
+<pre>
+<span style="color: #408080; font-style: italic"># Fragment 4</span>
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">f4</span>(data):
+    <span style="color: #408080; font-style: italic"># core cleaning code</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">numpy</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">np</span>
+    <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">pandas</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">pd</span>
+    <span style="color: #408080; font-style: italic"># data = pd.read_csv(&#39;../input/loan.csv&#39;)</span>
+    data_1 <span style="color: #666666">=</span> pd<span style="color: #666666">.</span>DataFrame(data)
+    category_one_data <span style="color: #666666">=</span> data_1[(data_1<span style="color: #666666">.</span>loan_status <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;Fully Paid&#39;</span>)]
+    category_two_data <span style="color: #666666">=</span> data_1[(data_1<span style="color: #666666">.</span>loan_status <span style="color: #666666">==</span> <span style="color: #BA2121">&#39;Charged Off&#39;</span>)]
+    new_data_copy <span style="color: #666666">=</span> np<span style="color: #666666">.</span>vstack((category_one_data, category_two_data))
+    new_data_copy <span style="color: #666666">=</span> pd<span style="color: #666666">.</span>DataFrame(new_data_copy)
+    data_2 <span style="color: #666666">=</span> new_data_copy
+    col_nos <span style="color: #666666">=</span> []
+    i <span style="color: #666666">=</span> <span style="color: #666666">0</span>
+    i <span style="color: #666666">=</span> (i <span style="color: #666666">+</span> <span style="color: #666666">1</span>)
+    data_2 <span style="color: #666666">=</span> data_2<span style="color: #666666">.</span>drop(data_2<span style="color: #666666">.</span>columns[col_nos], axis<span style="color: #666666">=1</span>)
+    rename_1 <span style="color: #666666">=</span> <span style="color: #008000">range</span>(<span style="color: #666666">0</span>, <span style="color: #666666">49</span>)
+    data_2<span style="color: #666666">.</span>columns <span style="color: #666666">=</span> rename_1
+    <span style="color: #008000; font-weight: bold">return</span> data_2
+</pre></div>
+
