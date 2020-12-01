@@ -1,6 +1,7 @@
 # Kaggle docker container config
 FROM kaggle/python
 
+RUN apt-get install -y --no-install-recommends gnupg2 curl ca-certificates apt-transport-https
 RUN apt-get update
 RUN apt-get install zip -y
 RUN apt-get install vim -y
@@ -23,9 +24,9 @@ RUN git clone https://github.com/josepablocam/python-pl
 RUN pip install -e python-pl
 
 # Transfer analysis tools
-ADD transfer-cleaning.zip transfer-cleaning.zip
-RUN unzip transfer-cleaning.zip -d transfer-cleaning
-RUN pip install -e transfer-cleaning
+ADD transfer.zip transfer.zip
+RUN unzip transfer.zip -d transfer
+RUN pip install -e transfer
 
 # install ipython to succesfully run
 RUN pip install ipython

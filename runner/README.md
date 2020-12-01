@@ -11,7 +11,7 @@
 3. Clone the main repository to `/raid/` on Rhino (make sure nothing uses AFS)
 
 4. Make sure that any data you want to run on is stored in
-   `transfer-cleaning/runner/program_data`.
+   `transfer/runner/program_data`.
    The directory structure assumed is:
    ```
 program_data
@@ -35,7 +35,7 @@ for the datasets we provide.
 
 5. Build the vagrant VM, used to sandbox the Kaggle scripts
     ```
-    cd transfer-cleaning/runner; make build_vagrant; vagrant halt
+    cd transfer/runner; make build_vagrant; vagrant halt
     ```
 6. Start up the VM with `longjob` to remain logged in for a day (change this for longer)
     ```
@@ -49,6 +49,16 @@ for the datasets we provide.
     ```
     cd transfer-cleaning/runner; make build_docker
     ```
+
+Occasionally `make build_docker`may result in the following error:
+
+```
+Get https://registry-1.docker.io/v2/: net/http: TLS handshake timeout
+```
+
+If so, I recommend just running `make build_docker` again, and that
+tends to solve the timeout.
+
 Note that you do not need to run the `make` command here using `sudo`, as `make build_vagrant` has already
 added the default user (`vagrant`) to the `docker` group.
 So all `docker` commands can run without `sudo`.
