@@ -1,0 +1,3 @@
+#testing script
+
+print ("hi")
