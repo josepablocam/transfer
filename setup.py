@@ -19,7 +19,7 @@ setup(
         'dill==0.3.2',
         'jupyter==1.0.0',
         'beautifulsoup4==4.9.1',
-        'ipython==7.18.1',
+        'ipython==7.16.1',
         'nbformat==5.0.7',
         'scikit-learn==0.23.2',
     ],
