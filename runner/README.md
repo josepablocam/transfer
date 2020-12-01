@@ -31,7 +31,7 @@ This directory is copied on to the VM and then the Docker container within that.
     ```
 6. Start up the VM with `longjob` to remain logged in for a day (change this for longer)
     ```
-    longjob --renew 1d
+    longjob --renew 1d vagrant up
     ```
 7. Connect to the VM
     ```
@@ -47,10 +47,10 @@ So all `docker` commands can run without `sudo`.
 
 9. You can now schedule jobs to running by using the command below
     and modifying script locations etc as desired.
-    The actual scheduling is done with the `at`
-    command underneath the covers. Timeout is
+    The actual scheduling is done with
+    task-spooler. Timeout is
     implemented with the `timeout` command.
-    The memory limit is handed directly to the
+    The memory limit is handed directly by the
     docker container that executes each job.
 
 ```

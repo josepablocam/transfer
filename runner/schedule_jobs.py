@@ -27,21 +27,25 @@ def build_docker_command(
 
 
 def schedule(command):
-    at_command = ['at', '-q', 'b', '-m', 'now', '-f']
-    # need to write out command to a temporary file
-    # before feeding to at
-    script_file = tempfile.NamedTemporaryFile(suffix='.sh', delete=False)
-    if not isinstance(command, str):
-        command = ' '.join(command)
-    print('Scheduling: {}'.format(command))
-    script_file.write('#!/bin/bash\n')
-    script_file.write('{}\n'.format(command))
-    script_file.flush()
-    script_file.close()
-    full_command = at_command + [script_file.name]
-    return_code = subprocess.call(full_command)
-    os.remove(script_file.name)
+    tsp_command = "tsp {}".format(command)
+    return_code = subprocess.call(tsp_command, shell=True)
     return return_code
+
+    # at_command = ['at', '-q', 'b', '-m', 'now', '-f']
+    # # need to write out command to a temporary file
+    # # before feeding to at
+    # script_file = tempfile.NamedTemporaryFile(suffix='.sh', delete=False)
+    # if not isinstance(command, str):
+    #     command = ' '.join(command)
+    # print('Scheduling: {}'.format(command))
+    # script_file.write('#!/bin/bash\n')
+    # script_file.write('{}\n'.format(command))
+    # script_file.flush()
+    # script_file.close()
+    # full_command = at_command + [script_file.name]
+    # return_code = subprocess.call(full_command)
+    # os.remove(script_file.name)
+    # return return_code
 
 
 def schedule_jobs(
@@ -49,6 +53,8 @@ def schedule_jobs(
     mem_limit, keep, regex_pattern, plain
 ):
     scripts = [s for s in os.listdir(scripts_dir) if s.split('.')[-1] == 'py']
+    # and remove any scripts we already lifted etc
+    scripts = [s for s in scripts if not s.endswith("lifted.py")]
     for script_name in scripts:
         script_path = os.path.join(scripts_dir, script_name)
         if regex_pattern is not None and re.match(regex_pattern,
@@ -72,15 +78,15 @@ def main(args):
 if __name__ == '__main__':
     parser = ArgumentParser(description='Schedule batch of Kaggle scripts')
     parser.add_argument(
-        'docker_image',
+        '--docker_image',
         type=str,
         help='Name for docker image to use to execute scripts'
     )
     parser.add_argument(
-        'scripts_dir', type=str, help='Path to directory with scripts'
+        '--scripts_dir', type=str, help='Path to directory with scripts'
     )
     parser.add_argument(
-        'vm_output_dir',
+        '--vm_output_dir',
         type=str,
         help='Path in VM that maps to docker output path'
     )
