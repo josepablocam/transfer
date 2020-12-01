@@ -19,7 +19,7 @@ The snippets are focused on code that modifies an existing column or derives a n
 
 # Installation
 The easiest way to install `transfer` is through a docker
-container.
+container. Alternatively you can run `bash install.sh`
 
 First, build the container
 

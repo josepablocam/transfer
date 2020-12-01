@@ -25,6 +25,14 @@ program_data
 
 This directory is copied on to the VM and then the Docker container within that.
 
+You can prepare this directory structure by running
+
+```
+bash prepare_kaggle.sh
+```
+
+for the datasets we provide.
+
 5. Build the vagrant VM, used to sandbox the Kaggle scripts
     ```
     cd transfer-cleaning/runner; make build_vagrant; vagrant halt
@@ -60,26 +68,20 @@ python schedule_jobs.py \
     program_data/loan_data/results \
     program_data/loan_data/results/ \
     --mem_limit 20GB \
-    --timeout 2h
+    --timeout 2h \
+    --max_jobs 10
 ```
 
 Note that if you have already built the VM with all the data needed, and docker has been built accordingly, then
 you can just skip to the last step directly.
 
-This runs with the default `atd` settings. If you want to schedule jobs so
-that more are run concurrently and there is less startup time between jobs
-you should:
+You can set the number of jobs you'd like to run concurrently by using
 
-* Find the currently running `atd` daemon.
 ```
-ps aux | grep atd
+tsp -S <num>
 ```
-* Kill it.
-* Start a new `atd` daemon with your desired configuration
-```
-sudo atd -l <load-limit> -b <time-between-job-launches>
-```
-* Run `schedule_jobs.py` as explained above.
+
+or by passing in the `--max_jobs` flag to `schedule_jobs.py` as done above.
 
 
 # Known Issues

@@ -115,10 +115,8 @@ def filter_candidates(input_dir, parsed_dir, converted_dir):
     filter_scripts(converted_dir, parsed_dir)
 
     n = len(os.listdir(parsed_dir))
-    print(
-        "Filtered down to {} candidates that can be parsed with Python 3.*".
-        format(n)
-    )
+    print("Filtered down to {} candidates that can be parsed with Python 3.*".
+          format(n))
 
 
 def main(args):
@@ -131,22 +129,19 @@ if __name__ == "__main__":
         'Convert ipython notebook kernels to py scripts and filter based on parsing from Python 3.*'
     )
     parser.add_argument(
-        'input_dir', type=str, help='Directory containing Kaggle kernels'
-    )
+        'input_dir', type=str, help='Directory containing Kaggle kernels')
     parser.add_argument(
         '-o',
         '--parsed_dir',
         type=str,
         help='Directory to store parsed kernels',
-        default='parsed_kernels'
-    )
+        default='parsed_kernels')
     parser.add_argument(
         '-c',
         '--converted_dir',
         type=str,
         help='Directory to store converted notebooks',
-        default='converted_notebooks'
-    )
+        default='converted_notebooks')
 
     args = parser.parse_args()
     try:
