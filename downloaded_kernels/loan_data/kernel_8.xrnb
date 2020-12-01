@@ -1,0 +1,80 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "3d684901-5cfe-80bd-70bb-1d5739331ccd"
+      },
+      "source": [
+        "Usually with Kaagle data sets we try and predict some obviously binary variable, in this case it seems like we should be trying to predict 'bad loans'. On a second look however, that is not going to be very useful as lending club has alraedy weeded out the predictably bad loans, and a only a decision tree with lots of complexity that overfits would bother classifying any loan as bad. There is still a lot of useful, practical information here, especially if we take the perspective of a potential lender. Then we flip the question on its head and ask, does Lending Tree constitute a good investment, and if so which loans are the 'best loans' to finance.\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "ef79e0b7-8327-5efc-cb17-ea1e0fea037d"
+      },
+      "outputs": [],
+      "source": [
+        "\n",
+        "#  import packages, may have to use install.packages() for packages you dont have.\n",
+        "library(DescTools) \n",
+        "library(dplyr) \n",
+        "library(magrittr) \n",
+        "library(rpart) \n",
+        "library(rattle)\n",
+        "library(ggplot2)\n",
+        "library(readxl)\n",
+        "library(caret)\n",
+        "library(randomForest)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "e6a3dd02-a0d2-bc86-47dd-19529d89c003"
+      },
+      "outputs": [],
+      "source": [
+        "##Preliminary plotting and Summary Statistics\n",
+        "str(loanbook)\n",
+        "summary(loanbook)\n",
+        "Desc(loanbook$loan_amnt, main = \"Loan Amount Distribution\", plotit = TRUE)\n",
+        "Desc(loanbook$grade, main= \"Grade Distribution\", plotit=TRUE)\n",
+        "Desc(loanbook$loan_status, main='Loan Status Distribution', plotit=TRUE)\n",
+        "Desc(loanbook$purpose, main = \"Loan Purpose Distribution\", plotit = TRUE)\n",
+        "Desc(loanbook$term, main='Loan Term Distribution', plotit=TRUE)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "ddf06644-c2f2-0f5a-c39f-3f1d7ffdf60f"
+      },
+      "outputs": [],
+      "source": ""
+    }
+  ],
+  "metadata": {
+    "_change_revision": 0,
+    "_is_fork": false,
+    "kernelspec": {
+      "display_name": "R",
+      "language": "R",
+      "name": "ir"
+    },
+    "language_info": {
+      "codemirror_mode": "r",
+      "file_extension": ".r",
+      "mimetype": "text/x-r-source",
+      "name": "R",
+      "pygments_lexer": "r",
+      "version": "3.3.2"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

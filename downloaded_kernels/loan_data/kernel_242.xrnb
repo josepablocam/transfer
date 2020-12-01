@@ -1,0 +1,129 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "2807fee8-7481-a86e-ff82-1bd3084d5de5"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "60d782e6-3093-1bba-2269-f5df7c8c872f"
+      },
+      "outputs": [],
+      "source": [
+        "library(data.table)\n",
+        "library(ggplot2)\n",
+        "library(caret)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "ee20ca5e-075b-e47e-785c-9d691a9e8d9a"
+      },
+      "outputs": [],
+      "source": [
+        "data <- fread(\"../input/loan.csv\",stringsAsFactors=TRUE)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "01fe753d-8415-296d-2c85-3ad32ffc8ce1"
+      },
+      "outputs": [],
+      "source": [
+        "dim(data)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "4e036b58-1c03-427f-6f31-208de1527c95"
+      },
+      "outputs": [],
+      "source": [
+        "str(data)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "11dc6ae7-25bf-55f3-8d52-7656367a9f4a"
+      },
+      "outputs": [],
+      "source": [
+        "unique(data$loan_status)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "922faae2-369c-bc14-0c93-823648af19ff"
+      },
+      "outputs": [],
+      "source": [
+        "data$loan_status <- as.factor(ifelse(data$loan_status == \"Default\",1,0))"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "51d37c14-cffa-8300-3f11-4841a6ddb02d"
+      },
+      "outputs": [],
+      "source": [
+        "summary(data)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "f9899118-1bae-4cf0-d2fc-e65149d1e41c"
+      },
+      "outputs": [],
+      "source": [
+        "head(data)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "36877ee3-de8c-b52f-7d37-ea256dbf5baf"
+      },
+      "outputs": [],
+      "source": ""
+    }
+  ],
+  "metadata": {
+    "_change_revision": 0,
+    "_is_fork": false,
+    "kernelspec": {
+      "display_name": "R",
+      "language": "R",
+      "name": "ir"
+    },
+    "language_info": {
+      "codemirror_mode": "r",
+      "file_extension": ".r",
+      "mimetype": "text/x-r-source",
+      "name": "R",
+      "pygments_lexer": "r",
+      "version": "3.3.1"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

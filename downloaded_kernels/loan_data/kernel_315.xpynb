@@ -1,0 +1,245 @@
+{
+  "cells": [
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "37072b4a-b1c6-4012-947e-2362a5c6c418"
+      },
+      "outputs": [],
+      "source": [
+        "# This Python 3 environment comes with many helpful analytics libraries installed\n",
+        "# It is defined by the kaggle/python docker image: https://github.com/kaggle/docker-python\n",
+        "# For example, here's several helpful packages to load in \n",
+        "\n",
+        "%matplotlib inline\n",
+        "import pandas as pd\n",
+        "import numpy as np\n",
+        "import matplotlib.pyplot as plt\n",
+        "\n",
+        "# Input data files are available in the \"../input/\" directory.\n",
+        "# For example, running this (by clicking run or pressing Shift+Enter) will list the files in the input directory\n",
+        "\n",
+        "from subprocess import check_output\n",
+        "print(check_output([\"ls\", \"../input\"]).decode(\"utf8\"))\n",
+        "\n",
+        "# Any results you write to the current directory are saved as output."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "55f7a6d7-f072-47e4-9d55-c975736daae5"
+      },
+      "outputs": [],
+      "source": [
+        "#Loan Data into data frame\n",
+        "df_data = pd.read_csv(\"../input/loan.csv\",low_memory=False)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "7b1b2cc7-1d44-4d87-bc2f-8ffece33f3e4"
+      },
+      "outputs": [],
+      "source": [
+        "#Group data by addr_state to start some analysis of counts by state\n",
+        "df_group = df_data.groupby('addr_state', as_index=False)['id'].count()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "b3816e4c-50df-4f73-bf3a-2c9375759295"
+      },
+      "outputs": [],
+      "source": [
+        "#Sort the grouping by counts to order ascending\n",
+        "df_group.sort_values(['id'], ascending=[True], inplace=True)\n",
+        "df_group = df_group.reset_index(drop=True)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "72538f1a-634c-4d10-af90-8a604c901e8e"
+      },
+      "outputs": [],
+      "source": [
+        "#Plot data of counts by state shows CA way at top and ID at bottom x plot is in per 100000\n",
+        "\n",
+        "plt.bar(df_group.index,df_group.id/100000)\n",
+        "plt.xticks(df_group.index,df_group.addr_state)\n",
+        "N = 3\n",
+        "params = plt.gcf()\n",
+        "plSize = params.get_size_inches()\n",
+        "params.set_size_inches( (plSize[0]*N, plSize[1]*N) )\n",
+        "plt.show()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "2e8eb400-cb88-4a1b-b4c8-e21cd09fddb4"
+      },
+      "outputs": [],
+      "source": [
+        "#Plot data of totdal funded amount  by state shows CA way at top same as count and ID.TX and NYswap places interestingly in counts and amount at bottom x plot is in per 100000\n",
+        "df_group = df_data.groupby('addr_state', as_index=False).sum()\n",
+        "df_group.sort_values(['funded_amnt'], ascending=[True], inplace=True)\n",
+        "df_group = df_group.reset_index(drop=True)\n",
+        "plt.bar(df_group.index,df_group.funded_amnt/100000)\n",
+        "plt.xticks(df_group.index,df_group.addr_state)\n",
+        "N = 3\n",
+        "params = plt.gcf()\n",
+        "plSize = params.get_size_inches()\n",
+        "params.set_size_inches( (plSize[0]*N, plSize[1]*N) )\n",
+        "plt.show()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "8d2ccb04-cb09-4419-bcb1-1eec27bc0bac"
+      },
+      "outputs": [],
+      "source": [
+        "#Plot data of totdal funded amount by investors by state  shows no deviation from the funded amount by state\n",
+        "df_group.sort_values(['funded_amnt_inv'], ascending=[True], inplace=True)\n",
+        "df_group = df_group.reset_index(drop=True)\n",
+        "plt.bar(df_group.index,df_group.funded_amnt_inv/10000)\n",
+        "plt.xticks(df_group.index,df_group.addr_state)\n",
+        "N = 3\n",
+        "params = plt.gcf()\n",
+        "plSize = params.get_size_inches()\n",
+        "params.set_size_inches( (plSize[0]*N, plSize[1]*N) )\n",
+        "plt.show()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "e9cc0daa-599e-42fc-ab86-22a54ca4a825"
+      },
+      "outputs": [],
+      "source": [
+        "#A grouping by mean annual income of people who applied for loans in the state shows something interesting pattern of mean annual income of people statewise\n",
+        "df_group = df_data.groupby('addr_state', as_index=False).mean()\n",
+        "df_group.sort_values(['annual_inc'], ascending=[True], inplace=True)\n",
+        "df_group = df_group.reset_index(drop=True)\n",
+        "plt.bar(df_group.index,df_group.annual_inc/1000)\n",
+        "plt.xticks(df_group.index,df_group.addr_state)\n",
+        "N = 3\n",
+        "params = plt.gcf()\n",
+        "plSize = params.get_size_inches()\n",
+        "params.set_size_inches( (plSize[0]*N, plSize[1]*N) )\n",
+        "plt.show()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "ce107a5f-22a9-4220-93e3-ec0a0cebbafe"
+      },
+      "outputs": [],
+      "source": [
+        "#A grouping by Issue date shows Lending clubs portfolio is growing and very rapidly in the last few months\n",
+        "df_group = df_data.groupby('issue_d', as_index=False).sum()\n",
+        "df_group.sort_values(['funded_amnt'], ascending=[True], inplace=True)\n",
+        "df_group = df_group.reset_index(drop=True)\n",
+        "plt.bar(df_group.index,df_group.funded_amnt/1000000)\n",
+        "plt.xticks(df_group.index,df_group.issue_d,rotation='vertical')\n",
+        "N = 4\n",
+        "params = plt.gcf()\n",
+        "plSize = params.get_size_inches()\n",
+        "params.set_size_inches( (plSize[0]*N, plSize[1]*N) )\n",
+        "plt.show()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "c3038dc5-d944-4d62-9553-92de7d9d300f"
+      },
+      "outputs": [],
+      "source": [
+        "#A plot of Grade and rate shows they are correlated\n",
+        "df_group = df_data.groupby('grade', as_index=False).mean()\n",
+        "df_group.sort_values(['int_rate'], ascending=[True], inplace=True)\n",
+        "df_group = df_group.reset_index(drop=True)\n",
+        "plt.bar(df_group.index,df_group.int_rate,align=\"center\")\n",
+        "plt.xticks(df_group.index,df_group.grade)\n",
+        "N = 3\n",
+        "params = plt.gcf()\n",
+        "plSize = params.get_size_inches()\n",
+        "params.set_size_inches( (plSize[0]*N, plSize[1]*N) )\n",
+        "plt.show()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "2be2c2f2-29e4-4eec-9731-29367ef49bed"
+      },
+      "outputs": [],
+      "source": [
+        "#A plot of sub grade and rate shows that they are also correlated\n",
+        "df_group = df_data.groupby('sub_grade', as_index=False).mean()\n",
+        "df_group.sort_values(['int_rate'], ascending=[True], inplace=True)\n",
+        "df_group = df_group.reset_index(drop=True)\n",
+        "plt.bar(df_group.index,df_group.int_rate,align=\"center\")\n",
+        "plt.xticks(df_group.index,df_group.sub_grade)\n",
+        "N = 3\n",
+        "params = plt.gcf()\n",
+        "plSize = params.get_size_inches()\n",
+        "params.set_size_inches( (plSize[0]*N, plSize[1]*N) )\n",
+        "plt.show()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "d051ac0b-ae81-4b03-b57a-af260ed244fb"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    }
+  ],
+  "metadata": {
+    "_change_revision": 0,
+    "_is_fork": false,
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.5.2"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

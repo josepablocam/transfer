@@ -1,0 +1,51 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "e7902dba-e73e-e189-f989-3f2374355074"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "004267cb-f1f9-f145-3d36-0d8325f6e9fc"
+      },
+      "outputs": [],
+      "source": [
+        "library(dplyr)\n",
+        "library(readr)\n",
+        "library(DBI)\n",
+        "library(RSQLite)\n",
+        "\n",
+        "df_loans = read_csv(\"../input/loan.csv\")\n",
+        "conn_loans = dbConnect(dbName = \"../input/database.sqlite\")\n",
+        "dbListTables(conn_loans)\n",
+        "# db_loans = DBI::dbReadTable(conn = conn_loans, name = )\n"
+      ]
+    }
+  ],
+  "metadata": {
+    "_change_revision": 0,
+    "_is_fork": false,
+    "kernelspec": {
+      "display_name": "R",
+      "language": "R",
+      "name": "ir"
+    },
+    "language_info": {
+      "codemirror_mode": "r",
+      "file_extension": ".r",
+      "mimetype": "text/x-r-source",
+      "name": "R",
+      "pygments_lexer": "r",
+      "version": "3.3.1"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

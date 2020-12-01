@@ -1,0 +1,199 @@
+{
+  "cells": [
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "f40e0c3e-b35f-06c2-ff42-d2825e29291a"
+      },
+      "outputs": [],
+      "source": [
+        "# This Python 3 environment comes with many helpful analytics libraries installed\n",
+        "# It is defined by the kaggle/python docker image: https://github.com/kaggle/docker-python\n",
+        "# For example, here's several helpful packages to load in \n",
+        "\n",
+        "import numpy as np # linear algebra\n",
+        "import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)\n",
+        "\n",
+        "# Input data files are available in the \"../input/\" directory.\n",
+        "# For example, running this (by clicking run or pressing Shift+Enter) will list the files in the input directory\n",
+        "\n",
+        "from subprocess import check_output\n",
+        "print(check_output([\"ls\", \"../input\"]).decode(\"utf8\"))\n",
+        "\n",
+        "# Any results you write to the current directory are saved as output."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "7768aa21-4f4a-b3b9-7a2e-beb36d1f5c0d"
+      },
+      "outputs": [],
+      "source": [
+        "cwur = pd.read_csv('../input/cwurData.csv')\n",
+        "shang = pd.read_csv('../input/shanghaiData.csv')\n",
+        "times = pd.read_csv('../input/timesData.csv')"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "6de76e7b-a6db-6b65-648b-f10f0a4eecf9"
+      },
+      "outputs": [],
+      "source": [
+        "cwur.dtypes"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "230cbe0b-e27c-8a1a-1ecb-5775844b42f0"
+      },
+      "outputs": [],
+      "source": [
+        "shang.dtypes"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "8627b1ec-f316-7613-08be-102bec0a0e24"
+      },
+      "outputs": [],
+      "source": [
+        "times.dtypes"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "f68c674b-7218-f118-1b75-76e729c6ad80"
+      },
+      "outputs": [],
+      "source": [
+        "times.index = times.university_name\n",
+        "times.shape"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "1d929aa8-2091-4382-29ec-25cb835e380c"
+      },
+      "outputs": [],
+      "source": [
+        "shang.index = shang.university_name\n",
+        "shang.shape"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "3735f177-342b-f48e-f9d4-848f41e8fca9"
+      },
+      "outputs": [],
+      "source": [
+        "cwur.index = cwur.institution\n",
+        "cwur.shape"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "5275900c-8013-9eb5-c3ca-796fb897b156"
+      },
+      "outputs": [],
+      "source": [
+        "for c in shang.columns:\n",
+        "    shang.rename(columns={c: \"shang_\" + c}, inplace=True)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "2bfc8f82-ad46-32aa-eb33-3943636aa151"
+      },
+      "outputs": [],
+      "source": [
+        "shang.columns"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "c3a5f912-13ed-0f52-f0ea-99b0e60f6d99"
+      },
+      "outputs": [],
+      "source": [
+        "conc = pd.concat([times, shang], axis=1, join='inner', join_axes=[times.index])\n",
+        "conc.shape"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "cc05b293-6a1e-ebcd-c1e0-8d4b971785f1"
+      },
+      "outputs": [],
+      "source": [
+        "conc.columns"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "48ecadf7-2180-0ff1-5b49-d3e463dded49"
+      },
+      "outputs": [],
+      "source": [
+        "conc[conc.world_rank != conc.shang_world_rank]"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "6008a7fe-5800-f3be-8fe3-aeaa8eab46a4"
+      },
+      "outputs": [],
+      "source": ""
+    }
+  ],
+  "metadata": {
+    "_change_revision": 0,
+    "_is_fork": false,
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.5.2"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

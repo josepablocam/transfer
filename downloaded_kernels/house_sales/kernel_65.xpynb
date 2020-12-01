@@ -1,0 +1,87 @@
+{
+  "cells": [
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "89b64c08-8901-0635-8ec3-c472c7ff5989"
+      },
+      "outputs": [],
+      "source": [
+        "# This Python 3 environment comes with many helpful analytics libraries installed\n",
+        "# It is defined by the kaggle/python docker image: https://github.com/kaggle/docker-python\n",
+        "# For example, here's several helpful packages to load in \n",
+        "\n",
+        "import numpy as np # linear algebra\n",
+        "import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)\n",
+        "import seaborn as sns\n",
+        "\n",
+        "# Input data files are available in the \"../input/\" directory.\n",
+        "# For example, running this (by clicking run or pressing Shift+Enter) will list the files in the input directory\n",
+        "\n",
+        "from subprocess import check_output\n",
+        "print(check_output([\"ls\", \"../input\"]).decode(\"utf8\"))\n",
+        "\n",
+        "# Any results you write to the current directory are saved as output.\n",
+        "\n",
+        "#read the data\n",
+        "df = pd.read_csv('../input/kc_house_data.csv')\n",
+        "df.head()\n",
+        "\n",
+        "#try to find missing values in the dataset\n",
+        "df.isnull().values.any()\n",
+        "#result was no NAs in the dataset\n",
+        "\n",
+        "# Another look, including data type\n",
+        "#print(str(df))\n",
+        "\n",
+        "# Check the descriptive statistics for the dataset\n",
+        "#print(df.describe())\n",
+        "\n",
+        "#run correlation - numerically plus visualization plots\n",
+        "#print(df.corr())\n",
+        "\n",
+        "#visualize correlations so this makes it easier to interpret the data\n",
+        "#plot_corr(df,size =20)\n",
+        "\n",
+        "#import seaborn as sns\n",
+        "#corr = df.corr()\n",
+        "#sns.heatmap(corr, \n",
+        "#          xticklabels=corr.columns.values,\n",
+        "#          yticklabels=corr.columns.values)\n",
+        "\n",
+        "#boxplots for each variable \n",
+        "\n",
+        "a = (sns.boxplot(x=\"bedrooms\", y=\"price\",  data=df, palette=\"PRGn\"))\n",
+        "print(a)\n",
+        "b =(sns.boxplot(x=\"bathrooms\", y=\"price\", data=df, palette=\"PRGn\"))\n",
+        "print(b)\n",
+        "c=(sns.boxplot(x=\"floors\", y=\"price\", data=df, palette=\"PRGn\"))\n",
+        "print(c)"
+      ]
+    }
+  ],
+  "metadata": {
+    "_change_revision": 0,
+    "_is_fork": false,
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.6.0"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

@@ -1,0 +1,79 @@
+{
+  "cells": [
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "3bac97ef-fa92-373f-516d-c0a48c67098b"
+      },
+      "outputs": [],
+      "source": [
+        "library(ggplot2) # Data visualization\n",
+        "library(data.table)\n",
+        "# Input data files are available in the \"../input/\" directory.\n",
+        "# For example, running this (by clicking run or pressing Shift+Enter) will list the files in the input directory\n",
+        "\n",
+        "system(\"ls ../input\")\n",
+        "\n",
+        "# Any results you write to the current directory are saved as output."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "5c8a1114-2446-9046-fff7-41dc32c3816d"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "0b6edcea-4313-cb4e-0b91-f958bd172e4b"
+      },
+      "outputs": [],
+      "source": [
+        "data <- fread(\"../input/loan.csv\")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "b752d3dd-7688-b1a3-4717-9fa3be394980"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "6a6a019d-a796-f324-1f8b-8459857dea4d"
+      },
+      "outputs": [],
+      "source": ""
+    }
+  ],
+  "metadata": {
+    "_change_revision": 0,
+    "_is_fork": false,
+    "kernelspec": {
+      "display_name": "R",
+      "language": "R",
+      "name": "ir"
+    },
+    "language_info": {
+      "codemirror_mode": "r",
+      "file_extension": ".r",
+      "mimetype": "text/x-r-source",
+      "name": "R",
+      "pygments_lexer": "r",
+      "version": "3.3.1"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

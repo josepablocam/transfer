@@ -1,0 +1,841 @@
+{
+  "cells": [
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "c2cb3607-7501-489c-9ae2-b3524b780ea3"
+      },
+      "outputs": [],
+      "source": [
+        "# This Python 3 environment comes with many helpful analytics libraries installed\n",
+        "# It is defined by the kaggle/python docker image: https://github.com/kaggle/docker-python\n",
+        "# For example, here's several helpful packages to load in \n",
+        "\n",
+        "import numpy as np # linear algebra\n",
+        "import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)\n",
+        "import matplotlib.pyplot as plt #plotting\n",
+        "%matplotlib inline\n",
+        "\n",
+        "import re #regex\n",
+        "from difflib import SequenceMatcher as SM #string comparison\n",
+        "\n",
+        "# Input data files are available in the \"../input/\" directory.\n",
+        "# For example, running this (by clicking run or pressing Shift+Enter) will list the files in the input directory\n",
+        "\n",
+        "from subprocess import check_output\n",
+        "print(check_output([\"ls\", \"../input\"]).decode(\"utf8\"))\n",
+        "\n",
+        "# Any results you write to the current directory are saved as output."
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "423e6235-7542-461b-915f-bd091bb21ef9"
+      },
+      "source": [
+        "## Preprocessing"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "9364fa7c-c758-4deb-8f23-8f1ad5fb0031"
+      },
+      "outputs": [],
+      "source": [
+        "cwur = pd.read_csv('../input/cwurData.csv')\n",
+        "shanghai = pd.read_csv('../input/shanghaiData.csv')\n",
+        "times = pd.read_csv('../input/timesData.csv')"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "d4108e70-4cc8-458f-b3e9-b0ec18e33f73"
+      },
+      "outputs": [],
+      "source": [
+        "cwur = cwur.rename(columns = {'institution': 'university_name'})\n",
+        "shanghai = shanghai.rename(columns = {'total_score': 'score'})\n",
+        "times = times.rename(columns = {'total_score': 'score'})"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "1b279baa-04e7-4f8e-835f-a6f03bc4c461"
+      },
+      "source": [
+        "only use total score for the time being"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "67b5dbd5-9581-40b5-bad7-9f9745c5dd00"
+      },
+      "outputs": [],
+      "source": [
+        "cwur = cwur[['university_name', 'score']]\n",
+        "shanghai = shanghai[['university_name', 'score']]\n",
+        "times = times[['university_name', 'score']]"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "b98c66e8-07ff-4d14-aea4-9feb4359a859"
+      },
+      "source": [
+        "pd.to_numeric will cast '-' to 100, therefore we gotta clean it beforhand"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "7eaaa053-7e87-4811-9529-215d477e2c8b"
+      },
+      "outputs": [],
+      "source": [
+        "times = times[~(times['score'] == '-')]"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "439ae4f5-fbd1-43c4-b935-a21916e5c9fb"
+      },
+      "source": [
+        "convert scores to floats"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "2c077895-e058-4638-a5ed-9d206659d1db"
+      },
+      "outputs": [],
+      "source": [
+        "cwur.score = pd.to_numeric(cwur.score, errors='coerce')\n",
+        "shanghai.score = pd.to_numeric(shanghai.score, errors='coerce')\n",
+        "times.score = pd.to_numeric(shanghai.score, errors='coerce')"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "8828eae5-d9bb-407c-84b5-9d02a567ca39"
+      },
+      "source": [
+        "group scores from different years by university"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "56232e96-2973-4cc9-b1cf-eb488439e6ad"
+      },
+      "outputs": [],
+      "source": [
+        "cwur = cwur.groupby('university_name').mean().reset_index()\n",
+        "shanghai = shanghai.groupby('university_name').mean().reset_index()\n",
+        "times = times.groupby('university_name').mean().reset_index()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "a7d10bcc-b417-4253-ba6f-8dd64ba6da8a"
+      },
+      "source": [
+        "creating some visualizations of score distributions to check whether a organization uses a different scala for the total score"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "64f1222c-60f3-44f3-a50b-96eaee55f95a"
+      },
+      "outputs": [],
+      "source": [
+        "scores_cwur = [x for x in cwur['score'].values if not np.isnan(x)]\n",
+        "scores_shanghai = [x for x in shanghai['score'].values if not np.isnan(x)]\n",
+        "scores_times = [x for x in times['score'].values if not np.isnan(x)]"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "1a768d6a-8ea6-4675-b813-72cb9063655b"
+      },
+      "outputs": [],
+      "source": [
+        "fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(14, 5))\n",
+        "\n",
+        "num_bins = 20\n",
+        "n, bins, patches = axes[0].hist(scores_cwur, num_bins, \n",
+        "                                facecolor='green', alpha=0.5)\n",
+        "axes[0].set_title('Cwur')\n",
+        "n, bins, patches = axes[1].hist(scores_shanghai, num_bins,\n",
+        "                                facecolor='blue', alpha=0.5)\n",
+        "axes[1].set_title('Shanghai')\n",
+        "n, bins, patches = axes[2].hist(scores_times, num_bins, \n",
+        "                                facecolor='red', alpha=0.5)\n",
+        "axes[2].set_title('Times')\n",
+        "plt.show()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "d104ee57-ca61-4e74-b7e8-905f49b9bcdf"
+      },
+      "outputs": [],
+      "source": [
+        "boxplt = plt.boxplot([scores_cwur, scores_shanghai, scores_times])\n",
+        "labels = plt.xticks([1, 2, 3], ['Cwur', 'Shanghai', 'Times'])"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "8a497ea9-5db9-4e98-9988-875826f3a556"
+      },
+      "source": [
+        "looks like Shanghai & Times do have a different scala than Cwur has thus we should standardize those"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "524992e8-9296-4b91-889a-0198d3a0fe0f"
+      },
+      "outputs": [],
+      "source": [
+        "cwur.score = (cwur.score - cwur.score.mean())/cwur.score.std()\n",
+        "shanghai.score = (shanghai.score - shanghai.score.mean())/shanghai.score.std()\n",
+        "times.score = (times.score - times.score.mean())/times.score.std()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "ed03fd27-de7b-4495-830c-8449bf22158d"
+      },
+      "outputs": [],
+      "source": [
+        "z_scores_cwur = [x for x in cwur['score'].values if not np.isnan(x)]\n",
+        "z_scores_shanghai = [x for x in shanghai['score'].values if not np.isnan(x)]\n",
+        "z_scores_times = [x for x in times['score'].values if not np.isnan(x)]"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "b18cff80-96d5-4314-9020-ab75a8e60e14"
+      },
+      "outputs": [],
+      "source": [
+        "boxplt = plt.boxplot([z_scores_cwur, z_scores_shanghai, z_scores_times])\n",
+        "labels = plt.xticks([1, 2, 3], ['Cwur', 'Shanghai', 'Times'])"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "c8124fd4-d446-44a1-97f3-7e0d1c057fdd"
+      },
+      "source": [
+        "way better, now we can try to merge those datasets: I'll start by cleaning the university_name string"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "5c6badef-a52d-4e8f-9495-d9650943b890"
+      },
+      "outputs": [],
+      "source": [
+        "cwur.university_name = [re.sub(r'[^a-zA-Z\\s0-9]+', '', string) for string in cwur.university_name]\n",
+        "shanghai.university_name = [re.sub(r'[^a-zA-Z\\s0-9]+', '', string) for string in shanghai.university_name]\n",
+        "times.university_name = [re.sub(r'[^a-zA-Z\\s0-9]+', '', string) for string in times.university_name]"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "e0a8ea14-13d2-401f-8b99-1678d6e71a84"
+      },
+      "source": [
+        "## Merging datasets\n",
+        "\n",
+        "\n",
+        "can't use SeatGeek's great [string matching module](https://github.com/seatgeek/fuzzywuzzy) due to the use of kaggle scripts, gonna start by using built in SequenceMatcher"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "023169fd-65ec-4612-9d16-94187d09f01e"
+      },
+      "outputs": [],
+      "source": [
+        "def is_fuzzy_match(string1, string2, threshold = 0.9):\n",
+        "    similarity = SM(None, str(string1), str(string2)).ratio()\n",
+        "    if (similarity > threshold):\n",
+        "        return True\n",
+        "    else:\n",
+        "        return False"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "b7d138a9-f2ef-4c2d-a59b-cf19a45b0eaa"
+      },
+      "source": [
+        "identifying the organization with the most universities present, gonna use that as a starting point"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "4ed446c9-248a-49d4-8f11-12e1d8471a2e"
+      },
+      "outputs": [],
+      "source": [
+        "(len(cwur), len(shanghai), len(times))"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "8269d7a2-5ca7-4709-9cc5-6afb7ec18987"
+      },
+      "outputs": [],
+      "source": [
+        "data = cwur"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "005927f1-088e-4832-a62b-fb9907b4791b"
+      },
+      "outputs": [],
+      "source": [
+        "data = data.rename(columns = {'score': 'score_cwur'})"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "499f6a86-6c43-4ef8-99de-bbba6e3b3c0f"
+      },
+      "source": [
+        "note: not that pretty, gonna refactor those functions later on:\n",
+        "\n",
+        "- more flexibility\n",
+        "- using the country as an additional parameter\n",
+        "- calculating stats for matching"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "0f29f675-7f72-4d48-9989-322434d97c0a"
+      },
+      "outputs": [],
+      "source": [
+        "def check_for_uni_shanghai(series):\n",
+        "    university = series['university_name']\n",
+        "    for uni in shanghai['university_name'].values:\n",
+        "        if (is_fuzzy_match(university, uni)):\n",
+        "            return shanghai[shanghai['university_name'] == uni]['score'].values[0]\n",
+        "    #print('found no match for {u}'.format(u = university))"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "cab657c5-cafa-44e2-aec4-0f2b14d39ff5"
+      },
+      "outputs": [],
+      "source": [
+        "def check_for_uni_times(series):\n",
+        "    university = series['university_name']\n",
+        "    for uni in times['university_name'].values:\n",
+        "        if (is_fuzzy_match(university, uni)):\n",
+        "            return times[times['university_name'] == uni]['score'].values[0]\n",
+        "    #print('found no match for {u}'.format(u = university))"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "6d0fe3c6-b4d2-4131-92c9-0739ee0cd7c2"
+      },
+      "outputs": [],
+      "source": [
+        "data['score_shanghai'] = data.apply(check_for_uni_shanghai, axis = 1)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "42356b21-cfc7-44ec-b9c8-d35726fa4d5e"
+      },
+      "outputs": [],
+      "source": [
+        "data['score_times'] = data.apply(check_for_uni_times, axis = 1)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "8b8145a5-49a9-4050-9699-d1fafde0bfc4"
+      },
+      "source": [
+        "litte data validation by comparing scores for 'Hardvard University'"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "3b542400-5c26-4d7a-9c9e-5105b02eb823"
+      },
+      "outputs": [],
+      "source": [
+        "data[data.university_name == 'Harvard University']"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "4278a8b8-c563-498d-a28b-be598902403c"
+      },
+      "outputs": [],
+      "source": [
+        "(cwur[cwur.university_name == 'Harvard University'].score.values[0],\n",
+        " shanghai[shanghai.university_name == 'Harvard University'].score.values[0],\n",
+        " times[times.university_name == 'Harvard University'].score.values[0])"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "c1272024-5bd1-496c-8308-4a76f0f4ad08"
+      },
+      "source": [
+        "now we are going to calc mean scores per row:\n",
+        "note that universities shouldn't be punsihed for not having a score, therefore only not nan values are relevant"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "3adad413-7f1a-4fdb-997a-ecbfc302d4f9"
+      },
+      "outputs": [],
+      "source": [
+        "def calcScore(series):\n",
+        "    scores = [x for x in series.values[1:] if not np.isnan(x)]\n",
+        "    return np.mean(scores)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "9ad90dbb-1d7a-4d54-9a5f-2aa2e8995da0"
+      },
+      "outputs": [],
+      "source": [
+        "data['mean_score'] = data.apply(calcScore, axis = 1)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "95a1b4dc-11a1-4f6f-9622-0308765e42af"
+      },
+      "outputs": [],
+      "source": [
+        "data = data.sort_values('mean_score', ascending=False)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "2c4f9704-7bda-4448-91d4-bf1554f0adcc"
+      },
+      "outputs": [],
+      "source": [
+        "data.to_csv('aggregatedScores.csv', sep=',')"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "1ff9183a-9025-4bb8-a4fe-dc40006fa5fd"
+      },
+      "source": [
+        "## Adding DS programs\n",
+        "\n",
+        "\n",
+        "\n",
+        "props to Ryan Swanstrom for [this](https://github.com/ryanswanstrom/awesome-datascience-colleges/blob/master/data_science_colleges.csv) awesome collection!! For more information see his [github](https://github.com/ryanswanstrom/) \n",
+        "\n",
+        "cause working in kaggle scripts I only exported university names which have a ds program:"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "ac45979d-e514-4ba0-b3b3-89eae1a1b8cb"
+      },
+      "outputs": [],
+      "source": [
+        "programs = ['Auburn University', 'The University of Alabama',\n",
+        "       'Arkansas Tech University', 'University of Arkansas',\n",
+        "       'University of Arkansas at Little Rock', 'Arizona State University',\n",
+        "       'University of Arizona', 'California Polytechnic State University',\n",
+        "       'California State UniversityEast Bay',\n",
+        "       'California State UniversityFullerton',\n",
+        "       'California State UniversityLong Beach',\n",
+        "       'California State UniversitySan Bernardino', 'Chapman University',\n",
+        "       'Claremont Graduate University', 'Galvanize U',\n",
+        "       'National University', 'San Jose State University',\n",
+        "       'Santa Clara University', 'Stanford University',\n",
+        "       'University of California Hastings College of Law',\n",
+        "       'University of CaliforniaDavis', 'University of CaliforniaIrvine',\n",
+        "       'University of CaliforniaSan Diego',\n",
+        "       'University of CaliforniaBerkeley', 'University of San Francisco',\n",
+        "       'University Of San Francisco', 'University of Southern California',\n",
+        "       'University of the Pacific', 'American Sentinel University',\n",
+        "       'Aspen University', 'Colorado State UniversityFort Collins',\n",
+        "       'Colorado State UniversityGlobal Campus',\n",
+        "       'Colorado Technical University', 'Regis University',\n",
+        "       'University of Colorado Boulder', 'University of Colorado Denver',\n",
+        "       'University of Denver', 'Central Connecticut State University',\n",
+        "       'Quinnipiac University', 'University of Connecticut',\n",
+        "       'University of New Haven', 'American University',\n",
+        "       'George Washington University', 'Georgetown University',\n",
+        "       'The George Washington University', 'New College of Florida',\n",
+        "       'Florida International University',\n",
+        "       'Florida Polytechnic University', 'Full Sail University',\n",
+        "       'Nova Southeastern University', 'PascoHernando State College',\n",
+        "       'University of Central Florida', 'University of Florida',\n",
+        "       'University of Miami',\n",
+        "       'University of South Florida SarasotaManatee',\n",
+        "       'University of South FloridaMain Campus',\n",
+        "       'Georgia Southern University', 'Georgia State University',\n",
+        "       'Georgia Tech', 'Kennesaw State University', 'Mercer University',\n",
+        "       'University of Georgia', 'Loras College', 'Northwestern College',\n",
+        "       'Luther College', 'The University of Iowa', 'Aurora University',\n",
+        "       'Benedictine University', 'DePaul University', 'Elmhurst College',\n",
+        "       'Illinois Institute of Technology', 'Lewis University',\n",
+        "       'Loyola University Chicago', 'Northwestern University',\n",
+        "       'University of Chicago', 'University of Illinois at Chicago',\n",
+        "       'University of Illinois at Springfield',\n",
+        "       'University of Illinois at UrbanaChampaign',\n",
+        "       'University of St Francis', 'Indiana University Bloomington',\n",
+        "       'Indiana UniversityPurdue UniversityIndianapolis',\n",
+        "       'Purdue UniversityMain Campus', 'Saint Marys College',\n",
+        "       'University of Notre Dame', 'University of Evansville',\n",
+        "       'University of Kansas', 'Northern Kentucky University',\n",
+        "       'University of Louisville', 'Louisiana State University',\n",
+        "       'Babson College', 'Becker College', 'Bentley University',\n",
+        "       'Brandeis University', 'Harvard University',\n",
+        "       'Northeastern University', 'University of Massachusetts Amherst',\n",
+        "       'Worcester Polytechnic Institute', 'Smith College',\n",
+        "       'Johns Hopkins University', 'Notre Dame of Maryland University',\n",
+        "       'University of MarylandBaltimore County',\n",
+        "       'University of MarylandCollege Park',\n",
+        "       'University of MarylandUniversity College', 'Baker College',\n",
+        "       'Central Michigan University', 'Davenport University',\n",
+        "       'Eastern Michigan University', 'Grand Valley State University',\n",
+        "       'Michigan State University', 'Michigan Technological University',\n",
+        "       'Oakland University', 'University of MichiganAnn Arbor',\n",
+        "       'University of MichiganDearborn', 'Capella University',\n",
+        "       'The College of Saint Scholastica', 'University of Minnesota',\n",
+        "       'University of MinnesotaDuluth', 'University of St Thomas',\n",
+        "       'Winona State University', 'Grantham University',\n",
+        "       'Missouri University of Science and Technology',\n",
+        "       'Rockhurst University', 'Saint Louis University',\n",
+        "       'Saint Louis UniversityMain Campus',\n",
+        "       'University of MissouriSt Louis', 'Jackson State University',\n",
+        "       'University of Montana', 'Elon University',\n",
+        "       'North Carolina State University at Raleigh',\n",
+        "       'University of North Carolina at Chapel Hill',\n",
+        "       'University of North Carolina at Charlotte',\n",
+        "       'University of North Carolina at Greensboro',\n",
+        "       'Wake forest University', 'Bellevue University',\n",
+        "       'Creighton University', 'Nebraska College of Technical Agriculture',\n",
+        "       'University of Nebraska at Omaha',\n",
+        "       'Southern New Hampshire University',\n",
+        "       'New Jersey Institute of Technology', 'Rutgers University',\n",
+        "       'Saint Peters University', 'Stevens Institute of Technology',\n",
+        "       'Thomas Edison State College', 'University of NevadaReno',\n",
+        "       'Columbia University in the City of New York', 'Cornell University',\n",
+        "       'CUNY Bernard M Baruch College',\n",
+        "       'CUNY Graduate School and University Center', 'CUNY Queens College',\n",
+        "       'Fordham University', 'Keller Graduate School of Management',\n",
+        "       'Marist College', 'New York University', 'Pace UniversityNew York',\n",
+        "       'Rensselaer Polytechnic Institute', 'St Johns UniversityNew York',\n",
+        "       'Syracuse University', 'The New School', 'Trocaire College',\n",
+        "       'Union Graduate College', 'University at Buffalo',\n",
+        "       'University of Rochester', 'Bowling Green State University',\n",
+        "       'Case Western Reserve University', 'Cleveland State University',\n",
+        "       'Miami University of Ohio', 'Notre Dame College', 'Ohio University',\n",
+        "       'The Ohio State University', 'University of CincinnatiMain Campus',\n",
+        "       'Oklahoma State University Center for Health Sciences',\n",
+        "       'Southwestern Oklahoma State University',\n",
+        "       'University of Oklahoma Norman Campus', 'Oregon State University',\n",
+        "       'Albright College', 'Carnegie Mellon University',\n",
+        "       'Drexel University',\n",
+        "       'Harrisburg University of Science and Technology',\n",
+        "       'La Salle University', 'Misericordia University',\n",
+        "       'Pennsylvania State University', 'Philadelphia University',\n",
+        "       'Saint Josephs University', 'Temple University',\n",
+        "       'University of PittsburghBradford',\n",
+        "       'University of PittsburghPittsburgh Campus', 'Villanova University',\n",
+        "       'Brown University', 'College of Charleston',\n",
+        "       'Medical University of South Carolina',\n",
+        "       'University of South CarolinaColumbia', 'Dakota State University',\n",
+        "       'South Dakota State University', 'Austin Peay State University',\n",
+        "       'Middle Tennessee State University',\n",
+        "       'Tennessee Technological University', 'The University of Tennessee',\n",
+        "       'The University of Tennessee at Chattanooga',\n",
+        "       'University of Memphis', 'Southern Methodist University',\n",
+        "       'St Marys University', 'Tarleton State University',\n",
+        "       'Texas A  M UniversityCollege Station',\n",
+        "       'The University of Texas at Austin',\n",
+        "       'The University of Texas at Dallas',\n",
+        "       'The University of Texas at San Antonio', 'University of Dallas',\n",
+        "       'University of North Texas', 'University of Utah',\n",
+        "       'George Mason University', 'Radford University',\n",
+        "       'University of Virginia', 'Virginia Commonwealth University',\n",
+        "       'Virginia Polytechnic Institute and State University',\n",
+        "       'Statisticscom', 'Bellevue College', 'City University of Seattle',\n",
+        "       'Seattle University', 'University of WashingtonSeattle Campus',\n",
+        "       'University of WashingtonTacoma Campus',\n",
+        "       'University of WisconsinMadison',\n",
+        "       'University of Wisconsin Colleges',\n",
+        "       'University of WisconsinMilwaukee', 'West Virginia University',\n",
+        "       'Ukrainian Catholic Univeristy', 'Sabanc University',\n",
+        "       'National University of Singapore', 'Dalarna University',\n",
+        "       'Blekinge Institute of Technology',\n",
+        "       'Kth Royal Institute Of Technology', 'Linkping University',\n",
+        "       'Universidade Nova de Lisboa', 'University of Otago',\n",
+        "       'Massey University', 'Erasmus University', 'Maastricht University',\n",
+        "       'Radboud Universiteit Nijmegen',\n",
+        "       'Eindhoven University of TechnologyTUe', 'Utrecht University',\n",
+        "       'Vrije Universiteit Amsterdam',\n",
+        "       'Autonomous Technological Institute of Mexico',\n",
+        "       'Mykolas Romeris University', 'Sangmyung University', 'BAICR',\n",
+        "       'Polytechnic University Of Turin', 'University Of MilanBicocca',\n",
+        "       'University Of Pisa', 'BenGurion University Of The Negev',\n",
+        "       'Dublin City University', 'Dublin Institute Of Technology',\n",
+        "       'Institute Of Technology Blanchardstown',\n",
+        "       'Irish Management Institute', 'National College Of Ireland',\n",
+        "       'National University Of Ireland Galway', 'University College Cork',\n",
+        "       'University College Dublin', 'Chinese University of Hong Kong',\n",
+        "       'Hong Kong University of Science  Technology',\n",
+        "       'Lancaster University', 'Aston University',\n",
+        "       'Birmingham City University', 'Bournemouth University',\n",
+        "       'Brunel University London', 'City University London',\n",
+        "       'Coventry University', 'De Montfort University',\n",
+        "       'Goldsmiths University of London', 'Imperial College London',\n",
+        "       'Leeds Met', 'Newcastle University', 'Robert Gordon University',\n",
+        "       'Royal Holloway University Of London',\n",
+        "       'Sheffield Hallam University', 'The University Of Edinburgh',\n",
+        "       'The University Of Manchester', 'University College London',\n",
+        "       'University Of Bristol', 'University of Derby',\n",
+        "       'University of Dundee', 'University Of East Anglia',\n",
+        "       'University Of East London', 'University Of Essex',\n",
+        "       'University Of Greenwich', 'University of Kent',\n",
+        "       'University Of Leeds', 'University of Leicester',\n",
+        "       'University Of Liverpool', 'University of Manchester',\n",
+        "       'University of Nottingham', 'University of Southampton',\n",
+        "       'University Of St Andrews', 'University of Strathclyde',\n",
+        "       'University of Surrey', 'University of Warwick',\n",
+        "       'University Of Warwick', 'University Of Westminster',\n",
+        "       'Data ScienceTech Institute', 'EISTI', 'ENSAE Paris Tech',\n",
+        "       'Telecom Paris Tech', 'Telecom Sudparis',\n",
+        "       'Universit Pierre Et Marie Curie', 'Aalto University',\n",
+        "       'University Of Helsinki', 'Universit De Nantes',\n",
+        "       'Barcelona School of Management', 'Instituto de Empresa',\n",
+        "       'Universidad Rey Juan Carlos', 'Universitat Pompeu Fabra',\n",
+        "       'Universities Of Alicante', 'University of Barcelona',\n",
+        "       'University of Oviedo', 'Aalborg University', 'Aarhus University',\n",
+        "       'Technical University of Denmark',\n",
+        "       'Otto Von Guericke University Magdeburg', 'TU Dortmund',\n",
+        "       'Universitt Konstanz', 'Queens University',\n",
+        "       'Simon Fraser University', 'University Of Alberta',\n",
+        "       'University of the Fraser Valley', 'York University',\n",
+        "       'Mackenzie Presbyterian Institute', 'Deakin University',\n",
+        "       'Macquarie University', 'University of South Australia',\n",
+        "       'University of Technology Sydney',\n",
+        "       'Vienna University of Economics and Business',\n",
+        "       'University of Vienna']"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "06c31a24-c73a-4c73-946b-1496aee39983"
+      },
+      "outputs": [],
+      "source": [
+        "programs = [re.sub(r'[^a-zA-Z\\s0-9]+', '', string) for string in programs]"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "2570985f-2b10-4f37-b651-d27494642b22"
+      },
+      "source": [
+        "fuzzy matching once again:"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "fe2f1f3d-3706-4282-8435-2a4adfd30aea"
+      },
+      "outputs": [],
+      "source": [
+        "def check_for_master(university):\n",
+        "    for program in programs:\n",
+        "        similarity = is_fuzzy_match(university, program)\n",
+        "        if (similarity):\n",
+        "            return True"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "11a87183-f1ef-4df3-ab90-9741fe0bffdf"
+      },
+      "outputs": [],
+      "source": [
+        "data['ds_master'] = data['university_name'].apply(check_for_master)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "db984d93-5c17-46d8-8f34-78ea2c57033b"
+      },
+      "outputs": [],
+      "source": [
+        "universities_with_ds_program = data[data['ds_master'] == True]"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "86b29baa-547b-40a1-a715-9a643bd6dbbb"
+      },
+      "outputs": [],
+      "source": [
+        "universities_with_ds_program.head(n=20)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "b54b7a13-cc0b-414e-a49b-c8a70b6bd37d"
+      },
+      "outputs": [],
+      "source": [
+        "universities_with_ds_program.to_csv('DSDegrees.csv', sep = ',')"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "d0be7eb9-00f8-4a10-b917-50d434c76f63"
+      },
+      "source": [
+        "## further steps\n",
+        "\n",
+        "\n",
+        "- improve fuzzy string matching (especially functions)\n",
+        "- use more information than just total score\n",
+        "- use weights to include personal preference\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "685a1064-1b31-4dc8-932a-10063e1167f7"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    }
+  ],
+  "metadata": {
+    "_change_revision": 0,
+    "_is_fork": false,
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.5.2"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

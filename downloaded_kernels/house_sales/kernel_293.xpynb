@@ -1,0 +1,128 @@
+{
+  "cells": [
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "192a97e9-490e-385d-0649-001086603198"
+      },
+      "outputs": [],
+      "source": [
+        "# This Python 3 environment comes with many helpful analytics libraries installed\n",
+        "# It is defined by the kaggle/python docker image: https://github.com/kaggle/docker-python\n",
+        "# For example, here's several helpful packages to load in \n",
+        "\n",
+        "import numpy as np # linear algebra\n",
+        "import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)\n",
+        "\n",
+        "# Input data files are available in the \"../input/\" directory.\n",
+        "# For example, running this (by clicking run or pressing Shift+Enter) will list the files in the input directory\n",
+        "\n",
+        "from subprocess import check_output\n",
+        "print(check_output([\"ls\", \"../input\"]).decode(\"utf8\"))\n",
+        "\n",
+        "# Any results you write to the current directory are saved as output."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "d3a53b7c-61d2-a6fa-3981-fbb18ecb4c7e"
+      },
+      "outputs": [],
+      "source": [
+        "dataset = pd.read_csv('../input/kc_house_data.csv')\n",
+        "dataset.shape"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "9dd7414b-7bf1-d1a8-ea0b-68ab78622a53"
+      },
+      "outputs": [],
+      "source": [
+        "from sklearn.linear_model import LinearRegression, Lasso, ElasticNet, Ridge\n",
+        "from sklearn.tree import DecisionTreeRegressor\n",
+        "from sklearn.neighbors import KNeighborsRegressor\n",
+        "from sklearn.svm import  SVR\n",
+        "from sklearn.model_selection import cross_val_score\n",
+        "def do_cross_validation(X_train, y_train):\n",
+        "    models = []\n",
+        "    models.append(('LR', LinearRegression()))\n",
+        "    models.append(('LASSO', Lasso()))\n",
+        "    models.append(('EN', ElasticNet()))\n",
+        "    models.append(('Ridge', Ridge()))\n",
+        "    models.append(('CART', DecisionTreeRegressor()))\n",
+        "    models.append(('KNN', KNeighborsRegressor()))\n",
+        "    models.append(('SVR', SVR()))\n",
+        "    results = []\n",
+        "    names = []\n",
+        "    scoring = 'neg_mean_squared_error'\n",
+        "    for name, model in models:\n",
+        "        cv_results = np.sqrt(-cross_val_score(model, X_train, y_train, cv=10, scoring=scoring))\n",
+        "        results.append(cv_results)\n",
+        "        names.append(name)\n",
+        "        print('%s: %f (%f)' % (name, cv_results.mean(), cv_results.std()))"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "0930cb28-fdd9-7f25-b8bd-71cddb98815f"
+      },
+      "outputs": [],
+      "source": [
+        "dataset.head()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "5e90b286-b6c3-01a3-6ce2-7f728ba8325f"
+      },
+      "outputs": [],
+      "source": [
+        "dataset.dtypes"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "0f310b3a-2fee-377c-d4c4-945626f1f330"
+      },
+      "outputs": [],
+      "source": [
+        "new_data = dataset['bedrooms']"
+      ]
+    }
+  ],
+  "metadata": {
+    "_change_revision": 0,
+    "_is_fork": false,
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.5.2"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

@@ -1,0 +1,563 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "48a484f3-784d-481f-95f8-fa6cf7751c3c"
+      },
+      "source": [
+        "# Python for Padawans\n",
+        "\n",
+        "This tutorial will go throughthe basic data wrangling workflow I'm sure you all love to hate, in Python! \n",
+        "FYI: I come from a R background (aka I'm not a proper programmer) so if you see any formatting issues please cut me a bit of slack. \n",
+        "\n",
+        "**The aim for this post is to show people how to easily move their R workflows to Python (especially pandas/scikit)**\n",
+        "\n",
+        "One thing I especially like is how consistent all the functions are. You don't need to switch up style like you have to when you move from base R to dplyr etc. \n",
+        "|\n",
+        "And also, it's apparently much easier to push code to production using Python than R. So there's that. \n",
+        "\n",
+        "### 1. Reading in libraries"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "38d3f550-abd5-4f0b-87cd-130d729727c7"
+      },
+      "outputs": [],
+      "source": [
+        "%matplotlib inline\n",
+        "import os\n",
+        "import pandas as pd\n",
+        "from matplotlib import pyplot as plt\n",
+        "import numpy as np\n",
+        "import math"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "1209d5ab-0769-45dc-8021-3ee71209945f"
+      },
+      "source": [
+        "#### Don't forget that %matplotlib function. Otherwise your graphs will pop up in separate windows and stop the execution of further cells. And nobody got time for that.\n",
+        "\n",
+        "### 2. Reading in data"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "b6436003-b215-46f0-b2a0-c0016c6133bb"
+      },
+      "outputs": [],
+      "source": [
+        "data = pd.read_csv('../input/loan.csv', low_memory=False)\n",
+        "data.drop(['id', 'member_id', 'emp_title'], axis=1, inplace=True)\n",
+        "\n",
+        "data.replace('n/a', np.nan,inplace=True)\n",
+        "data.emp_length.fillna(value=0,inplace=True)\n",
+        "\n",
+        "data['emp_length'].replace(to_replace='[^0-9]+', value='', inplace=True, regex=True)\n",
+        "data['emp_length'] = data['emp_length'].astype(int)\n",
+        "\n",
+        "data['term'] = data['term'].apply(lambda x: x.lstrip())"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "3d29e53b-73da-4f05-9578-78950c2b11b8"
+      },
+      "source": [
+        "### 3. Basic plotting using Seaborn\n",
+        "\n",
+        "Now let's make some pretty graphs. Coming from R I definitely prefer ggplot2 but the more I use Seaborn, the more I like it. If you kinda forget about adding \"+\" to your graphs and instead use the dot operator, it does essentially the same stuff.\n",
+        "\n",
+        "**And I've just found out that you can create your own style sheets to make life easier. Wahoo!**\n",
+        "\n",
+        "But anyway, below I'll show you how to format a decent looking Seaborn graph, as well as how to summarise a given dataframe."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "25e4f8f3-ab6b-4115-93fb-e93e7ca351a1"
+      },
+      "outputs": [],
+      "source": [
+        "import seaborn as sns\n",
+        "import matplotlib\n",
+        "\n",
+        "s = pd.value_counts(data['emp_length']).to_frame().reset_index()\n",
+        "s.columns = ['type', 'count']\n",
+        "\n",
+        "def emp_dur_graph(graph_title):\n",
+        "\n",
+        "    sns.set_style(\"whitegrid\")\n",
+        "    ax = sns.barplot(y = \"count\", x = 'type', data=s)\n",
+        "    ax.set(xlabel = '', ylabel = '', title = graph_title)\n",
+        "    ax.get_yaxis().set_major_formatter(\n",
+        "    matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))\n",
+        "    _ = ax.set_xticklabels(ax.get_xticklabels(), rotation=0)\n",
+        "    \n",
+        "emp_dur_graph('Distribution of employment length for issued loans')"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "4a9a7497-9931-4822-b7e6-8f0e6d0122d0"
+      },
+      "source": [
+        "### 4. Using Seaborn stylesheets\n",
+        "\n",
+        "Now before we move on, we'll look at using style sheets to customize our graphs nice and quickly."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "df05f639-77af-4f25-967f-d710a688ae12"
+      },
+      "outputs": [],
+      "source": [
+        "import seaborn as sns\n",
+        "import matplotlib\n",
+        "\n",
+        "print (plt.style.available)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "f2b63a3f-26ec-4d6b-a2f3-16ac04b64f42"
+      },
+      "source": [
+        "Now you can see that we've got quite a few to play with. I'm going to focus on the following styles:\n",
+        "\n",
+        "- fivethirtyeight (because it's my fav website)\n",
+        "- seaborn-notebook\n",
+        "- ggplot\n",
+        "- classic"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "b6845aea-8287-470c-8a40-38c71f0b7ec0"
+      },
+      "outputs": [],
+      "source": [
+        "import seaborn as sns\n",
+        "import matplotlib\n",
+        "\n",
+        "plt.style.use('fivethirtyeight')\n",
+        "ax = emp_dur_graph('Fivethirty eight style')"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "018d6b31-39bd-4395-9f74-0053218bcdf4"
+      },
+      "outputs": [],
+      "source": [
+        "plt.style.use('seaborn-notebook')\n",
+        "ax = emp_dur_graph('Seaborn-notebook style')"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "f0d3eda4-7da6-4896-a626-7c21138a530c"
+      },
+      "outputs": [],
+      "source": [
+        "plt.style.use('ggplot')\n",
+        "ax = emp_dur_graph('ggplot style')"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "14b95316-882e-42d7-a862-a33d1c51e88a"
+      },
+      "outputs": [],
+      "source": [
+        "plt.style.use('classic')\n",
+        "ax = emp_dur_graph('classic style')"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "ad362bfc-fb98-4463-ae52-cf560b2d7261"
+      },
+      "source": [
+        "### 5. Working with dates\n",
+        "\n",
+        "Now we want to looking at datetimes. Dates can be quite difficult to manipulate but it's worth the wait. Once they're formatted correctly life becomes much easier"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "efb9cdb9-ae55-4ec0-9b70-8a5f89071f3a"
+      },
+      "outputs": [],
+      "source": [
+        "import datetime\n",
+        "\n",
+        "data.issue_d.fillna(value=np.nan,inplace=True)\n",
+        "issue_d_todate = pd.to_datetime(data.issue_d)\n",
+        "data.issue_d = pd.Series(data.issue_d).str.replace('-2015', '')\n",
+        "data.emp_length.fillna(value=np.nan,inplace=True)\n",
+        "\n",
+        "data.drop(['loan_status'],1, inplace=True)\n",
+        "\n",
+        "data.drop(['pymnt_plan','url','desc','title' ],1, inplace=True)\n",
+        "\n",
+        "data.earliest_cr_line = pd.to_datetime(data.earliest_cr_line)\n",
+        "import datetime as dt\n",
+        "data['earliest_cr_line_year'] = data['earliest_cr_line'].dt.year"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "63babaa6-7ab5-4f05-af2b-cbfecc07806f"
+      },
+      "source": [
+        "### 6. Making faceted graphs using Seaborn\n",
+        "\n",
+        "Now I'll show you how you can build on the above data frame summaries as well as make some facet graphs."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "815714af-6387-4d27-afc3-c343a70c26c9"
+      },
+      "outputs": [],
+      "source": [
+        "import seaborn as sns\n",
+        "import matplotlib.pyplot as plt\n",
+        "\n",
+        "s = pd.value_counts(data['earliest_cr_line']).to_frame().reset_index()\n",
+        "s.columns = ['date', 'count']\n",
+        "\n",
+        "s['year'] = s['date'].dt.year\n",
+        "s['month'] = s['date'].dt.month\n",
+        "\n",
+        "d = s[s['year'] > 2008]\n",
+        "\n",
+        "plt.rcParams.update(plt.rcParamsDefault)\n",
+        "sns.set_style(\"whitegrid\")\n",
+        "\n",
+        "g = sns.FacetGrid(d, col=\"year\")\n",
+        "g = g.map(sns.pointplot, \"month\", \"count\")\n",
+        "g.set(xlabel = 'Month', ylabel = '')\n",
+        "axes = plt.gca()\n",
+        "_ = axes.set_ylim([0, d.year.max()])\n",
+        "plt.tight_layout()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "ffba52cb-3dfa-478e-afcd-8750d8898364"
+      },
+      "source": [
+        "Now I want to show you how to easily drop columns that match a given pattern. Let's drop any column that includes \"mths\" in it."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "783d66a3-6979-4045-b129-424670f10eb7"
+      },
+      "outputs": [],
+      "source": [
+        "mths = [s for s in data.columns.values if \"mths\" in s]\n",
+        "mths\n",
+        "\n",
+        "data.drop(mths, axis=1, inplace=True)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "69ff7026-c984-4730-94b0-57d2d0e98631"
+      },
+      "source": [
+        "### 7. Using groupby to create summary graphs"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "88c2d7bd-5029-4da4-902e-30c56a539c40"
+      },
+      "outputs": [],
+      "source": [
+        "group = data.groupby('grade').agg([np.mean])\n",
+        "loan_amt_mean = group['loan_amnt'].reset_index()\n",
+        "\n",
+        "import seaborn as sns\n",
+        "import matplotlib\n",
+        "\n",
+        "plt.style.use('fivethirtyeight')\n",
+        "\n",
+        "sns.set_style(\"whitegrid\")\n",
+        "ax = sns.barplot(y = \"mean\", x = 'grade', data=loan_amt_mean)\n",
+        "ax.set(xlabel = '', ylabel = '', title = 'Average amount loaned, by loan grade')\n",
+        "ax.get_yaxis().set_major_formatter(\n",
+        "matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))\n",
+        "_ = ax.set_xticklabels(ax.get_xticklabels(), rotation=0)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "72ce949b-db12-43f9-b027-39f86989efd3"
+      },
+      "source": [
+        "### 8. More advanced groupby statements visualised with faceted graphs"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "05417ece-a763-453a-91ed-3225d7d226db"
+      },
+      "outputs": [],
+      "source": [
+        "filtered  = data[data['earliest_cr_line_year'] > 2008]\n",
+        "group = filtered.groupby(['grade', 'earliest_cr_line_year']).agg([np.mean])\n",
+        "\n",
+        "graph_df = group['int_rate'].reset_index()\n",
+        "\n",
+        "import seaborn as sns\n",
+        "import matplotlib\n",
+        "\n",
+        "plt.style.use('fivethirtyeight')\n",
+        "plt.suptitle('bold figure suptitle', fontsize=14, fontweight='bold')\n",
+        "\n",
+        "sns.set_style(\"whitegrid\")\n",
+        "g = sns.FacetGrid(graph_df, col=\"grade\", col_wrap = 2)\n",
+        "g = g.map(sns.pointplot, \"earliest_cr_line_year\", \"mean\")\n",
+        "g.set(xlabel = 'Year', ylabel = '')\n",
+        "axes = plt.gca()\n",
+        "axes.set_ylim([0, graph_df['mean'].max()])\n",
+        "_ = plt.tight_layout()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "7a3f22cf-8104-4dc6-ab6c-a3014bb2da50"
+      },
+      "source": [
+        "### 9. Treatment of missing values\n",
+        "This section is a toughie because there really is no correct answer. A pure data science/mining approach would test each of the approaches here using a CV split and include the most accurate treatment in their modelling pipeline.\n",
+        "Here I have included the code for the following treatments:\n",
+        "\n",
+        "- Mean imputation\n",
+        "- Median imputation\n",
+        "- Algorithmic imputation\n",
+        "\n",
+        "I spent a large amount of time looking at 3. because I couldn't find anyone else who has implemented it, so I built it myself. In R it's very easy to use supervised learning techniques to impute missing values for a given variable (as shown here: https://www.kaggle.com/mrisdal/shelter-animal-outcomes/quick-dirty-randomforest) but sadly I couldn't find it done in Python."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "0a4fef44-897e-4ab9-bc57-31b47c8b079f"
+      },
+      "outputs": [],
+      "source": [
+        "#data['emp_length'].fillna(data['emp_length'].mean())\n",
+        "#data['emp_length'].fillna(data['emp_length'].median())\n",
+        "#data['emp_length'].fillna(data['earliest_cr_line_year'].median())\n",
+        "\n",
+        "from sklearn.ensemble import RandomForestClassifier\n",
+        "rf =  RandomForestClassifier(max_depth=5, n_estimators=100, max_features=1)\n",
+        "\n",
+        "data['emp_length'].replace(to_replace=0, value=np.nan, inplace=True, regex=True)\n",
+        "\n",
+        "cat_variables = ['term', 'purpose', 'grade']\n",
+        "columns = ['loan_amnt', 'funded_amnt', 'funded_amnt_inv', 'int_rate', 'grade', 'purpose', 'term']\n",
+        "\n",
+        "def impute_missing_algo(df, target, cat_vars, cols, algo):\n",
+        "\n",
+        "    y = pd.DataFrame(df[target])\n",
+        "    X = df[cols].copy()\n",
+        "    X.drop(cat_vars, axis=1, inplace=True)\n",
+        "\n",
+        "    cat_vars = pd.get_dummies(df[cat_vars])\n",
+        "\n",
+        "    X = pd.concat([X, cat_vars], axis = 1)\n",
+        "\n",
+        "    y['null'] = y[target].isnull()\n",
+        "    y['null'] = y.loc[:, target].isnull()\n",
+        "    X['null'] = y[target].isnull()\n",
+        "\n",
+        "    y_missing = y[y['null'] == True]\n",
+        "    y_notmissing = y[y['null'] == False]\n",
+        "    X_missing = X[X['null'] == True]\n",
+        "    X_notmissing = X[X['null'] == False]\n",
+        "\n",
+        "    y_missing.loc[:, target] = ''\n",
+        "\n",
+        "    dfs = [y_missing, y_notmissing, X_missing, X_notmissing]\n",
+        "    \n",
+        "    for df in dfs:\n",
+        "        df.drop('null', inplace = True, axis = 1)\n",
+        "\n",
+        "    y_missing = y_missing.values.ravel(order='C')\n",
+        "    y_notmissing = y_notmissing.values.ravel(order='C')\n",
+        "    X_missing = X_missing.as_matrix()\n",
+        "    X_notmissing = X_notmissing.as_matrix()\n",
+        "    \n",
+        "    algo.fit(X_notmissing, y_notmissing)\n",
+        "    y_missing = algo.predict(X_missing)\n",
+        "\n",
+        "    y.loc[(y['null'] == True), target] = y_missing\n",
+        "    y.loc[(y['null'] == False), target] = y_notmissing\n",
+        "    \n",
+        "    return(y[target])\n",
+        "\n",
+        "data['emp_length'] = impute_missing_algo(data, 'emp_length', cat_variables, columns, rf)\n",
+        "data['earliest_cr_line_year'] = impute_missing_algo(data, 'earliest_cr_line_year', cat_variables, columns, rf)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "d3803bb4-06bf-4c12-ac4f-00c1d85bca65"
+      },
+      "source": [
+        "### 10. Running a simple classification model\n",
+        "Here I take my cleaned variables (missing values have been imputed using random forests) and run a simple sklearn algo to classify the term of the loan.\n",
+        "This step in the analytics pipeline does take longer in Python than in R (as R handles factor variables out of the box while sklearn only accepts numeric features) but it isn't that hard.\n",
+        "This is just indicative though! A number of the variables are likely to introduce leakage to the prediction problem as they'll influence the term of the loan either directly or indirectly."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "b32339c0-bed2-47eb-83f6-267df16883e8"
+      },
+      "outputs": [],
+      "source": [
+        "y = data.term\n",
+        "\n",
+        "cols = ['loan_amnt', 'funded_amnt', 'funded_amnt_inv', 'int_rate', 'grade', 'emp_length', 'purpose', 'earliest_cr_line_year']\n",
+        "X = pd.get_dummies(data[cols])\n",
+        "\n",
+        "from sklearn import preprocessing\n",
+        "\n",
+        "y = y.apply(lambda x: x.lstrip())\n",
+        "\n",
+        "le = preprocessing.LabelEncoder()\n",
+        "le.fit(y)\n",
+        "\n",
+        "y = le.transform(y)\n",
+        "X = X.as_matrix()\n",
+        "\n",
+        "from sklearn import linear_model\n",
+        "\n",
+        "logistic = linear_model.LogisticRegression()\n",
+        "\n",
+        "logistic.fit(X, y)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "9728168c-555c-4b07-958a-1a151c51b911"
+      },
+      "source": [
+        "### 11. Pipelining in sklearn\n",
+        "\n",
+        "In this section I'll go through how you can combine multiple techniques (supervised an unsupervised) in a pipeline.\n",
+        "These can be useful for a number of reasons:\n",
+        "\n",
+        "- You can score the output of the whole pipeline\n",
+        "- You can gridsearch for the whole pipeline making finding optimal parameters easier\n",
+        "\n",
+        "So next we'll combine some a PCA (unsupervised) and Random Forests (supervised) to create a pipeline for modelling the data. \n",
+        "\n",
+        "In addition to this I'll show you an easy way to grid search for the optimal hyper parameters."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "63806a13-88cb-41e7-ae23-40d2db5b2887"
+      },
+      "outputs": [],
+      "source": [
+        "from sklearn import linear_model, decomposition\n",
+        "from sklearn.ensemble import RandomForestClassifier\n",
+        "from sklearn.pipeline import Pipeline\n",
+        "from sklearn.grid_search import GridSearchCV\n",
+        "\n",
+        "rf = RandomForestClassifier(max_depth=5, max_features=1)\n",
+        "\n",
+        "pca = decomposition.PCA()\n",
+        "pipe = Pipeline(steps=[('pca', pca), ('rf', rf)])\n",
+        "\n",
+        "n_comp = [3, 5]\n",
+        "n_est = [10, 20]\n",
+        "\n",
+        "estimator = GridSearchCV(pipe,\n",
+        "                         dict(pca__n_components=n_comp,\n",
+        "                              rf__n_estimators=n_est))\n",
+        "\n",
+        "estimator.fit(X, y)"
+      ]
+    }
+  ],
+  "metadata": {
+    "_change_revision": 0,
+    "_is_fork": false,
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.5.2"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

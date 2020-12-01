@@ -1,0 +1,1234 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "c5947440-17b4-5052-52d7-0c5ebd012eb0"
+      },
+      "source": [
+        "## Predict loan default \n",
+        "The object of this notebook is to apply several classification methods to predict loan default. For each classification models, tune the hyper-parameters using grid search via cross validation. Evaluate different classifiers with ROC AUC metric and select the optimal model accordingly."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "7358f05d-44ee-d4f0-2ed7-60d84b1b2872",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": [
+        "#!pip install mysql-connector\n",
+        "#import mysql.connector as sql_conn\n",
+        "import pandas as pd\n",
+        "import numpy as np\n",
+        "import matplotlib.pyplot as plt\n",
+        "import matplotlib\n",
+        "%matplotlib inline\n",
+        "import seaborn as sns\n",
+        "import datetime as dt\n",
+        "from time import time\n",
+        "\n",
+        "from __future__ import print_function\n",
+        "import os\n",
+        "import subprocess\n",
+        "from operator import itemgetter\n",
+        "from scipy.stats import randint"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "3b14283d-37db-22cf-a572-154ba820e4fe"
+      },
+      "source": [
+        "## 1. Data Cleaning"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "13236574-85eb-f8bc-5315-f02298ddce44"
+      },
+      "source": [
+        "### load data from csv file"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "05b58afd-be94-29b1-a6ff-1edf283773ca"
+      },
+      "outputs": [],
+      "source": [
+        "nan_values = ['nan','N.A','NaN','n/a']\n",
+        "data = pd.read_csv('loan.csv',na_values=nan_values, index_col='id')  \n",
+        "\n",
+        "pd.set_option('display.max_columns', 101)\n",
+        "data.describe()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "e5ccbbbc-7a88-1d8b-590e-874271672474"
+      },
+      "source": [
+        "### declare functions used in data cleaning"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "d443eea9-2c7b-b403-f2f6-94a60044a751"
+      },
+      "outputs": [],
+      "source": [
+        "# extract numerical parts form textual feature\n",
+        "def year_to_int(string):\n",
+        "    try:\n",
+        "        if string == '10+ years':\n",
+        "            num=10\n",
+        "        elif string == '< 1 year':\n",
+        "            num=0\n",
+        "        else:\n",
+        "            num=int(str(string).split()[0])\n",
+        "        return num\n",
+        "    except:\n",
+        "        return np.nan\n",
+        "\n",
+        "    \n",
+        "def percent_to_float(string):\n",
+        "    try:\n",
+        "        return float(string.split('%')[0])/100\n",
+        "    except:\n",
+        "        return np.nan\n",
+        "\n",
+        "    \n",
+        "def str_to_timestamp(string):\n",
+        "    try:\n",
+        "        return dt.datetime.strptime(string, '%b-%Y').timestamp()\n",
+        "    except:\n",
+        "        return np.nan"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "deabc56f-d735-36d7-1090-acf81f7a969d"
+      },
+      "outputs": [],
+      "source": [
+        "def clean_data(data):\n",
+        "#response:\n",
+        "    # 1<--default, 0<--not default\n",
+        "    data['charge_off']=np.where((data['loan_status']=='Charged Off') | \n",
+        "                                (data['loan_status']=='Default') |\n",
+        "                                (data['loan_status']=='Does not meet the credit policy. Status:Charged Off'), 1, 0) \n",
+        "\n",
+        "#predictor:\n",
+        "    data['revol_util'] = data['revol_util'].apply(percent_to_float)\n",
+        "    data['int_rate'] = data['int_rate'].apply(percent_to_float)\n",
+        "    data['earliest_cr_line'] = data['earliest_cr_line'].apply(str_to_timestamp)\n",
+        "    data['issue_d'] = data['issue_d'].apply(str_to_timestamp)\n",
+        "    data['emp_length'] = data['emp_length'].apply(year_to_int)\n",
+        "    \n",
+        "    #extended_inc: annual income varible that takes co-borrowers into consideration\n",
+        "    data['extended_inc']=np.where(data['application_type']=='JOINT',data['annual_inc_joint'],data['annual_inc'])\n",
+        "    \n",
+        "    return None"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "51991f9b-202a-1d46-dd3c-4a2f3c51f017"
+      },
+      "outputs": [],
+      "source": [
+        "clean_data(data)\n",
+        "\n",
+        "#remove intuitively useless or duplicated features\n",
+        "useless_col=['member_id','grade','annual_inc','funded_amnt_inv','collection_recovery_fee', 'pymnt_plan', 'recoveries', 'last_pymnt_d',\n",
+        "             'total_pymnt', 'total_pymnt_inv', 'total_rec_int', 'total_rec_late_fee', 'total_rec_prncp', 'loan_amnt',\n",
+        "             'url', 'zip_code', 'acc_now_delinq', 'policy_code', 'loan_status','out_prncp','out_prncp_inv','funded_amnt',\n",
+        "            'emp_title', 'desc', 'last_pymnt_amnt','next_pymnt_d','last_credit_pull_d', 'title' ]\n",
+        "data.drop(useless_col, axis=1, inplace=True)\n",
+        "\n",
+        "#drop columns that contain more than 10% missing value\n",
+        "my_thresh = 0.9*len(data)\n",
+        "data.dropna(axis=1, thresh=my_thresh, inplace=True)\n",
+        "\n",
+        "#remove any row with missing values in any field\n",
+        "data.dropna(axis=0, inplace=True)\n",
+        "\n",
+        "data.head(3)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "731ceb3b-c46b-7cdf-78dc-7fd514de1404"
+      },
+      "source": [
+        "### categorical feature encoding"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "79c546f1-8a2e-89f9-d154-2977bc61b118"
+      },
+      "outputs": [],
+      "source": [
+        "#ordinal\n",
+        "ordered_grade = ['G','F','E','D','C','B','A']\n",
+        "ordered_sub_grade = [x+i  for x in ordered_grade for i in ['5','4','3','2','1']]     \n",
+        "data.sub_grade = data.sub_grade.astype(\"category\", ordered=True, categories=ordered_sub_grade).cat.codes\n",
+        "\n",
+        "#nominal\n",
+        "nominal_col = ['term','initial_list_status','application_type','purpose','addr_state',\n",
+        "               'home_ownership','verification_status']\n",
+        "data = pd.get_dummies(data, columns=nominal_col)\n",
+        "\n",
+        "data.describe()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "c9f850ce-1d63-3c9b-02e9-b52d63b5f0dd"
+      },
+      "source": [
+        "### split the data into training, validation and testing sets "
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "519a6409-038f-382e-bf32-d617dffd6cf9",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": [
+        "#split our data set into the three parts\n",
+        "# 60% - train set, used for classifier construction\n",
+        "# 20% - validation set, used for model selection \n",
+        "# 20% - test set\n",
+        "train, validation, test = np.split(data, [int(.6*len(data)), int(.8*len(data))])"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "c2306ab0-c01e-4112-4135-46021f09254c"
+      },
+      "outputs": [],
+      "source": [
+        "#split X and y\n",
+        "X_train = train.ix[:,data.columns!='charge_off']\n",
+        "y_train = train['charge_off'].reshape(-1,1).ravel()\n",
+        "X_validation = validation.ix[:,data.columns!='charge_off']\n",
+        "y_validation = validation['charge_off'].reshape(-1,1).ravel()\n",
+        "X_test = test.ix[:,data.columns!='charge_off']\n",
+        "y_test = test['charge_off'].reshape(-1,1).ravel"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "5b4849cb-b644-a1b3-8681-8f00d0fad8de"
+      },
+      "source": [
+        "### feature scaling"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "fae7a634-b1b2-05fc-75e9-219a6b1fb239"
+      },
+      "outputs": [],
+      "source": [
+        "import sklearn\n",
+        "from sklearn.model_selection import train_test_split\n",
+        "from sklearn import preprocessing\n",
+        "from sklearn import grid_search\n",
+        "from sklearn.grid_search import GridSearchCV\n",
+        "from sklearn.grid_search import RandomizedSearchCV\n",
+        "from sklearn.model_selection import cross_val_score\n",
+        "from sklearn import metrics"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "e36cbb83-2b2d-ee3a-1020-32e78929edf6",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": [
+        "#scaling\n",
+        "scaler = preprocessing.StandardScaler()\n",
+        "X_train = pd.DataFrame(scaler.fit_transform(X_train.astype(np.float64)), columns=X_train.columns)\n",
+        "X_validation = pd.DataFrame(scaler.fit_transform(X_validation.astype(np.float64)), columns=X_validation.columns)\n",
+        "X_test = scaler.transform(X_test.astype(np.float64))"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "98ac1f61-0774-c26d-62e1-fd0c4c5052df"
+      },
+      "source": [
+        "## 2. Grid Parameter Search via cross validation\n",
+        "parameter tuning is an important step in the model-building. We first define some functions that will be useful in parameter tuning. <br>\n",
+        "reference: http://chrisstrelioff.ws/sandbox/2015/06/25/decision_trees_in_python_again_cross_validation.html <br>"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "46d27bdf-c147-3fbc-69ff-1b03d533a48a"
+      },
+      "source": [
+        "<b>report</b> - This function takes the output from the grid or random search, prints a report of the top models and returns the best parameter setting."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "48b596e0-b49b-b9bd-73a2-33d3043c6042",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": [
+        "def report(grid_scores, n_top=3):\n",
+        "    \"\"\"\n",
+        "    Args\n",
+        "    ----\n",
+        "    grid_scores -- output from grid or random search\n",
+        "    n_top -- how many to report of top models, default n_top=3\n",
+        "\n",
+        "    Returns\n",
+        "    -------\n",
+        "    top_params -- [dict] top parameter settings found in\n",
+        "                  search\n",
+        "    \"\"\"\n",
+        "    top_scores = sorted(grid_scores,\n",
+        "                        key=itemgetter(1),    # itemgetter(n): fetches n-th element \n",
+        "                        reverse=True)[:n_top]\n",
+        "    \n",
+        "    for i, score in enumerate(top_scores):\n",
+        "        print(\"Model with rank: {0}\".format(i + 1))\n",
+        "        print((\"Mean validation score: \"\n",
+        "               \"{0:.3f} (std: {1:.3f})\").format(\n",
+        "               score.mean_validation_score,\n",
+        "               np.std(score.cv_validation_scores)))\n",
+        "        print(\"Parameters: {0}\".format(score.parameters))\n",
+        "        print(\"\")\n",
+        "\n",
+        "    return top_scores[0].parameters"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "8f0b0ff1-cbb0-8bc7-3c5a-bc35f2d76c10"
+      },
+      "source": [
+        "<b>run_gridsearch</b> - This function runs a grid search for best tuning parameters"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "c08bbdac-6b7f-d242-8d5f-837644e17405",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": [
+        "def run_gridsearch(X, y, clf, param_grid, scoring, cv=5):\n",
+        "    \"\"\"\n",
+        "    Args\n",
+        "    ----\n",
+        "    X -- features\n",
+        "    y -- targets (classes)\n",
+        "    cf -- scikit-learn Decision Tree\n",
+        "    param_grid -- [dict] parameter settings to test\n",
+        "    scoring -- [string] defining model evaluation rules\n",
+        "    cv -- fold of cross-validation, default 5\n",
+        "\n",
+        "    Returns\n",
+        "    -------\n",
+        "    top_params -- [dict] from report()\n",
+        "    \"\"\"\n",
+        "    grid_search = GridSearchCV(clf,\n",
+        "                               param_grid=param_grid,\n",
+        "                               scoring=scoring,\n",
+        "                               cv=cv)\n",
+        "    start = time()\n",
+        "    grid_search.fit(X, y)\n",
+        "\n",
+        "    print((\"\\nGridSearchCV took {:.2f} \"\n",
+        "           \"seconds for {:d} candidate \"\n",
+        "           \"parameter settings.\").format(time() - start,\n",
+        "                len(grid_search.grid_scores_)))\n",
+        "\n",
+        "    top_params = report(grid_search.grid_scores_, 3)\n",
+        "    return  top_params"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "71b797d3-a3aa-4b1d-3dff-45238db908da"
+      },
+      "source": [
+        "### Performance Measures\n",
+        "Before applying the grid search to parameter tuning, we also need a evaluation metric to measure the performance of our classifiers. Selecting an appropriate evaluation metric is also important for model comparison.<br><br>\n",
+        "<b>Accuracy</b> is the most common evaluation metric for classification. However, it can be misleading if there is class imbalance in a dataset (i.e., one class is much more common than another). The loan data is highly unbalanced, since defaulted loans account for only a very small proportion of total loans. In this case, guessing the more common class (say, non-default) will often yield very high accuracy. Therefore, we should choose a different metric that is less sensitive to imbalance when evaluating the predictive performance of classifiers.<br><br>\n",
+        "It is obvious that the loss of accepting defaulted loans is much more serious, and thus we should adapt our classifiers to emphasize false negative rate (1-sensitivity) over false positive rate (specificity). However, it is difficult to assign a proper weight due to the lack of information on cost context. Considering this, we decide to use <b>AUC</b> to combine both sensitivity and specificity into a single general-purpose score. <br><br>\n",
+        "roc_auc_score: http://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_auc_score.html"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "18a85005-88b9-456d-9353-aa8a9c567646"
+      },
+      "source": [
+        "## 3. Constructing Classifiers"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "d92f3279-dc04-a692-285a-125df2d7fbcc"
+      },
+      "source": [
+        "### 3.1. Linear Discriminant Analysis\n",
+        "Linear Discriminant Analysis (LDA) and Quadratic Discriminant Analysis (QDA) are two classic classifiers. These classifiers are attractive because they have closed-form solutions that can be easily computed and have no hyperparameters to tune. <br>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "2b003b9e-1ed8-a5af-8c50-a76da146c1e8"
+      },
+      "outputs": [],
+      "source": [
+        "from sklearn.discriminant_analysis import LinearDiscriminantAnalysis\n",
+        "\n",
+        "# fit the LDA model\n",
+        "lda = LinearDiscriminantAnalysis()\n",
+        "X_r = lda.fit(X_train, y_train).transform(X_train)\n",
+        "\n",
+        "# make prediction using validation set\n",
+        "y_pred=dict()\n",
+        "y_pred_prob=dict()\n",
+        "y_pred['lda'] = lda.predict(X_validation)\n",
+        "\n",
+        "# predicted probability for charge_off=1 i.e. default probability\n",
+        "y_pred_prob['lda'] = lda.predict_proba(X_validation)[:, 1]"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "d4db8972-2252-fb85-e6d1-5f2c11bfb5d5"
+      },
+      "source": [
+        "<b>Dimensionality reduction using LDA</b>\n",
+        "\n",
+        "LDA can be used to perform supervised dimensionality reduction, by projecting the input data to a linear subspace consisting of the directions which maximize the separation between classes. \n",
+        "The dimension of the output is necessarily less than the number of classes, so this is a in general a rather strong dimensionality reduction. <br>\n",
+        "In this binary classfication case, we project the high dimensional data points onto a line (1-D) <br>\n",
+        "reference: http://scikit-learn.org/stable/auto_examples/decomposition/plot_pca_vs_lda.html#sphx-glr-auto-examples-decomposition-plot-pca-vs-lda-py"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "38976ad4-0e1e-d2ba-fb47-5136ebd11711"
+      },
+      "outputs": [],
+      "source": [
+        "plt.figure(figsize=(10,5))\n",
+        "\n",
+        "for color, i, y_label in zip(['navy', 'turquoise'], [0, 1], ['non-default', 'default']):\n",
+        "    plt.scatter(X_r[y_train == i], np.random.uniform(-0.1,0.1,sum(y_train == i)), alpha=.5, color=color, label = y_label)\n",
+        "    \n",
+        "plt.legend(loc='best', shadow=False, scatterpoints=1)\n",
+        "plt.ylim(-1.5,1.5)\n",
+        "plt.title('LDA of loan dataset')\n",
+        "\n",
+        "plt.show()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "7c2d267a-4ad7-de78-5195-6a4b2a671762"
+      },
+      "source": [
+        "### 3.2. Quadratic Discriminant Analysis"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "1b3f7416-8ba9-42ab-5937-c04f8f90aa01"
+      },
+      "outputs": [],
+      "source": [
+        "from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis\n",
+        "\n",
+        "# fit the QDA model\n",
+        "qda = QuadraticDiscriminantAnalysis()\n",
+        "qda.fit(X_train, y_train)\n",
+        "\n",
+        "# make prediction using validation set\n",
+        "y_pred['qda'] = qda.predict(X_validation)\n",
+        "\n",
+        "# predicted probability for charge_off=1 i.e. default probability\n",
+        "y_pred_prob['qda'] = qda.predict_proba(X_validation)[:, 1]"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "af3566a7-0d3d-a928-b0ca-bedcc4da6f90"
+      },
+      "source": [
+        "### 3.3. L2 Regularized Logistic Regression Model\n",
+        "1.1.11. Logistic regression: http://scikit-learn.org/stable/modules/linear_model.html#logistic-regression"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "9c1bd535-e158-bde6-d02b-aed0e8e41695"
+      },
+      "outputs": [],
+      "source": [
+        "from sklearn.linear_model import LogisticRegressionCV\n",
+        "\n",
+        "# fit the logistic model\n",
+        "logit_r2 = LogisticRegressionCV(solver='sag', max_iter=3000)   # 'sag' is faster for large datasets\n",
+        "logit_r2.fit(X_train,y_train)\n",
+        "\n",
+        "# make prediction using validation set\n",
+        "y_pred['logit_r2'] = logit_r2.predict(X_validation)\n",
+        "\n",
+        "# predicted probability for charge_off=1 i.e. default probability\n",
+        "y_pred_prob['logit_r2'] = logit_r2.predict_proba(X_validation)[:, 1]"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "9a80a455-0107-4f81-9364-58b96d1bb9ad"
+      },
+      "source": [
+        "<b>Importance of features"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "57d8b7da-d097-edad-0441-d6aa6a7c9bee"
+      },
+      "outputs": [],
+      "source": [
+        "#top 10 features that contribute most\n",
+        "coefs = pd.Series(logit_r2.coef_[0], index=X_train.columns)\n",
+        "ordered_coefs = coefs.reindex(coefs.abs().order(ascending = False).index)\n",
+        "ordered_coefs[:11][::-1].plot(kind=\"barh\", figsize=(9,6))"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "108a7d3a-78d2-f3b3-e003-d59bbc3a2376"
+      },
+      "source": [
+        "### 3.4. Decision Tree"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "2f3e48e4-1eae-79f1-2b54-8d3811527299"
+      },
+      "outputs": [],
+      "source": [
+        "#!pip install graphviz\n",
+        "from sklearn.tree import DecisionTreeClassifier\n",
+        "from sklearn.tree import export_graphviz\n",
+        "from graphviz import Source"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "39c43d5e-c0ed-9b79-365c-ff4c8e6a9adc"
+      },
+      "source": [
+        "<b>Application of grid search"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "c9104640-de3f-2e17-340e-16f0e54066b1"
+      },
+      "outputs": [],
+      "source": [
+        "scoring = ['accuracy', 'average_precision', 'f1', 'f1_weighted', 'roc_auc']\n",
+        "\n",
+        "# set of parameters to test\n",
+        "param_grid = {\"criterion\": [\"gini\", \"entropy\"],\n",
+        "              \"min_samples_split\": [2, 5, 10],\n",
+        "              \"max_leaf_nodes\": [None, 5, 10] }\n",
+        "\n",
+        "dt = DecisionTreeClassifier()\n",
+        "ts_gs = run_gridsearch(X_train, y_train, dt, param_grid, scoring[4], cv=10)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "a0bb5c3a-bed9-ecab-49e0-e37e5ad49188"
+      },
+      "source": [
+        "<b>Test the retuned best parameters"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "5edd9c94-5ad2-3b7a-69b7-5f11d19a4da8"
+      },
+      "outputs": [],
+      "source": [
+        "dt_ts_gs = DecisionTreeClassifier(**ts_gs)\n",
+        "scores = cross_val_score(dt_ts_gs, X_train, y_train, scoring=scoring[4], cv=10)\n",
+        "print(\"{} (mean: {:.3f}, std: {:.3f})\".format(scoring[4],\n",
+        "                                                       scores.mean(),\n",
+        "                                                       scores.std()),\n",
+        "                                                       end=\"\\n\\n\" )"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "3b833d8c-63d1-cde9-2b07-0926efab8d11"
+      },
+      "source": [
+        "<b>Visualize decision tree"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "0b865a29-60b2-0883-c190-618b98735cdc"
+      },
+      "outputs": [],
+      "source": [
+        "dt_ts_gs.fit(X_train,y_train)\n",
+        "\n",
+        "dot_data = export_graphviz(dt_ts_gs, out_file=None,\n",
+        "                           feature_names=list(X_train.columns.values),\n",
+        "                           class_names=['non-default', 'default'],\n",
+        "                           filled=True)\n",
+        "\n",
+        "Source(dot_data)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "74f58de2-939d-17d9-e9f3-88d696eb7a55"
+      },
+      "outputs": [],
+      "source": [
+        "with open('best_tree.dot', 'w') as f:\n",
+        "    export_graphviz(dt_ts_gs, out_file=f,\n",
+        "                    feature_names=list(X_train.columns.values),\n",
+        "                    class_names=['default', 'not default'])\n",
+        "\n",
+        "command = [\"dot\", \"-Tpng\", 'best_tree.dot', \"-o\", 'best_tree.png']\n",
+        "subprocess.check_call(command)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "c9dcfcd7-8f2a-c440-43b7-44ff20a9af23"
+      },
+      "source": [
+        "### 3.5. Random Forest\n",
+        "A random forest fits a number of decision tree classifiers on various sub-samples of the dataset and use averaging to improve the predictive accuracy and control over-fitting. The sub-sample size is always the same as the original input sample size but the samples are drawn with replacement"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "48f551e1-3da1-2642-691a-e2407a4a79c1"
+      },
+      "source": [
+        "<b>Application of grid search"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "a8935b75-9cf6-6485-1be3-ed47e1b6dfbd"
+      },
+      "outputs": [],
+      "source": [
+        "from sklearn.ensemble import RandomForestClassifier\n",
+        "\n",
+        "# set of parameters to test\n",
+        "param_grid = {\"n_estimators\": list(range(1,10,2)),    #n_estimators : number of trees in the forest\n",
+        "              \"max_features\": [None, 5,'auto'],\n",
+        "              \"criterion\": ['entropy','gini'],\n",
+        "              \"max_leaf_nodes\":[5,10],\n",
+        "              \"min_samples_split\":[2,5]}\n",
+        "\n",
+        "rf = RandomForestClassifier()\n",
+        "ts_gs = run_gridsearch(X_train, y_train, rf, param_grid, scoring[4], cv=10)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "fd96701f-39af-8dc0-7fcd-7f24caa35869"
+      },
+      "source": [
+        "<b>Test the retuned best parameters and fit the optimal model on training set"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "1c824ac1-5994-cdcb-9eb2-a950fa82b90a"
+      },
+      "outputs": [],
+      "source": [
+        "rf_ts_gs = RandomForestClassifier(**ts_gs) \n",
+        "\n",
+        "scores = cross_val_score(rf_ts_gs, X_train, y_train, scoring=scoring[4], cv=10)\n",
+        "print(\"{} (mean: {:.3f}, std: {:.3f})\".format(scoring[4], scores.mean(), scores.std()), end=\"\\n\\n\" )"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "eadcae06-b3c5-e467-a934-ee4e475ae97a"
+      },
+      "source": [
+        "<b>Fit the optimal model on training set and use it to predict validation data"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "6640bac0-d64f-b10b-3b8c-9a6554d5650c",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": [
+        "rf_ts_gs.fit(X_train,y_train)\n",
+        "y_pred['random forest'] = rf_ts_gs.predict(X_validation)\n",
+        "y_pred_prob['random forest'] = rf_ts_gs.predict_proba(X_validation)[:, 1]"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "c10c25eb-8280-c6cc-5c20-87294f97c6a4"
+      },
+      "source": [
+        "<b>Importance of features"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "a6436b9d-6eb7-4c71-d344-5d2b07653e0e"
+      },
+      "outputs": [],
+      "source": [
+        "imp = pd.Series(rf_ts_gs.feature_importances_, index=X_train.columns)\n",
+        "imp.sort_values(ascending = False)[:5][::-1].plot(kind=\"barh\", figsize=(9,6))"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "8f9481cf-8ede-f304-733e-a4a4fa8086d4",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": [
+        "# Plotting decision regions\n",
+        "x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1\n",
+        "y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1\n",
+        "xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.1),\n",
+        "                     np.arange(y_min, y_max, 0.1))\n",
+        "\n",
+        "f, axarr = plt.subplots(2, 2, sharex='col', sharey='row', figsize=(10, 8))\n",
+        "\n",
+        "for idx, clf, tt in zip(product([0, 1], [0, 1]),\n",
+        "                        [clf1, clf2, clf3, eclf],\n",
+        "                        ['Decision Tree (depth=4)', 'KNN (k=7)',\n",
+        "                         'Kernel SVM', 'Soft Voting']):\n",
+        "\n",
+        "    Z = clf.predict(np.c_[xx.ravel(), yy.ravel()])\n",
+        "    Z = Z.reshape(xx.shape)\n",
+        "\n",
+        "    axarr[idx[0], idx[1]].contourf(xx, yy, Z, alpha=0.4)\n",
+        "    axarr[idx[0], idx[1]].scatter(X[:, 0], X[:, 1], c=y, alpha=0.8)\n",
+        "    axarr[idx[0], idx[1]].set_title(tt)\n",
+        "\n",
+        "plt.show()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "011a074b-ef8c-8cd5-a8d3-bf4d1f9391e5"
+      },
+      "outputs": [],
+      "source": [
+        "X_train"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "31744eb4-05da-91b2-1565-0f71c319ce6e"
+      },
+      "source": [
+        "## 4. Performance Evaluation and Classifier Comparison"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "01e004c3-e544-97da-ddc3-eca07fab1a8e"
+      },
+      "source": [
+        "### 4.1. Histogram of Predicted Default Probabilities\n",
+        "When we call the predict() method, the algorithm simply convert the predicted probabilities into predictions by choosing the class with pred_proba > 0.5. \n",
+        "However, predicted probability calculated in this way can be inaccurate because of class imbalance. <br>\n",
+        "To improve the sensitivity and get a better prediction, we can choose a more appropriate threshold instead of 0.5"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "b4ca319b-106e-bf8c-acfe-4c53627b626d"
+      },
+      "outputs": [],
+      "source": [
+        "COL_NUM = 2\n",
+        "ROW_NUM = 2\n",
+        "fig, axes = plt.subplots(ROW_NUM, COL_NUM, figsize=(9,6))\n",
+        "\n",
+        "for i, (label, prob) in enumerate(y_pred_prob.items()): \n",
+        "    ax = axes[int(i/COL_NUM), int(i%COL_NUM)]\n",
+        "    pd.DataFrame(prob).plot(kind='hist', bins=20, ax=ax)\n",
+        "    ax.set_title('{}'.format(label))\n",
+        "    ax.set_xlabel('Predicted Default Probabilities')\n",
+        "    ax.legend_.remove()\n",
+        "    \n",
+        "plt.tight_layout() "
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "939bf5e7-77ef-05ca-8a8b-806c1f2d1cfc"
+      },
+      "source": [
+        "### 4.2. ROC Curve\n",
+        "<b>ROC for threshold selection</b><br>\n",
+        "ROC curve is created by plotting the true positive rate against the false positive rate at various threshold settings. \n",
+        "The specification of optimal thresholds depends on the problem we want to solve. <br>\n",
+        "<b>ROC for model selection</b><br>\n",
+        "For a perfect classifier the ROC curve will go straight up the Y axis (true positive) and then along the X axis (false positive). A classifier with no power will sit on the diagonal, while most classifiers fall somewhere in between.<br>\n",
+        "if two ROC do not intersect, one method dominantes the other<br>\n",
+        "if two ROC intersect, one method is better for some thresholds, and other method is better for other thresholds."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "3353e43f-f05e-ac1d-230b-06db4e27055d"
+      },
+      "outputs": [],
+      "source": [
+        "#ROC Curve\n",
+        "fpr=dict()\n",
+        "tpr=dict()\n",
+        "thresholds=dict()\n",
+        "\n",
+        "for label, prob in y_pred_prob.items(): \n",
+        "    fpr[label], tpr[label], thresholds[label] = metrics.roc_curve(y_validation, prob)\n",
+        "    plt.plot(fpr[label], tpr[label], label=label, alpha=0.7)\n",
+        "\n",
+        "plt.xlim([0.0, 1.0])\n",
+        "plt.ylim([0.0, 1.0])\n",
+        "plt.title('ROC curve comparison') \n",
+        "plt.xlabel('False Positive Rate')\n",
+        "plt.ylabel('True Positive Rate (Sensitivity)')\n",
+        "plt.legend()\n",
+        "plt.grid(True)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "983f1c53-dc93-95fc-9e36-35dc3d01cc78"
+      },
+      "source": [
+        "### 4.3. AUC\n",
+        "AUC is measured by the area under the ROC curve. It give us a convenient way of measuring model performances and comparing models. <br>\n",
+        "AUC for a classifier with no power is 0.5. AUC for the perfect classifier is 1.0. Most classifiers have AUCs that fall somewhere between these 0.5 and 1\n",
+        "Reducing the ROC Curve to a single number can be misleading when two ROC curve intersect. Therefore, we consider AUC to be a  complementary metric for model selection"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "906cdfc5-c0f9-85c9-3b05-f412d86bd93f"
+      },
+      "outputs": [],
+      "source": [
+        "auc=dict()\n",
+        "for label, prob in y_pred_prob.items(): \n",
+        "    auc[label] = metrics.roc_auc_score(y_validation, prob)\n",
+        "    print(label,\":\", auc[label])"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "00cc5194-5a9a-80b6-fcdf-cbb03f4a5b52"
+      },
+      "source": [
+        "<b>It seems that LDA works best"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "c26228e8-d34c-527d-2e45-e6b156409871"
+      },
+      "source": [
+        "## 5. Re-fit the optimal model on training+validation set"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "2384c23d-6823-9047-8c6b-bced24442447"
+      },
+      "outputs": [],
+      "source": [
+        "new_train = pd.concat([train, validation])\n",
+        "X_new_train = new_train.ix[:,data.columns!=['charge_off']]\n",
+        "y_new_train = new_train['charge_off'].reshape(-1,1).ravel()\n",
+        "\n",
+        "# fit the optimal model to both traing and validation set\n",
+        "lda.fit(X_new_train, y_new_train)\n",
+        "\n",
+        "# predict the test data (predicted probability)\n",
+        "y_pred_prob['opt'] = lda.predict_proba(X_test)[:, 1]"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "7f8e4341-81d0-3017-0e25-cba871166d5d"
+      },
+      "source": [
+        "<b>evaluate_threshold</b> - This function shows how sensitivity and specificity change with varing threshold by summarizing them in a table. "
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "c3672f34-a48e-d4a1-8f6a-cf49a9d1d3b8"
+      },
+      "outputs": [],
+      "source": [
+        "def evaluate_threshold(fpr, tpr, thresholds, thres_min=0, thres_max=1, step=0.1):\n",
+        "    thres_list = np.arange(thres_min, thres_max, step)\n",
+        "    sens=[]\n",
+        "    spec=[]\n",
+        "    \n",
+        "    for x in thres_list:\n",
+        "        sens.append(tpr[thresholds>x][-1])\n",
+        "        spec.append(1-fpr[thresholds>x][-1])\n",
+        "        \n",
+        "    df = pd.DataFrame(thres_list, columns=['threshold'])\n",
+        "    df['sensitivity']=sens\n",
+        "    df['specificity']=spec\n",
+        "    return df"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "45d571ab-58ad-1dd8-4cf6-3c17f8a1a63b"
+      },
+      "outputs": [],
+      "source": [
+        "fpr['opt'], tpr['opt'], thresholds['opt'] = metrics.roc_curve(y_new_train, lda.predict_proba(X_new_train)[:, 1])\n",
+        "evaluate_threshold(fpr['opt'], tpr['opt'], thresholds['opt'], thres_min=0, thres_max=0.1, step=0.01)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "cdba6da1-559f-fd10-50c5-b12949397a02"
+      },
+      "source": [
+        "Before choosing the best threshold, we would like to introduce the last classification method -- <b>Support Vector Machine (SVM)</b>. We didn't mention it above because it is different from the methods we have used so far, for it returns only 0 or 1 rather than probability estimates. Hence, there is no threshold to choose, and the definition of ROC Curve is different. <br><br>\n",
+        "But we still want to try this method because it possesses the following advantages:<br>\n",
+        "SVM with a non linear kernel can help us solve problems that are not linearly separable<br>\n",
+        "Effective in high dimensional spaces"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "4e0e4100-4c47-f1fd-77f2-3d5cd6f98e7f"
+      },
+      "source": [
+        "## Support Vector Machine"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "e5608cb1-72b1-4860-1010-98a81822c09c"
+      },
+      "source": [
+        "We use a new evaluation metrics different from AUC <br>\n",
+        "Note that we didn't tune parameters in this case, because kernelized SVM would take a long time to learn the data."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "da0ebf89-594c-d898-f08d-6819134618b9"
+      },
+      "outputs": [],
+      "source": [
+        "from sklearn.svm import SVC   # default kernel is 'rbf'\n",
+        "\n",
+        "# set of parameters to test\n",
+        "#param_grid = {\"C\": [0.1, 1, 10],                 #C : Penalty parameter of the error term\n",
+        "#              \"gamma\": [0.1, 1, 10],                 #gamma: Kernel coefficient for \u2018rbf\u2019\n",
+        "#              \"class_weight\": [None, 'balanced', {1: 10}] } #balanced: adjust weights inversely proportional to class frequencies \n",
+        "\n",
+        "svm = SVC(C=1.0, gamma=1.0, class_weight='balanced')    \n",
+        "#ts_gs = run_gridsearch(X_new_train, y_new_train, svm, param_grid, scoring[2], cv=5)  #scoring[2]='weighted_f1'\n",
+        "# f1 = 2 * (precision * sensitivity) / (precision + sensitivity)\n",
+        "# weighted_f1: weighted f1 by the number of true instances for each class. It accounts for label imbalance. "
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "585dd83e-5ed6-7642-f4c4-0ec908fc70c6",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": [
+        "#svm = SVC(**ts_gs)\n",
+        "svm.fit(X_new_train,y_new_train)\n",
+        "\n",
+        "y_pred['svm'] = svm.predict(X_test)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "0bc40484-ad1c-5d64-08d9-6eb66748f34e"
+      },
+      "source": [
+        "### Evaluate the performance by confusion matrix"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "ab23d8aa-9d8e-dbc4-04c6-40ee2f81832c"
+      },
+      "source": [
+        "<b>confusion</b> -- This function computes and visualizes the confusion matrix"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "df84fbea-c415-cff1-faec-4f140c434863"
+      },
+      "outputs": [],
+      "source": [
+        "def confusion(y_true, y_pred):\n",
+        "    cm = metrics.confusion_matrix(y_true, y_pred)\n",
+        "    plt.figure(figsize=(8,4))\n",
+        "    sns.heatmap(cm, annot=True, fmt=\"d\", xticklabels=['non-default', 'default'], yticklabels=['non-default','default'])\n",
+        "    plt.ylabel(\"Real value\")\n",
+        "    plt.xlabel(\"Predicted value\")\n",
+        "    \n",
+        "    d={'True Negative':cm[0,0], 'False Positive':cm[0,1], 'False Negative':cm[1,0], 'True Positive':cm[1,1]}\n",
+        "\n",
+        "    return(d)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "920b32fe-4faa-9627-3166-2fe5fb1903bf"
+      },
+      "source": [
+        "True Negative -- actual non-default & predict non-default (correct)<br>\n",
+        "False Positive -- actual non-default & predict default (incorrect)<br>\n",
+        "False Negative -- actual default & predict non-default (incorrect)<br>\n",
+        "True Positive -- actual default & predict default (correct)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "779e8c42-5bc1-4606-1748-452a64c12990",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": [
+        "# calculate sensitivity \n",
+        "print (\"The fraction of defaulters that are correctly identified:\", metrics.recall_score(y_test, y_pred['svm']) )\n",
+        "\n",
+        "# confusion matrix\n",
+        "confusion(y_test, y_pred['svm'])"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "64af3096-7122-1238-8977-1035ba42ad09"
+      },
+      "source": [
+        "## LDA Vs. SVM"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "4a2f8ecb-d1a6-b7b1-60c3-9fe831fc1809"
+      },
+      "source": [
+        "In order to compare the svm mehtod with other methods we mentioned above, we choose a threshold for the previously optimal model that can achieve a sensitivity slightly higher than \n",
+        "Notice that this threshold is selected based on the performance on new_training data, the performance on test set can be worse because the test error is usually higher than training error."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "ef28fb29-6859-4dce-9fe6-aa38a7fce420",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": [
+        "# predict default on test set with a new threshold\n",
+        "from sklearn.preprocessing import binarize\n",
+        "y_pred['opt'] = binarize(y_pred_prob['opt'], 0.06)[0]"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "616d13d9-b568-07af-6fae-876c2290ad86"
+      },
+      "outputs": [],
+      "source": [
+        "# calculate sensitivity \n",
+        "print (\"The fraction of defaulters that are correctly identified:\", metrics.recall_score(y_test, y_pred['opt']) )\n",
+        "\n",
+        "# confusion matrix\n",
+        "confusion(y_test,  y_pred['opt'])"
+      ]
+    }
+  ],
+  "metadata": {
+    "_change_revision": 0,
+    "_is_fork": false,
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.6.0"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

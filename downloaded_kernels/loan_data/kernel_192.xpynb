@@ -1,0 +1,1019 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "79e0d941-8bee-378b-80fa-a73eb39513b3"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "596b2c5a-ce26-9e82-6e6b-ebb2b1a1e9b3"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "8ffaa333-2a3c-9078-8aa8-0afadf6c3196"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "319dad7d-30c6-f9fd-f7d5-e81615491a59"
+      },
+      "outputs": [],
+      "source": [
+        "import matplotlib.pyplot as plt\n",
+        "import numpy as np\n",
+        "import pandas as pd\n",
+        "import sqlite3\n",
+        "import seaborn as sns\n",
+        "from sklearn import tree\n",
+        "%matplotlib inline"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "8c5693e6-6700-40e7-5caf-001beddf30fb"
+      },
+      "outputs": [],
+      "source": [
+        "#df = pd.read_csv('loan.csv', na_values=['NA'], nrows=10000)\n",
+        "df = pd.read_csv('../input//loan.csv', na_values=['NA'])\n",
+        "\n",
+        "half_count = len(df) / 2\n",
+        "df = df.dropna(thresh=half_count, axis=1) # Drop any column with more than 50% missing values\n",
+        "\n",
+        "#print (df.columns)\n",
+        "print (df.describe())\n",
+        "print (df['loan_status'].unique())"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "c2f01621-779d-d009-f391-b2a50d9bdccf"
+      },
+      "outputs": [],
+      "source": [
+        "print (\"Number of records {}\".format(len(df)))\n",
+        "print (\"Dataset Shape {}\".format(df.shape))"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "4c4cee47-39bd-a280-c4ef-6c560dc1668a"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "40192c79-284e-6831-d46c-158975b6a89d"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "97c48d5e-d8b6-3fe5-ad77-7e303df72b07"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "0c5f09e6-7560-2d2e-114c-fd6574bb864d"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "b50a989d-56d8-bdb2-4aa8-234f4954e2f7"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "4fcbd973-9479-e649-6c61-0805f4ec753f"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "31b63dd1-d683-07e5-056a-b8bd6b32c19c"
+      },
+      "outputs": [],
+      "source": [
+        "post_loan_features= ['open_acc_6m','open_il_6m','open_il_12m','open_il_24m','mths_since_rcnt_il','total_bal_il','il_util',\\\n",
+        "    'open_rv_12m','open_rv_24m','max_bal_bc','all_util','total_rev_hi_lim','inq_fi','total_cu_tl',\\\n",
+        "    'inq_last_12m','acc_now_delinq','tot_coll_amt','tot_cur_bal']\n",
+        "\n",
+        "df[post_loan_features].describe()\n",
+        "df.drop(post_loan_features, axis=1)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "d50d08ca-e987-21dc-b4aa-33952e49f777"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "747896a9-81c1-96b7-2a75-ab06ce910919"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "0e399b99-5f17-3f0a-7bb6-88f52e511871"
+      },
+      "outputs": [],
+      "source": [
+        "plt.xticks(rotation=90)\n",
+        "\n",
+        "df_status = df.loc[df['loan_status'].isin(['Current','Charged Off','Default','Fully Paid','In Grace Period','Late (16-30 days)','Late (31-120 days)'])]\n",
+        "\n",
+        "sns.countplot(df_status['loan_status'], palette='Set2')\n",
+        "plt.xlabel('Loan Status')"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "513f52fa-c9b7-a414-56ae-3a818d4804c6"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "d43a38dd-1861-353c-d927-993c5909da1a"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "8b696d1f-59ef-055a-9219-a0df4d1d12e7"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "11346c67-e060-5746-90ac-becc23ab7278"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "0ed776e8-fa6d-a301-f69c-d4f37fd9a002"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "e8c32fa3-40ed-6d97-cfb9-9be6ef4f1c05"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "cc1e829f-78df-9857-af30-f5fdac04770a"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "82fc2fa4-37fe-d287-9fb2-4429c72d0269"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "da2e2935-9585-429f-e577-f6ba0e4b5f7c"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "b8ac8717-3f3e-1bd4-6a34-8cd61ce89425"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "b5baf19c-0e73-a4a0-0ae7-3dd9f3070ac9"
+      },
+      "outputs": [],
+      "source": [
+        "def print_data_shape(df):\n",
+        "    print (\"No rows: {}\".format(df.shape[0]))\n",
+        "    print (\"No cols: {}\".format(df.shape[1]))\n",
+        "    print (df.head(1).values)\n",
+        "    print (\"Columns: \" + df.columns)\n",
+        "    #df.info()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "c4fcd70f-ef11-381e-569c-ebafdf70f84d"
+      },
+      "outputs": [],
+      "source": [
+        "df.replace('n/a', np.nan,inplace=True)\n",
+        "df.emp_length.fillna(value=0,inplace=True)\n",
+        "df['emp_length'].replace(to_replace='[^0-9]+', value='', inplace=True, regex=True)\n",
+        "df['emp_length'] = df['emp_length'].astype(int)\n",
+        "#df.emp_length.head()\n",
+        "print_data_shape(df)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "56e2c991-302e-912a-0ba0-e66c79db4fd6"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "e5760e97-0596-f95c-1524-ccaddb6cfbda"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "23283492-1a98-80a2-6132-216127aa6e83"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "de3b3fd4-fa0c-4e04-1221-6fbbe63b6730"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "cb16363f-f2e2-459d-df2c-8c9d942f0c5a"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "3a1be62b-886e-c349-7064-67672c7543ef"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "e89eaf1f-9a1d-e292-9b66-69e5501ed275"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "fd744034-5a5d-b491-6ebb-2b7e12ad98d7"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "cfce7519-9b33-e991-4a6c-ee7d42c206c3"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "0f65d0ab-7422-aca0-d8c9-8e42a6bff275"
+      },
+      "outputs": [],
+      "source": [
+        "df['issue_month'], df['issue_year'] = zip(*df.issue_d.str.split('-'))\n",
+        "df.drop(['issue_d'], 1, inplace=True)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "0f080113-3607-ebf7-0cf7-dad32c49977f"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "830615ad-3d46-8a4c-0c22-457503bbf7ed"
+      },
+      "outputs": [],
+      "source": [
+        "df['zip_code'] = df['zip_code'].str.rstrip('x')"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "ac5cc014-472f-3d79-e4e1-ddf87d41f20b"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "a5b4c10c-346d-f999-97ff-7b34fa0d631d"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "70a083b2-8149-f0b4-84f2-0fb71f6d2fb9"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "b3e8e928-1ab0-bbed-0500-1b8138cf16e3",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "ecd622d2-9a4e-0eea-32e9-845da9a595f9"
+      },
+      "outputs": [],
+      "source": [
+        "# Drop surrogate identifiers\n",
+        "df.drop(['id','member_id'],1, inplace=True)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "ef55b5e9-fb37-b025-af48-59cf3101aa43"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "33d30c77-d016-f7cd-6207-1812e37bf1bd"
+      },
+      "outputs": [],
+      "source": [
+        "cor = df.corr()\n",
+        "cor.loc[:,:] = np.tril(cor, k=-1) # below main lower triangle of an array\n",
+        "cor = cor.stack()\n",
+        "cor[(cor > 0.55) | (cor < -0.55)]"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "d3636986-991e-2d4a-c2b7-a6e633d3f44c"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "53acf9f7-1eec-f5cf-837c-6ed9555ff66d"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "e98fa8d1-ffec-f9e3-debc-d412b45e6a68"
+      },
+      "outputs": [],
+      "source": [
+        "mapping_dict = {'loan_status':{'Fully Paid':1, 'Charged Off': 0, 'Default': 0, 'Current': 1}}\n",
+        "df = df.replace(mapping_dict)\n",
+        "df = df[(df['loan_status'] == 1) | (df['loan_status'] == 0)]\n",
+        "\n",
+        "print_data_shape(df)\n",
+        "df.loan_status.value_counts()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "83ffec47-28e7-6993-19c6-dc8570e3530b"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "ed5e1c63-a2ef-f6c0-4377-a57eca71c116"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "0a3a9260-4f50-dcb3-6aa3-54e117ed62d1"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "af3d40c0-0caf-8373-87fc-ded9957e4bb3"
+      },
+      "outputs": [],
+      "source": [
+        "def show_nulls(df):\n",
+        "    nulls = pd.DataFrame(df.isnull().sum().sort_values(ascending=False)[:25])\n",
+        "    nulls.columns = ['Null Count']   \n",
+        "    nulls.index.name = 'Feature'\n",
+        "    return nulls"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "a85fee4b-1c7f-f8a5-ce5a-0544e9891409"
+      },
+      "outputs": [],
+      "source": [
+        "# Dropping last few cols with too many nulls\n",
+        "df.drop(['next_pymnt_d','total_rev_hi_lim','tot_coll_amt','tot_cur_bal','emp_title','last_pymnt_d', \\\n",
+        "         'title','collections_12_mths_ex_med','last_credit_pull_d', 'total_acc', 'pub_rec',\\\n",
+        "         'policy_code','url','pymnt_plan','earliest_cr_line'], 1, inplace=True)\n",
+        "\n",
+        "show_nulls(df)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "cd77cc1d-b05f-aece-685f-9655eb727d13"
+      },
+      "outputs": [],
+      "source": [
+        "# drop last few records with nulls\n",
+        "df = df.dropna()\n",
+        "print(df.dtypes.value_counts())\n",
+        "print()\n",
+        "\n",
+        "show_nulls(df)\n",
+        "print (df.shape)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "2601b157-60d1-8ac3-e200-a3a135963eca"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "8c3ca973-b598-854e-bdc7-f0574fd34c61"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "d007f89b-62f1-8f96-5a4e-88754d2b9c39"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "7668be94-a942-f6ba-c759-4ae888b97802"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "7a12f4d5-95a9-de4d-6c04-b08b338f37bc"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "25da53fe-e344-2c3f-6f8e-9cf2844676b5"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "32dc2ed2-88a1-b580-e862-7cc9200946a1"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "f2ae9b10-6103-b951-bd82-4f126c340552"
+      },
+      "outputs": [],
+      "source": [
+        "df['loan_status'].value_counts() / df.shape[0]"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "49fb800a-a00f-5f0d-120f-cefc150b7bc1"
+      },
+      "outputs": [],
+      "source": [
+        "mapping_dict = {'loan_status':{1:'Fully Paid', 0: 'Default'}}\n",
+        "df = df.replace(mapping_dict)\n",
+        "\n",
+        "# Visualise Loan Default Percentage / ratio per year\n",
+        "grp_df = df.groupby(['issue_year','loan_status']).count().unstack()\n",
+        "#tempdf['percent']=tempdf[0]/tempdf['total']*100\n",
+        "grp_df['loan_amnt'].plot(kind='bar', stacked=True)\n",
+        "#grp_df['loan_amnt'].plot(kind='kde' )"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "b8338255-c6b5-6b72-f0cc-831a9c7a9cd4",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "73c97401-63dd-5dc1-f262-e93880533932",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "fff3d908-1da3-e2fb-1c15-e969eb43e7e4",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "21608a66-5755-ba57-0e89-76978957f741",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "7fe182d7-50f6-2250-1c0f-5273e79e5d5a"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "ed7b3a9b-9626-99c8-0814-c27ae1e2d54c"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "4a2ceb10-ea91-32a8-bc71-e4b2f5f377d6",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "503275a3-1a42-2ef5-f8b2-7308d8ead188"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "6b1446b3-fda6-157e-be0a-55696dc74cee",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "7a2cb1bf-5b5a-872c-9b99-47471c291266"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "5a998f9b-968a-62d6-0e85-6edcacf0b96f"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "2eee8857-1e83-b18b-f6bd-2b119be1acc2",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "fcca01d4-7a71-d951-1328-fe1bc9486c59"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "36404c4e-fbfc-cfbf-049b-ec3cbe18d9cc",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "5713ea57-34c9-3d74-5e63-facc5496450a"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "38a67ca3-149c-184e-e106-277740c0b283",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "da6b25a0-afe0-9990-d5c7-b4684cfbe2b0"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "161d0f4a-dfd2-0908-b32d-8324413fc643"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "2994537e-51ed-ca98-5ec3-75a5f5550da3",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "d6223bf3-4df9-4179-f20b-c25cdca784cc"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "04f71b20-72e1-faae-9d2f-193230d05a23",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "d17bec74-edae-3c9f-b099-4a06c5081e69"
+      },
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "268719dd-069f-b419-297d-5f760ae640d0",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    }
+  ],
+  "metadata": {
+    "_change_revision": 0,
+    "_is_fork": false,
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.6.0"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

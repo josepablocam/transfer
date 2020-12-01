@@ -1,0 +1,807 @@
+{
+  "cells": [
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "b6ce5aee-fc97-5451-c666-2b13ee0cfa04"
+      },
+      "outputs": [],
+      "source": [
+        "#import libraries\n",
+        "\n",
+        "import numpy as np\n",
+        "import pandas as pd\n",
+        "import matplotlib.pyplot as plt\n",
+        "%matplotlib inline\n",
+        "import seaborn as sns\n",
+        "import datetime"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "512eb824-7910-dc16-a89a-b9a5a7e199d3"
+      },
+      "outputs": [],
+      "source": [
+        "# import raw data\n",
+        "\n",
+        "df_raw = pd.read_csv('../input/loan.csv',low_memory=False)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "11d545a0-3909-c749-3342-0e8a4bf4848f"
+      },
+      "outputs": [],
+      "source": [
+        "# group loan status duplicates\n",
+        "\n",
+        "def group_status(status):\n",
+        "    if status == 'Does not meet the credit policy. Status:Charged Off':\n",
+        "        return 'Charged Off'\n",
+        "    elif status == 'Does not meet the credit policy. Status:Fully Paid':\n",
+        "        return 'Fully Paid'\n",
+        "    elif status in ['Late (16-30 days)', 'Late (31-120 days)']:\n",
+        "        return 'Late'\n",
+        "    else:\n",
+        "        return status\n",
+        "\n",
+        "df_raw['loan_status_new'] = df_raw['loan_status'].apply(group_status)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "1c96b251-1610-4c85-ebb9-ddd21576cf8e"
+      },
+      "outputs": [],
+      "source": [
+        "#pd.set_option('display.max_columns', len(df_raw.columns))\n",
+        "df_raw.head(1)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "cbd15072-7d8e-ce82-1adc-bdec2ddf98c0"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "dc4ecbf3-ca1f-5735-39f6-611656bf58af"
+      },
+      "outputs": [],
+      "source": [
+        "#create column in original dataset to distinguish between good or bad loans\n",
+        "#this will be the target variable for subsequent predictive models\n",
+        "\n",
+        "gl = []\n",
+        "\n",
+        "for row in df_raw['loan_status_new']:\n",
+        "    if row == 'Current':\n",
+        "        gl.append(1)\n",
+        "    elif row == 'Issued':\n",
+        "        gl.append(1)\n",
+        "    elif row == 'Fully Paid':\n",
+        "        gl.append(1)\n",
+        "    else: \n",
+        "        gl.append(0)\n",
+        "\n",
+        "df_raw['good_bad_loans']=gl\n",
+        "  "
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "cd1e1866-3398-a05f-511a-808737f21e0f"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "12f7d56e-6a4a-f241-9310-312419882099"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "8fcea651-ceb1-3ab6-7483-79b350150f71"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "c15dd853-bcfd-e221-6645-28c675cb862a"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "e0326330-44bb-8959-0f22-065877226186"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "016f503d-0000-c4d5-1cc4-38a16a33752d"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "f2400968-2624-d240-fc7b-6fdad40d4d36"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "51f7d8b8-116e-e755-6e12-3a56107d50cb"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "e2d4544d-afb7-bf55-6657-e17479fe71a6"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "2e1a454d-5233-0705-3bb8-f1da9fc0bcfd"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "eb24397d-38c3-997d-3cb0-5a725aabc278"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "dc6e2d3f-6b72-ba41-352a-e93fbc27abd3"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "3141826a-ab86-0014-76eb-accc29078e2f"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "d5766850-3245-a57b-0799-20a010fc141d"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "bc7b08a9-f5b6-5aa6-f30f-e3607d76af72"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "4e5d5032-e284-0ec0-163f-552c0a32225b"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "57a23034-68ae-a9bc-2f66-148b443dafee"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "17d08abb-adc1-3d69-94ac-c79f4dffe9d2"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "80bb6e2e-2d0a-d9f1-4312-314822d86807"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "c0177164-9d30-a0e0-1441-d0ae27db4759"
+      },
+      "outputs": [],
+      "source": [
+        "#How is loan performance related to applicant state?\n",
+        "\n",
+        "table11 = pd.pivot_table(df_raw, values='id', index='addr_state', columns=['good_bad_loans'], aggfunc='count').fillna(0)\n",
+        "table11.columns=[['bad loans', 'good loans']]\n",
+        "table11['Sum']=table11['bad loans']+table11['good loans']\n",
+        "table11['%good_loans']=table11['good loans']/table11['Sum']*100\n",
+        "table11['%bad_loans']=table11['bad loans']/table11['Sum']*100\n",
+        "table11.index = table11.index.astype(str)\n",
+        "table11['above mean'] = table11['%bad_loans'] - table11['%bad_loans'].mean()  \n",
+        "print(table11)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "41ee5cd5-4a1b-47d5-09f8-1c03089919de"
+      },
+      "outputs": [],
+      "source": [
+        "#Plot bad loans on map\n",
+        "\n",
+        "import plotly.plotly as py\n",
+        "import plotly.graph_objs as go\n",
+        "from plotly import tools\n",
+        "from plotly.offline import download_plotlyjs, init_notebook_mode, plot, iplot\n",
+        "init_notebook_mode(connected=True) \n",
+        "\n",
+        "data = [ dict(\n",
+        "        type='choropleth',\n",
+        "        colorscale = 'Greens',\n",
+        "        autocolorscale = False,\n",
+        "        locations = table11.index,\n",
+        "        z = table11['%bad_loans'].astype(float).round(2),\n",
+        "        locationmode = 'USA-states',\n",
+        "        marker = dict(\n",
+        "            line = dict (\n",
+        "                color = 'rgb(255,255,255)',\n",
+        "                width = 2\n",
+        "            ) ),\n",
+        "        colorbar = dict(title = \"Portion of bad loans (%)\"))]\n",
+        "\n",
+        "layout = dict(\n",
+        "        title = 'Bad loans by state (%)',\n",
+        "        geo = dict(\n",
+        "            scope='usa',\n",
+        "            projection=dict( type='albers usa' ),\n",
+        "            showlakes = True,\n",
+        "            lakecolor = 'rgb(255, 255, 255)'),)\n",
+        "    \n",
+        "fig = dict( data=data, layout=layout )\n",
+        "py.iplot( fig, filename='d3-cloropleth-map' )"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "59a50ed3-d9d4-ffdb-f8c5-7fb045530503"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "1a7f6664-be08-c19f-8e70-48ad33ce257f"
+      },
+      "outputs": [],
+      "source": [
+        "#Plot bad loans on map\n",
+        "\n",
+        "data = [ dict(\n",
+        "        type='choropleth',\n",
+        "        colorscale = 'Reds',\n",
+        "        autocolorscale = False,\n",
+        "        locations = table11.index,\n",
+        "        z = table11['Sum'].astype(float).round(2),\n",
+        "        locationmode = 'USA-states',\n",
+        "        marker = dict(\n",
+        "            line = dict (\n",
+        "                color = 'rgb(255,255,255)',\n",
+        "                width = 2\n",
+        "            ) ),\n",
+        "        colorbar = dict(title = \"No of loans\"))]\n",
+        "\n",
+        "layout = dict(\n",
+        "        title = 'No of loans by state (%)',\n",
+        "        geo = dict(\n",
+        "            scope='usa',\n",
+        "            projection=dict( type='albers usa' ),\n",
+        "            showlakes = True,\n",
+        "            lakecolor = 'rgb(255, 255, 255)'),)\n",
+        "    \n",
+        "fig = dict( data=data, layout=layout )\n",
+        "py.iplot( fig, filename='d3-cloropleth-map' )"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "4949d814-35ab-8cdc-b855-809bae4a509a"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "dda74038-5c76-c87d-77e7-ee1f414f0908"
+      },
+      "source": [
+        "## Data pre-processing"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "67126514-5784-b473-537d-2a994e3052c8"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "d7931b0b-54e2-c7dc-8da0-bbb7d2f86db7"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "ba2512fc-561b-9810-e2b1-697b54bd4dc5"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "5a4a12b4-defd-9d23-c8fd-d8a28cd0b8a2"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "7fa7d09a-d0a8-07ba-d9da-465d03fc178d"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "eb3ba199-1703-28d0-2907-d87a1bca4e73"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "d58928ee-1d22-3848-6abe-92307927e25d"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "08e343a0-f76c-73fd-e56c-7d1ae6b849d2"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "26a13e73-5bff-07d1-dacc-d69a7fafea1d"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "15dd4a18-70df-6aaf-d0b7-bbbe414b75dd"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "8697668a-69dd-ac50-4ec7-249b9cb6aaab"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "67680ec3-e3f2-ab61-b4bc-a8fb1cdb2917"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "ed05608e-83b3-ba7a-01e2-302add441381"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "570c7299-1d6a-7163-4478-0a55c54df8f5"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "398c2ca0-c5a0-a46b-d2cb-47136b2d70b3"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "8d7b556d-56b9-16e0-7a71-1eec9aad1a77"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "71a07d23-e545-3f5b-bf86-ad163434cbf6"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "e03d496f-8b61-3feb-a691-1d6c3ae5d359"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "519f0f5b-d5d5-7f6b-bcfe-aea9dfd9a042"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "9f0a4a59-f1a3-aad1-d5e6-d1f04602dbb2"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "ac03e137-7625-e749-2060-57bc1f4ac126"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "d3d73f9a-d9c9-dc43-4803-5ca0ab42298f"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "c2da77c6-2185-6d53-95df-272ce548f670"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "4397af30-d39c-0875-4445-4e78577f737a"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "f0644d63-d5fc-da57-bc5d-1106315acf9f"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "822fe064-1eb5-2a75-65a2-8408275b9179"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "b1170d52-ee63-40ab-6f8e-6135d90eb905"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "5772a0c1-204e-94b6-2281-8bc5ee17c034"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "86805935-007c-c895-51e7-9bbc66da0e78"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "5ae14021-d3d6-476c-fda4-858f16c16492"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "b328d73c-2582-491b-2462-31e358e76bb8"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "0d0b4b99-3a45-6bf3-2926-47b2f19cfee5"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "4455ecaf-7270-78eb-1b94-024cae163c9c"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "a773a8e0-74fa-7e60-8941-11254d5ce670"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "2f5e9545-17aa-db13-5b59-a091efde479d",
+        "collapsed": true
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "1cc17b2b-bb04-1a93-d36b-aac557de78c6"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "b709a4af-34dd-7b40-6ddc-812f05f9b73c"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "bf83cbfa-2c3d-16db-16e2-e9eedd89ef42"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "ecd566d7-ca12-0865-6475-efb07be9d485"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "7103cded-96c4-0666-d813-24c5cf7ef961"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "13f39166-ae9f-6bb6-ece2-cf54be25316f"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "97667203-cd27-a286-1b05-b2e4431e3d3f"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "e2b44f2f-4aa0-1554-bd71-823ca68673d0"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "bc32cd25-eb60-3632-00a8-e153c85b79b0"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "48e0c73c-c3af-98f9-ceda-24c712ed1fa1"
+      },
+      "outputs": [],
+      "source": ""
+    }
+  ],
+  "metadata": {
+    "_change_revision": 0,
+    "_is_fork": false,
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.6.0"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

@@ -1,0 +1,191 @@
+{
+  "cells": [
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "aac151ed-b965-a3a0-8e88-075564b776f2"
+      },
+      "outputs": [],
+      "source": [
+        "import numpy as np # linear algebra\n",
+        "import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)\n",
+        "import seaborn as sns\n",
+        "import matplotlib.pyplot as plt\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "832638de-3dd5-421b-79d4-eb6ffe32178b"
+      },
+      "outputs": [],
+      "source": [
+        "cwur_frame = pd.read_csv(\"../input/cwurData.csv\")\n",
+        "shanghai_frame = pd.read_csv(\"../input/shanghaiData.csv\")\n",
+        "times_frame = pd.read_csv(\"../input/timesData.csv\")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "5be5a997-830b-d7e5-a2dd-54479cbd251d"
+      },
+      "outputs": [],
+      "source": [
+        "times_frame.head(10)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "77e3cec1-0360-5a09-139e-ae566720165f"
+      },
+      "outputs": [],
+      "source": [
+        "times_frame.info()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "f2880af9-14a1-1164-cb5e-f11f7d1f5058"
+      },
+      "outputs": [],
+      "source": [
+        "times_frame['income'] = times_frame['income'].replace('-', np.nan).astype(float)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "27f06251-6a9b-20dc-94cb-a201919e441d"
+      },
+      "outputs": [],
+      "source": [
+        "times_frame[:200]['country'].value_counts().plot(kind='bar')"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "f5d64720-ec7c-f443-5412-f8f94012ae7e"
+      },
+      "outputs": [],
+      "source": [
+        "# drop english speaking countries as they seem to be somehow promoted\n",
+        "non_english = times_frame[\n",
+        "    (times_frame.country != 'United States of America')\n",
+        "    & (times_frame.country != 'United Kingdom')\n",
+        "    & (times_frame.country != 'Australia')\n",
+        "    & (times_frame.country != 'Canada')\n",
+        "]\n",
+        "non_english.head()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "3ff73614-2ea1-9b80-90cd-81e0c60680d9"
+      },
+      "outputs": [],
+      "source": [
+        "non_english[:200]['country'].value_counts().plot(kind='bar')"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "61e211cc-99e6-4b1f-778b-f0528e07890a"
+      },
+      "outputs": [],
+      "source": [
+        "# is there any other factor than language that distinguishes between english \n",
+        "# and no english speaking countries?\n",
+        "english_speaking = times_frame[:200][\n",
+        "    (times_frame.country == 'United States of America')\n",
+        "    | (times_frame.country == 'United Kingdom')\n",
+        "    | (times_frame.country == 'Australia')\n",
+        "    | (times_frame.country == 'Canada')\n",
+        "]\n",
+        "\n",
+        "non_english_speaking = times_frame[:200][\n",
+        "    (times_frame.country != 'United States of America')\n",
+        "    & (times_frame.country != 'United Kingdom')\n",
+        "    & (times_frame.country != 'Australia')\n",
+        "    & (times_frame.country != 'Canada')\n",
+        "]\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "de040322-b774-652f-1957-b46d287bb3ba"
+      },
+      "outputs": [],
+      "source": [
+        "english_speaking_income = english_speaking['income'].dropna()\n",
+        "non_english_speaking_income = non_english_speaking['income'].dropna()\n",
+        "\n",
+        "fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9, 4))\n",
+        "ax1.set_ylim([0, 50])\n",
+        "ax2.set_ylim([0, 50])\n",
+        "english_speaking_income.plot(kind='hist', legend=True, ax=ax1, title='English')\n",
+        "non_english_speaking_income.plot(kind='hist', legend=True, ax=ax2, color='g', title='Non-english')"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "b9b474a2-a0a3-8388-9e8b-e7221f9844ff"
+      },
+      "outputs": [],
+      "source": [
+        "print(english_speaking_income.mean(), english_speaking_income.median())\n",
+        "print(non_english_speaking_income.mean(), non_english_speaking_income.median())"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "4e06e5f3-3a8f-243a-67c9-7c5ce832ccb2"
+      },
+      "outputs": [],
+      "source": ""
+    }
+  ],
+  "metadata": {
+    "_change_revision": 0,
+    "_is_fork": false,
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.5.2"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

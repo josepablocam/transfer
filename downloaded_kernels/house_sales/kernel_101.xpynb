@@ -1,0 +1,90 @@
+{
+  "cells": [
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "d8a0fdd7-0680-0d96-c534-fc3456bdaffe"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "f3563ac0-99c3-3ed9-459e-f3341c6576ec"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "6bc1f8ae-2ac7-3ed8-d411-36a068b97286"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "ebdc6b44-e70e-a1de-79a1-a6d71a2922ea"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "e84cb13c-606c-a656-d6bc-ec8bd0f5ed00"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "a55565b5-f162-b6f8-394f-15709a0b44e5"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "6b690491-1990-7235-36e1-a2b94bdaebbd"
+      },
+      "outputs": [],
+      "source": ""
+    }
+  ],
+  "metadata": {
+    "_change_revision": 0,
+    "_is_fork": false,
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.6.0"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

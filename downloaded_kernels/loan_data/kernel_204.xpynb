@@ -1,0 +1,388 @@
+{
+  "cells": [
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "5f8a61a1-f0fc-0148-3abf-912eb2d9baec"
+      },
+      "outputs": [],
+      "source": [
+        "# Imports:\n",
+        "import matplotlib.pyplot as plt\n",
+        "from matplotlib import font_manager as fm\n",
+        "%matplotlib inline\n",
+        "import pandas as pd\n",
+        "import numpy as np\n",
+        "import sqlite3 as sql\n",
+        "# import seaborn as sns"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "8308e47c-dfae-56b5-d3c2-18ef05603473"
+      },
+      "outputs": [],
+      "source": [
+        "# Connect to database and pull in raw data\n",
+        "db_con = sql.connect('../input/database.sqlite')\n",
+        "data = pd.read_sql_query('SELECT * FROM loan', db_con)\n",
+        "\n",
+        "# Print Sample\n",
+        "print(data.head(3))"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "c5cebfee-9c78-54fc-1544-961cf86999c8"
+      },
+      "outputs": [],
+      "source": [
+        "# Summary of loan 'status' data\n",
+        "summary = data.groupby(['loan_status']).count()['index'].sort_values(ascending=False)\n",
+        "print('Number of loans per', summary)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "06003866-f685-63bb-4200-e22079c55aa1"
+      },
+      "outputs": [],
+      "source": [
+        "# Clean the raw data:\n",
+        "\n",
+        "# To ensure that a 'loan_status' value is available for each row, we get the totals of rows with/ without the status value:\n",
+        "print('Out of {} records, {} have a status, and {} do not'.format(len(data['loan_status']),\n",
+        "                                                             data['loan_status'].notnull().sum(),\n",
+        "                                                             data['loan_status'].isnull().sum()))\n",
+        "\n",
+        "# Remove rows with no 'loan_status'\n",
+        "data = data[data.loan_status.notnull()]\n",
+        "\n",
+        "# This function characterizes loans\n",
+        "def clean_status(raw_status):\n",
+        "    \n",
+        "    status = \"\"\n",
+        "    raw_status = str(raw_status).lower().strip()\n",
+        "    \n",
+        "    if 'charged' in raw_status:\n",
+        "        status = 'charged_off'        \n",
+        "    elif 'default' in raw_status:\n",
+        "        status = 'default'\n",
+        "    elif 'paid' in raw_status:\n",
+        "        status = 'paid'   \n",
+        "    elif ('grace' and 'period') in raw_status:\n",
+        "        status = 'grace_per'\n",
+        "    elif 'current' in raw_status:\n",
+        "        status = 'current' \n",
+        "    elif 'issued' in raw_status:\n",
+        "        status = 'current' \n",
+        "    elif ('late' and '16-30') in raw_status:\n",
+        "        status = 'late16_30' \n",
+        "    elif ('late' and '31-120') in raw_status:\n",
+        "        status = 'late31_120' \n",
+        "    else:\n",
+        "        # There shouldn't be any 'uncategorized' loans, but we'll be able to find them if there are any\n",
+        "        # using this label:\n",
+        "        status = 'uncategorized'\n",
+        "        \n",
+        "    return status\n",
+        "\n",
+        "# Add a 'clean_status' column\n",
+        "data['clean_status'] = data.apply(lambda row:clean_status(row[\"loan_status\"]) , axis = 1)\n",
+        "\n",
+        "print('{} records are Uncategorized'.format(len(data[data['clean_status'] == 'uncategorized'])))"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "dc56044d-4cf6-09db-4c89-d4ea8dd3eddf"
+      },
+      "outputs": [],
+      "source": [
+        "# Total values for each status category. To make ploting graphs easier, we create a Dict for each,\n",
+        "# which contains labels and colors:\n",
+        "val_current = {'value': data[data['clean_status'] == 'current']['loan_amnt'].sum(), \n",
+        "               'label': 'Current', 'color': 'green'}\n",
+        "val_paid = {'value': data[data['clean_status'] == 'paid']['loan_amnt'].sum(), \n",
+        "               'label': 'Paid', 'color': 'green'}\n",
+        "val_grace_per = {'value': data[data['clean_status'] == 'grace_per']['loan_amnt'].sum(), \n",
+        "               'label': 'In Grace Period', 'color': 'green'}\n",
+        "val_late16_30 = {'value': data[data['clean_status'] == 'late16_30']['loan_amnt'].sum(), \n",
+        "               'label': 'Late 16-30 Days', 'color': 'yellow'}\n",
+        "val_late31_120 = {'value': data[data['clean_status'] == 'late31_120']['loan_amnt'].sum(), \n",
+        "               'label': 'Late 31-120 Days', 'color': 'yellow'}\n",
+        "val_default = {'value': data[data['clean_status'] == 'default']['loan_amnt'].sum(), \n",
+        "               'label': 'Default', 'color': 'red'}\n",
+        "val_charged_off = {'value': data[data['clean_status'] == 'charged_off']['loan_amnt'].sum(), \n",
+        "               'label': 'Charged Off', 'color': 'red'}\n",
+        "val_uncat = {'value': data[data['clean_status'] == 'uncategorized']['loan_amnt'].sum(), \n",
+        "               'label': 'Uncategorized', 'color': 'gray'}"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "9019b994-4a69-f007-3d04-499abb01b188"
+      },
+      "outputs": [],
+      "source": [
+        "# Plot a pie chart, showing loans by status\n",
+        "\n",
+        "fig = plt.figure(1, figsize=(8,8))\n",
+        "ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])\n",
+        "plt.title(\"Overall Loan Status\",y=1.08,fontweight=\"bold\")\n",
+        "\n",
+        "labels = [val_current.get('label'), \n",
+        "          val_paid.get('label'), \n",
+        "          val_late16_30.get('label'), \n",
+        "          val_late31_120.get('label'), \n",
+        "          val_default.get('label'), \n",
+        "          val_charged_off.get('label'), \n",
+        "          val_uncat.get('label')]\n",
+        "\n",
+        "values = [val_current.get('value'), \n",
+        "          val_paid.get('value'), \n",
+        "          val_late16_30.get('value'), \n",
+        "          val_late31_120.get('value'), \n",
+        "          val_default.get('value'), \n",
+        "          val_charged_off.get('value'), \n",
+        "          val_uncat.get('value')]\n",
+        "\n",
+        "colors = [val_current.get('color'), \n",
+        "          val_paid.get('color'), \n",
+        "          val_late16_30.get('color'), \n",
+        "          val_late31_120.get('color'), \n",
+        "          val_default.get('color'), \n",
+        "          val_charged_off.get('color'), \n",
+        "          val_uncat.get('color')]\n",
+        "\n",
+        "patches, texts, autotexts = ax.pie(values, labels=labels, autopct='%1.1f%%', colors=colors,\n",
+        "                                  pctdistance=1.1, labeldistance=1.18)\n",
+        "\n",
+        "proptease = fm.FontProperties()\n",
+        "proptease.set_size('x-small')\n",
+        "plt.setp(autotexts, fontproperties=proptease)\n",
+        "plt.setp(texts, fontproperties=proptease)\n",
+        "\n",
+        "plt.show()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "216f2fa7-85d7-a9fc-b86d-a7bb48acba2c"
+      },
+      "outputs": [],
+      "source": [
+        "# Next we'll examine the effect performance of loans based on Lending Club's own 'Grade' rating\n",
+        "# These range between A and G, and reflect the borrower's expected credit risk\n",
+        "\n",
+        "grade_summary = data.sort_values(['grade']).groupby(['grade']).count()['index']\n",
+        "print('Number of loans per', grade_summary)\n",
+        "\n",
+        "# Overall loan performance\n",
+        "data['net_pl'] = (data['out_prncp_inv'] + data['total_pymnt_inv']) - data['funded_amnt_inv'] - data['collection_recovery_fee']\n",
+        "data['rtn_pct'] = (data['net_pl'] / data['funded_amnt_inv']) * 100\n",
+        "\n",
+        "rtn_pct_summary = (data.groupby(['grade']).sum()['net_pl'] / data.groupby(['grade']).sum()['funded_amnt_inv']) * 100\n",
+        "print('Net rate of return per', rtn_pct_summary)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "ed471d18-e059-a870-229c-022c2c250f6f"
+      },
+      "outputs": [],
+      "source": [
+        "def get_xy(values):\n",
+        "    y = []\n",
+        "    for i in values:\n",
+        "        y.append(i)\n",
+        "        \n",
+        "    x = np.arange(len(values))\n",
+        "    \n",
+        "    return {'x':x, 'y':y}\n",
+        "\n",
+        "xy = get_xy(rtn_pct_summary)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "482e3f82-630b-3991-3250-8baddb23063b"
+      },
+      "outputs": [],
+      "source": [
+        "# Overall loan performance\n",
+        "data['net_pl'] = (data['out_prncp_inv'] + data['total_pymnt_inv']) - data['funded_amnt_inv'] - data['collection_recovery_fee']\n",
+        "data['rtn_pct'] = (data['net_pl'] / data['funded_amnt_inv']) * 100\n",
+        "\n",
+        "rtn_pct_summary = (data.groupby(['grade']).sum()['net_pl'] / data.groupby(['grade']).sum()['funded_amnt_inv']) * 100\n",
+        "print('Net rate of return per', rtn_pct_summary)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "27a0c022-b5cf-cc5b-ce02-8d82d171a6b5"
+      },
+      "outputs": [],
+      "source": [
+        "# Return by loan grade, net of charge offs and defaults\n",
+        "\n",
+        "ax = rtn_pct_summary.plot(kind='bar', title =\"Return by Loan Grade\", figsize=(8, 5), fontsize=12)\n",
+        "ax.set_xlabel(\"Loan Grade\", fontsize=12)\n",
+        "ax.set_ylabel(\"Return (%)\", fontsize=12)\n",
+        "plt.show()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "486d3942-f131-3b5c-f32e-da8ecc3708c6"
+      },
+      "outputs": [],
+      "source": [
+        "'''\n",
+        "# View overall performance of all loans\n",
+        "funded_amnt = data['funded_amnt'].sum() # Amt. issued to borrower\n",
+        "total_pymnt = data['total_pymnt'].sum() # Payments received to date for total amount funded\n",
+        "out_prncp = data['out_prncp'].sum() # Remaining outstanding principal\n",
+        "recoveries = data['recoveries'].sum() # post charge off gross recovery\n",
+        "\n",
+        "# We will be using the following data to find correlation with defaults:\n",
+        "\n",
+        "loan_amnt\n",
+        "total_bal_il\n",
+        "revol_bal\n",
+        "grade\n",
+        "delinq_2yrs\n",
+        "average of: fico_range_high, fico_range_low\n",
+        "# print(data[data['clean_status'] == 'default']['loan_amnt'])\n",
+        "# print(data.ix[48113].to_string())\n",
+        "'''"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "b83494eb-d5a1-2aec-b81e-2f7fa02e9b79"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "623cc320-078a-c97d-f17c-cf309e66eae8"
+      },
+      "source": [
+        "**In this analysis, I will examine data of nearly 90,000 loans issued via Lending Club. These loans are  funded by individual investors, who purchase notes in them in $25 increments.** \n",
+        "\n",
+        "Lending Club determines the interest rates based on the borrower's expected credit risk.\n",
+        "\n",
+        "The data used is publicly available on the [company's website][1].\n",
+        "\n",
+        "\n",
+        "  [1]: https://www.lendingclub.com/info/statistics.action"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "832382b0-c093-9335-c9db-5f4b95feb560"
+      },
+      "source": [
+        " **1. Raw Data**\n",
+        "\n",
+        "Here is a sample of the type of data that is available to us. Note that borrower's incomes and job status are mostly 'self-reported', meaning that LC doesn't actually verify this data."
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "dee9438f-93b7-3678-632a-7a68f55cd36b"
+      },
+      "source": [
+        " **2. Loan Status**\n",
+        "\n",
+        "Each loan has a 'status', such as 'current', 'default', etc. Below is an overall distribution of loans by status, as seen in the database. However, to make analysis easier, I'll have to clean this data."
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "22a1adf3-cf31-f75d-f4ed-0e8dde6051b9"
+      },
+      "source": [
+        "**3. Data Cleaning**\n",
+        "\n",
+        "First, I check how many loans do not have a 'status'. Then, I assign new categories to them to make deeper analysis easier."
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "455391f9-59c1-4637-fa14-b0a72cf11e9a"
+      },
+      "source": [
+        " **4. Overall Loan Status**\n",
+        "\n",
+        "Below is a breakdown of loans by status. "
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "c0fc93a6-e293-6c2d-702a-4f52ede75cb9"
+      },
+      "source": [
+        " **5. Loans by Grade**\n",
+        "\n",
+        "Next we'll examine the effect performance of loans based on Lending Club's own 'Grade' rating. These range between A and G, and reflect the borrower's expected credit risk."
+      ]
+    }
+  ],
+  "metadata": {
+    "_change_revision": 0,
+    "_is_fork": false,
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.5.2"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

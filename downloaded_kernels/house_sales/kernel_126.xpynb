@@ -1,0 +1,254 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "f6ca3feb-00fe-0372-d4a3-baec010aac04"
+      },
+      "source": [
+        "## House price prediction using simple linear regression technique.  "
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "1161222e-a053-5e48-13c9-32df2d74b752"
+      },
+      "outputs": [],
+      "source": [
+        "import numpy as np\n",
+        "import pandas as pd\n",
+        "import matplotlib.pyplot as plt\n",
+        "%matplotlib inline"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "55c23ee8-2fec-efc1-c8f0-35d88df77abd"
+      },
+      "outputs": [],
+      "source": [
+        "# Read CSV file using pandas\n",
+        "df = pd.read_csv(\"../input/kc_house_data.csv\")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "b75983b0-1d51-7c9e-0311-914e7ce7c300"
+      },
+      "outputs": [],
+      "source": [
+        "# view first five rows of the dataset\n",
+        "df.head()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "0e3ad00a-2b29-4971-e2ad-5ea00ba36d56"
+      },
+      "outputs": [],
+      "source": [
+        "# number of rows and coloumn in dataset \n",
+        "df.shape"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "d8cfa3f8-48b5-b83f-41c7-db13d4b936cd"
+      },
+      "source": [
+        "Linear regression with one variable"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "7477a260-321f-a713-7c56-7fd60899d7af"
+      },
+      "outputs": [],
+      "source": [
+        "# add a bias X0 = 1 \n",
+        "X = np.c_[np.ones(df.shape[0]),df['sqft_living']]\n",
+        "y = np.c_[df['price']]"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "54428264-60e1-14e8-132b-ee3ae0d1e643"
+      },
+      "outputs": [],
+      "source": [
+        "plt.scatter(X[:,1], y, c='r', marker='x', linewidths=1)\n",
+        "plt.xlabel('Sqft Living')\n",
+        "plt.ylabel('House Price')"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "fbc80266-6dcd-bc06-e8a1-b92434648393"
+      },
+      "source": [
+        "### We can measure the accuracy of our hypothesis function by using a cost function. This takes an average difference of all the results of the hypothesis with inputs from X's and the actual output y"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "f4e366cd-74d1-efdd-087a-7559b62bcb87"
+      },
+      "outputs": [],
+      "source": [
+        "theta = np.zeros(2)\n",
+        "theta"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "0a973902-366c-4146-856d-a46176910cc7"
+      },
+      "outputs": [],
+      "source": [
+        "# Define a cost function\n",
+        "def costFunction(X, y, theta):\n",
+        "    m = y.size;\n",
+        "    j =0\n",
+        "    # Linear regression hypothesis represnetation\n",
+        "    h = X.dot(theta)  # matrix product\n",
+        "    j = 1/(2*m)*np.sum(np.square(h-y))\n",
+        "    return(j)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "c675dcc4-a04a-4674-562c-856eecc98cd8"
+      },
+      "outputs": [],
+      "source": [
+        "theta = np.zeros(shape=(2, 1))\n",
+        "costFunction(X, y, theta)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "29ac93ec-d6ee-8e26-6888-f0f23dbbef1f"
+      },
+      "source": [
+        "### Estimate the parameters in the hypothesis function by using gradient descent. The goal is to find an optimum theta parameters that minimise the cost function. "
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "867e25c8-c19d-8788-3520-926309d5be71"
+      },
+      "outputs": [],
+      "source": [
+        "def gradientDescent(X, y, theta, alpha=0.01, iters=100):\n",
+        "    m = y.size\n",
+        "    parameters = 2\n",
+        "    j_history = np.zeros(iters)\n",
+        "    \n",
+        "    for i in range(iters):\n",
+        "         # hypothesis function hx\n",
+        "         hx = np.dot(X, theta) \n",
+        "         # loss\n",
+        "         error = hx - y\n",
+        "         \n",
+        "         theta[0][0] = theta[0][0] - alpha * (1/m) * np.sum(np.dot(X[:,0], error))\n",
+        "         theta[1][0] = theta[1][0] - alpha * (1/m) * np.sum(np.dot(X[:,1], error))\n",
+        "  \n",
+        "         j_history[i] = costFunction(X, y, theta)\n",
+        "    \n",
+        "    return(theta, j_history)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "c42d4e88-3200-a66a-744b-1a628c3c3408"
+      },
+      "outputs": [],
+      "source": [
+        "theta, cost_j = gradientDescent(X, y, theta)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "457dee9e-5aef-4950-3713-9956e295e020"
+      },
+      "outputs": [],
+      "source": [
+        "cost_j"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "f4937cf5-49a5-395e-63e7-47d894fdc7fc"
+      },
+      "outputs": [],
+      "source": [
+        "plt.plot(cost_j)\n",
+        "plt.ylabel('Cost J')\n",
+        "plt.xlabel('Iterations')"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "8eb3845e-047b-9669-0744-b4247525f852"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    }
+  ],
+  "metadata": {
+    "_change_revision": 0,
+    "_is_fork": false,
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.5.2"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

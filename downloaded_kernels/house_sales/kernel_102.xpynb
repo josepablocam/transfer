@@ -1,0 +1,341 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "15bf0ad3-185c-d55b-c121-338b864d762d"
+      },
+      "source": [
+        "What are some contributing factors to the price of a home? We'll do some basic exploratory data analysis to find out. "
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "aa4d0a81-5936-4ab9-4819-35d2d3fe445b"
+      },
+      "outputs": [],
+      "source": [
+        "# This Python 3 environment comes with many helpful analytics libraries installed\n",
+        "# It is defined by the kaggle/python docker image: https://github.com/kaggle/docker-python\n",
+        "# For example, here's several helpful packages to load in \n",
+        "\n",
+        "import numpy as np # linear algebra\n",
+        "import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)\n",
+        "import matplotlib.pyplot as plt\n",
+        "import seaborn as sns\n",
+        "% matplotlib inline\n",
+        "# Input data files are available in the \"../input/\" directory.\n",
+        "# For example, running this (by clicking run or pressing Shift+Enter) will list the files in the input directory\n",
+        "\n",
+        "from subprocess import check_output\n",
+        "print(check_output([\"ls\", \"../input\"]).decode(\"utf8\"))\n",
+        "\n",
+        "# Any results you write to the current directory are saved as output."
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "9710956f-b15e-67f3-3e1a-9cf60b6ef5a1"
+      },
+      "source": [
+        "Let's read in the data and do any necessary cleaning. "
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "7ee7bb8e-5e2c-1da3-02c9-a03f2fb94f9f"
+      },
+      "outputs": [],
+      "source": [
+        "data = pd.read_csv('../input/kc_house_data.csv')\n",
+        "pd.options.display.max_columns = data.shape[1]"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "9c625189-ff96-e17c-e125-d1db688295c9"
+      },
+      "outputs": [],
+      "source": [
+        "print (\"Missing Values\")\n",
+        "print (data.isnull().any())\n",
+        "print (\"+++++++++++++++++++++++++++++++\")\n",
+        "print (\"+++++++++++++++++++++++++++++++\")\n",
+        "print (\"Data Types\")\n",
+        "print (data.dtypes)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "9e4ad8bd-7dcc-7354-176e-70046e00ef58"
+      },
+      "source": [
+        "So far so good! The data types look great and there aren't any null values. Time for some EDA (exploratory data analysis). "
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "373191f1-5d79-305c-0943-6c362152bc8a"
+      },
+      "outputs": [],
+      "source": [
+        "# look at first 5 rows\n",
+        "data.head(5)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "25921457-6f32-2c9c-9aee-0ff4ca176612"
+      },
+      "outputs": [],
+      "source": [
+        "# data summaries\n",
+        "data.describe()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "b3b16e31-8f88-5597-798f-9399f4e743e3"
+      },
+      "source": [
+        "I won't spend much time looking at the summaries, but one thing to note is that the waterfront properties make up roughly 0.75% of the homes in the set, or 163 homes. The percentage of homes with a view is a whopping 23%, or about 5000 homes. From a real estate agent point of view, that will translate to a larger selling price most likely. \n",
+        "\n",
+        "No sense of paying for a home if it is in poor condition, what does the price of the home look like across conditions? "
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "389839a1-487b-6227-ba52-1dc304483a31"
+      },
+      "outputs": [],
+      "source": [
+        "plt.figure(figsize = (10,10))\n",
+        "sns.boxplot('condition', 'price', data = data)\n",
+        "plt.tight_layout()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "df03ee15-acc7-e192-ebda-9af73e420f07"
+      },
+      "source": [
+        "Doesn't look like there is much difference between the median prices across conditions, though the homes with average and above average conditions have significantly more variation across them. If one is so inclined, an ANOVA test can be done to look for any significant differences in housing price across conditions (assuming you were to turn this variable into a categorical one). \n",
+        "\n",
+        "What happens to the price across grade levels and view? "
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "024c4ede-c5dc-a4d2-36b3-c7eb20f232cf"
+      },
+      "outputs": [],
+      "source": [
+        "plt.figure(figsize = (10,10))\n",
+        "\n",
+        "sns.pairplot(data[['price', 'view', 'grade']]);\n",
+        "plt.tight_layout();"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "18130918-1ef2-cc27-38b1-e0bb787a92bd"
+      },
+      "source": [
+        "The grade of the home seems to matter quite a bit after say, grade 7 or 8. As far as the view goes, it doesn't look like it matters a whole lot as far as the spacing out of the homes is concerned. These are only at first glance, however. \n",
+        "\n",
+        "Now might be a good time to drop some variables that won't really matter/won't be analyzed for the time being."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "e8c96fe6-e865-ff1c-d921-0573ae08ba30"
+      },
+      "outputs": [],
+      "source": [
+        "# drop ID, date, and geospatial information, these won't be used\n",
+        "# do it inplace as to not create another instance\n",
+        "data.drop(['id', 'date', 'lat', 'long', 'zipcode'], axis=1, inplace=True)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "ffe7e564-9546-42e6-ecb5-e793c6a31136"
+      },
+      "outputs": [],
+      "source": [
+        "# view the columns list again\n",
+        "print (data.columns)\n",
+        "print (\"=================================\")\n",
+        "print (\"%d columns remain.\" %len(data.columns))"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "d078dc9e-5838-46b1-fd1f-83e202355d27"
+      },
+      "source": [
+        "Of the 16 remaining features, let's look at a pair plot of what could be deemed to be the important ones to most prospective homeowners/home sellers."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "8f808f45-dbcc-08a7-f0dd-29ba9ccd88cf"
+      },
+      "outputs": [],
+      "source": [
+        "# correlations between variables\n",
+        "feat_subset = ['price', 'bedrooms', 'bathrooms', 'sqft_living',\n",
+        "                'floors', 'yr_built', 'sqft_lot', 'yr_renovated']\n",
+        "corrmat = data[feat_subset].corr()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "f735fa93-176e-2a3d-4e60-60b33e5e0961"
+      },
+      "outputs": [],
+      "source": [
+        "plt.figure(figsize = (10,10))\n",
+        "\n",
+        "sns.heatmap(corrmat, \n",
+        "            cmap = 'YlGnBu', \n",
+        "            linewidth = .5,\n",
+        "            vmin = 0, vmax = 1,\n",
+        "            annot = True,\n",
+        "            cbar_kws = {'orientation':'horizontal'})\n",
+        "plt.tight_layout()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "44826b47-4dfe-7027-3144-5967bd0e6e78"
+      },
+      "source": [
+        "Some results:\n",
+        "* Most of the correlations appear to be positive (not surprising, larger spaces tend to have more rooms)\n",
+        "* The correlation between price and square footage is large, as expected. \n",
+        "* The year the home was built doesn't really appear to be correlated with pricing at all. \n",
+        "* The year the home was renovated has significantly more correlation with price than year home was built. \n",
+        "\n",
+        "What about other features? "
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "e2af7d74-b117-d57a-65c2-d8946f2f35be"
+      },
+      "source": [
+        "# 2. Feature Engineering\n",
+        "\n",
+        "Now that we have a good handle on what the data looks like, let's explore other features which may have some impact into the analysis. Here are some possibilities:\n",
+        "\n",
+        "* renovated: was the home renovated (1 if year of renovation is non-zero, 0 otherwise)). \n",
+        "* log_sqft: take logarithm of square footage, bringing large values close and spreading small values apart\n",
+        "* bed_bath: bedrooms times bathrooms"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "8e8e465f-6ff1-4b01-54b3-2e69a6e9f429"
+      },
+      "outputs": [],
+      "source": [
+        "data['renovated'] = data['yr_renovated'].apply(lambda year: 'Yes' if year != 0 else 'No')\n",
+        "data['log_sqft'] = data['sqft_living'].apply(lambda sqft: np.log(sqft))\n",
+        "data['bed_bath'] = data['bedrooms']*data['bathrooms']"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "880bd07f-5fd3-ae99-b51d-a8d4e33aeb22"
+      },
+      "outputs": [],
+      "source": [
+        "feat_subset = feat_subset + ['renovated', 'log_sqft', 'bed_bath']"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "f98c6be1-5511-38ed-e231-17e2b23dc483"
+      },
+      "outputs": [],
+      "source": [
+        "plt.figure(figsize = (10,10))\n",
+        "\n",
+        "sns.pairplot(data[['renovated', 'sqft_living', 'price']], \n",
+        "             hue = 'renovated',\n",
+        "            kind = 'reg')"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "93ed790d-3e91-01cb-1ac6-bf4c7800a326"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    }
+  ],
+  "metadata": {
+    "_change_revision": 0,
+    "_is_fork": false,
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.6.0"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

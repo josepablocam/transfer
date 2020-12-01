@@ -1,0 +1,233 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "d47f823d-475e-7cae-5bc0-5e2206a17785"
+      },
+      "source": [
+        "Step 1:\n",
+        "Creating data_frame named housing_data"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "9eb8fa24-97c0-e9e1-b27b-661fb758b7b2"
+      },
+      "outputs": [],
+      "source": [
+        "import pandas as pd\n",
+        "housing_data = pd.read_csv(\"../input/kc_house_data.csv\")\n",
+        "housing_data.head()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "b7fe9261-ccc8-0e42-87b2-63739d433437"
+      },
+      "source": [
+        "Step 2:\n",
+        "\n",
+        "Calculating age of house for better analysis\n",
+        "\n",
+        "Creating another column named age_of_house for visualization\n",
+        "\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "e78eee19-ec46-e85d-fc1b-c369ae21453f"
+      },
+      "outputs": [],
+      "source": [
+        "import datetime\n",
+        "current_year = datetime.datetime.now().year\n",
+        "housing_data[\"age_of_house\"] = current_year - pd.to_datetime(housing_data[\"date\"]).dt.year\n",
+        "housing_data.head()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "23a371ad-cb03-b1d8-2274-c1dcd7efd6ea"
+      },
+      "source": [
+        "Data Frame Info. (Quick View)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "01c92600-d130-2474-f3a2-565ecc569ce3"
+      },
+      "outputs": [],
+      "source": [
+        "housing_data.info()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "3ea9555a-7e33-6515-2eb1-c223e6c4a0fd"
+      },
+      "source": [
+        "Populating Column Names"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "c7d8e5c5-7d0f-7039-59d2-0cafad6f7c28"
+      },
+      "outputs": [],
+      "source": [
+        "housing_data.columns"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "98c224c9-d345-d3c5-6612-959bdc627a9f"
+      },
+      "source": [
+        "Step 3:\n",
+        "Selecting features and target"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "e25ae397-9437-5f3c-850a-8a9c9c61b298"
+      },
+      "outputs": [],
+      "source": [
+        "feature_cols = [ u'age_of_house',  u'bedrooms', u'bathrooms', u'sqft_living',\n",
+        "       u'sqft_lot', u'floors', u'waterfront', u'view', u'condition', u'grade',\n",
+        "       u'sqft_above', u'sqft_basement', u'yr_built', u'yr_renovated']\n",
+        "x = housing_data[feature_cols]\n",
+        "y = housing_data[\"price\"]"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "9c9ed082-2184-f5ff-fa5e-cc1a261da378"
+      },
+      "source": [
+        "Visualizing Feature Columns against target"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "90b78aa1-0fe6-1dbb-1143-4a301fda01f0"
+      },
+      "outputs": [],
+      "source": [
+        "import seaborn as sns\n",
+        "%matplotlib inline\n",
+        "\n",
+        "sns.pairplot(housing_data,x_vars=feature_cols,y_vars=\"price\",size=7,aspect=0.7,kind = 'reg')"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "5bd25d0f-d939-ec24-3cb9-13fced81fb26"
+      },
+      "source": [
+        "Step 4:\n",
+        "Splitting Training and Test Data"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "05aed26c-fa90-10f0-0750-74bf5006fbb4"
+      },
+      "outputs": [],
+      "source": [
+        "from sklearn.model_selection import train_test_split\n",
+        "x_train,x_test,y_train,y_test = train_test_split(x, y, random_state=3)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "eabe6f62-2885-c885-3d19-ad57cf0cd2da"
+      },
+      "source": [
+        "Step 5:\n",
+        "Fitting Data to Linear Regressor using scikit"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "54085c71-ee32-fbc4-b04b-81cab1930e51"
+      },
+      "outputs": [],
+      "source": [
+        "from sklearn.linear_model import LinearRegression\n",
+        "regressor = LinearRegression()\n",
+        "regressor.fit(x_train, y_train)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "18f3420f-04cd-b40a-ccec-4d1891e0a5e1"
+      },
+      "source": [
+        "Achieved Accuracy: 66% \n",
+        "which is not so bad at inital commit :)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "7c5849ac-ced1-3673-b102-d2a041644acd"
+      },
+      "outputs": [],
+      "source": [
+        "accuracy = regressor.score(x_test, y_test)\n",
+        "\"Accuracy: {}%\".format(int(round(accuracy * 100)))"
+      ]
+    }
+  ],
+  "metadata": {
+    "_change_revision": 0,
+    "_is_fork": false,
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.6.0"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

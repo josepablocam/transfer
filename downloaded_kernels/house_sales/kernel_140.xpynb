@@ -1,0 +1,366 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "7c1ec12c-11c5-8773-4fdd-07ed3eda8c5a"
+      },
+      "source": [
+        "House Sales Discussion"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "9744857d-0029-feb9-7205-ca018cf687d2"
+      },
+      "outputs": [],
+      "source": [
+        "# This Python 3 environment comes with many helpful analytics libraries installed\n",
+        "# It is defined by the kaggle/python docker image: https://github.com/kaggle/docker-python\n",
+        "# For example, here's several helpful packages to load in \n",
+        "\n",
+        "import numpy as np # linear algebra\n",
+        "import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)\n",
+        "\n",
+        "# Input data files are available in the \"../input/\" directory.\n",
+        "# For example, running this (by clicking run or pressing Shift+Enter) will list the files in the input directory\n",
+        "\n",
+        "from subprocess import check_output\n",
+        "print(check_output([\"ls\", \"../input\"]).decode(\"utf8\"))\n",
+        "\n",
+        "# Any results you write to the current directory are saved as output."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "319f2649-376f-b2a3-8a00-f85bb89fff4d"
+      },
+      "outputs": [],
+      "source": [
+        "data = pd.read_csv(\"../input/kc_house_data.csv\")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "012e06b0-fc64-179d-4292-546df9e559c4"
+      },
+      "outputs": [],
+      "source": [
+        "data.head(5)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "1f14cc99-c4d8-869f-612c-d353e1197a2b"
+      },
+      "outputs": [],
+      "source": [
+        "data.info()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "e63c7d10-d4d1-a9f0-20b6-241273bd7a5c"
+      },
+      "outputs": [],
+      "source": [
+        "data.describe()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "5b171540-ddfa-5cd7-b1fd-986107285199"
+      },
+      "outputs": [],
+      "source": [
+        "import matplotlib.pyplot as plt\n",
+        "import seaborn as sns\n",
+        "from sklearn.linear_model import LinearRegression\n",
+        "from sklearn.linear_model import Ridge\n",
+        "from sklearn.linear_model import Lasso\n",
+        "from sklearn.model_selection import train_test_split\n",
+        "from sklearn.preprocessing import StandardScaler\n",
+        "from sklearn_pandas import DataFrameMapper\n",
+        "from sklearn.tree import DecisionTreeClassifier\n",
+        "from sklearn.ensemble import RandomForestClassifier\n",
+        "from sklearn.metrics import (r2_score, mean_squared_error)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "d7903ddf-8c77-3a2e-33d8-43da77b59c50"
+      },
+      "outputs": [],
+      "source": [
+        "data[\"date\"] = pd.to_datetime(data[\"date\"],yearfirst=True)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "34d81d9e-c983-3c87-385b-ec318de471e9"
+      },
+      "outputs": [],
+      "source": [
+        "data.head(5)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "bc3d47d1-d367-b68d-7c5c-141dd523274e"
+      },
+      "outputs": [],
+      "source": [
+        "y = data[\"price\"]\n",
+        "date = data[\"date\"]\n",
+        "X = data.drop([\"id\",\"price\",\"date\"],axis=1)\n",
+        "X.columns"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "5dd77a47-c68c-6a03-b718-cb479194f7c2"
+      },
+      "outputs": [],
+      "source": [
+        "#mapper = DataFrameMapper([(X.columns,StandardScaler())])\n",
+        "#mapper1 = mapper.fit_transform(X.copy(),18) \n",
+        "#X = pd.DataFrame(mapper1, index=X.index,columns=X.columns)\n",
+        "#X[\"date\"]  = date\n",
+        "#X.head(5)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "cec27706-9ec0-543c-4e3c-77a1f21aa68e"
+      },
+      "outputs": [],
+      "source": [
+        "X_t, X_test, y_t, y_test = train_test_split(X, y, test_size = 0.2, random_state = 42)\n",
+        "X_train, X_cv, y_train, y_cv = train_test_split(X_t, y_t, test_size = 0.2, random_state = 42)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "a5308cf4-8663-4c4f-ce82-431c2f127a16"
+      },
+      "outputs": [],
+      "source": [
+        "model = LinearRegression(normalize=True)\n",
+        "model.fit(X_train, y_train)\n",
+        "pred = model.predict(X_cv)\n",
+        "print(\"r2_score: \")\n",
+        "print(r2_score(y_cv, pred))\n",
+        "print(\"mean_Squared_error: \")\n",
+        "print(mean_squared_error(y_cv, pred))\n",
+        "# The coefficients\n",
+        "print('Coefficients: \\n', model.coef_)\n",
+        "# The mean squared error\n",
+        "print(\"Mean squared error: %.2f\"\n",
+        "      % np.mean((model.predict(X_cv) - y_cv) ** 2))\n",
+        "# Explained variance score: 1 is perfect prediction\n",
+        "print('Variance score: %.2f' % model.score(X_cv, y_cv))"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "40dec257-e188-f251-f632-d4bba14d7d13"
+      },
+      "outputs": [],
+      "source": [
+        "X.corr()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "206435f9-9f3e-256c-9ded-387584d66d38"
+      },
+      "outputs": [],
+      "source": [
+        "corr = X.corr()\n",
+        "sns.heatmap(corr, xticklabels=corr.columns.values, yticklabels = corr.columns.values)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "22e6259c-2643-b6bf-c5f9-3b34e702fbd7"
+      },
+      "outputs": [],
+      "source": [
+        "X.corrwith(y)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "6617987d-96cf-03c0-df55-fde160963599"
+      },
+      "outputs": [],
+      "source": [
+        "model.intercept_"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "0f211df7-8ace-52c3-339c-612b87211137"
+      },
+      "outputs": [],
+      "source": [
+        "model.coef_"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "2a36fe71-0925-3f6b-9343-3096837c26f0"
+      },
+      "outputs": [],
+      "source": [
+        "new_features = [\"bathrooms\", \"sqft_living\", \"floors\", \"waterfront\",\"view\", \"condition\", \"grade\",\"sqft_above\",\"sqft_basement\", \"yr_renovated\", \"lat\",\"sqft_living15\"]\n",
+        "X.columns"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "017e9dbf-4d22-b4b0-dfb4-da917e69cdf0"
+      },
+      "outputs": [],
+      "source": [
+        "#model = LinearRegression(normalize=True)\n",
+        "model.fit(X_train[new_features], y_train)\n",
+        "pred = model.predict(X_cv[new_features])\n",
+        "print(\"r2_score: \")\n",
+        "print(r2_score(y_cv, pred))\n",
+        "print(\"mean_Squared_error: \")\n",
+        "print(mean_squared_error(y_cv, pred))"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "c5f7969d-26a4-c8a6-9390-14e2f2c328ac"
+      },
+      "outputs": [],
+      "source": [
+        "for col in X.columns:\n",
+        "    print(X.groupby(col).size())\n",
+        "    print()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "a70af8a0-e862-beff-8634-33cdcde2377b"
+      },
+      "outputs": [],
+      "source": [
+        "X.T.apply(lambda x: x.nunique(), axis=1)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "0f54902c-0ce9-424b-86b9-e4812496d5ee"
+      },
+      "outputs": [],
+      "source": [
+        "new_features = [\"bedrooms\",\"bathrooms\", \"floors\",\"view\", \"condition\", \"grade\",\"yr_built\",\"sqft_basement\", \"yr_renovated\",\"zipcode\"]\n",
+        "model.fit(X_train[new_features], y_train)\n",
+        "pred = model.predict(X_cv[new_features])\n",
+        "print(\"r2_score: \")\n",
+        "print(r2_score(y_cv, pred))\n",
+        "print(\"mean_Squared_error: \")\n",
+        "print(mean_squared_error(y_cv, pred))"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "e29a0c76-a276-e329-8111-f7b711c37715"
+      },
+      "outputs": [],
+      "source": [
+        "new_features = [\"bedrooms\",\"bathrooms\", \"waterfront\",\"floors\",\"view\", \"condition\", \"grade\",\"yr_built\",\"sqft_basement\", \"yr_renovated\",\"zipcode\"]\n",
+        "model.fit(X_train[new_features], y_train)\n",
+        "pred = model.predict(X_cv[new_features])\n",
+        "print(\"r2_score: \")\n",
+        "print(r2_score(y_cv, pred))\n",
+        "print(\"mean_Squared_error: \")\n",
+        "print(mean_squared_error(y_cv, pred))"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "b02749fd-84d7-e457-3f62-3e551616efc9"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    }
+  ],
+  "metadata": {
+    "_change_revision": 0,
+    "_is_fork": false,
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.6.0"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

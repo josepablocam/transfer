@@ -1,0 +1,263 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "030dc6bc-6f23-994a-e061-cff198674aef"
+      },
+      "source": [
+        "## Analysis on loan returns"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "6b93df62-12d1-149c-7914-219dcc62fffa"
+      },
+      "outputs": [],
+      "source": [
+        "# This Python 3 environment comes with many helpful analytics libraries installed\n",
+        "# It is defined by the kaggle/python docker image: https://github.com/kaggle/docker-python\n",
+        "# For example, here's several helpful packages to load in \n",
+        "\n",
+        "import numpy as np # linear algebra\n",
+        "import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)\n",
+        "import pandas as pd\n",
+        "%matplotlib inline\n",
+        "import numpy as np\n",
+        "import matplotlib.pyplot as plt\n",
+        "import matplotlib \n",
+        "import seaborn as sns\n",
+        "import datetime as dt\n",
+        "# Input data files are available in the \"../input/\" directory.\n",
+        "# For example, running this (by clicking run or pressing Shift+Enter) will list the files in the input directory\n",
+        "\n",
+        "from subprocess import check_output\n",
+        "print(check_output([\"ls\", \"../input\"]).decode(\"utf8\"))\n",
+        "\n",
+        "# Any results you write to the current directory are saved as output."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "836fceb8-6a7a-f576-4de0-f059a1d15c52"
+      },
+      "outputs": [],
+      "source": [
+        "#Read CSV file into DataFrame\n",
+        "#Convert missing values to NaN\n",
+        "#Set column id as index\n",
+        "nan_values = ['nan','N.A','NaN','n/a']\n",
+        "data = pd.read_csv('../input/loan.csv',na_values=nan_values, encoding = \"ISO-8859-1\", index_col='id')  "
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "56702a70-f3d3-2a99-ef16-2b7fe559cf35"
+      },
+      "outputs": [],
+      "source": [
+        "#briefly examine our data\n",
+        "data.info()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "30a9dbf2-f2cd-7d5b-46b7-99bdb2141a72"
+      },
+      "outputs": [],
+      "source": [
+        "pd.set_option('display.max_columns',100)\n",
+        "data.head()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "4719ac18-32b7-db99-1c76-229d29f30f7d"
+      },
+      "source": [
+        "### Data Cleaning"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "7da7341c-241e-6ee0-58c5-749749a83510"
+      },
+      "outputs": [],
+      "source": [
+        "#1. make sure that all loans have been funded \n",
+        "data = data[data['funded_amnt_inv']>0]\n",
+        "#2. columns such as issue_d and loan_states are essential for calculating the loan returns. remove rows with missing data\n",
+        "data = data[(data['issue_d'].notnull()) & (data['loan_status'].notnull())]\n",
+        "#3. convert a string date to datetime formate\n",
+        "def str_to_dt(a_string,conv_format='%b-%Y'):\n",
+        "    try:\n",
+        "        return dt.datetime.strptime(a_string,conv_format)\n",
+        "    except:\n",
+        "        return None    \n",
+        "data['issue_d'] = data['issue_d'].apply(str_to_dt)\n",
+        "data['last_pymnt_d'] = data['last_pymnt_d'].apply(str_to_dt)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "ff021381-7f34-12d2-2a05-8c3cfd0012b0"
+      },
+      "source": [
+        "### Calculating Net Annualized Return (NAR)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "667381e7-832c-bed5-70e9-1562d1a34201"
+      },
+      "outputs": [],
+      "source": [
+        "compounded_nar_li = list()\n",
+        "simple_nar_li = list()\n",
+        "\n",
+        "# starting time and ending time for all loans in our dataset\n",
+        "t0 = dt.datetime(2000,1,1) # set a starting time\n",
+        "update_d = str_to_dt('Mar-2016') # last update time of our data \n",
+        "\n",
+        "# calculate net annualized return for each loan (row-wise)\n",
+        "for index, row in data.iterrows():\n",
+        "\n",
+        "    net_interest = row['total_rec_int'] + row['total_rec_late_fee'] - 0.01*row['total_pymnt_inv']\n",
+        "    net_charge_offs = 0\n",
+        "    \n",
+        "    # specify loan period based on the current loan status\n",
+        "    if row['loan_status'] == 'Fully Paid':\n",
+        "        loan_period = (row['last_pymnt_d'] - row['issue_d'])/ np.timedelta64(1,'D')/30\n",
+        "    elif row['loan_status'] == 'Charged Off':\n",
+        "        net_charge_offs = row['funded_amnt_inv'] - row['total_rec_prncp'] - row['recoveries'] + row['collection_recovery_fee']\n",
+        "        active_period = 0\n",
+        "        if row['last_pymnt_d']>=t0:\n",
+        "            active_period = (row['last_pymnt_d'] - row['issue_d'])/ np.timedelta64(1,'D')/30\n",
+        "        up_to_now = (update_d-row['issue_d'])/ np.timedelta64(1,'D')/30 -1\n",
+        "        #Charge off typically occurs when a loan is no later than 5 months past due\n",
+        "        loan_period = min(active_period+6, up_to_now)\n",
+        "    else:\n",
+        "        loan_period = (update_d-row['issue_d'])/ np.timedelta64(1,'D')/30 -1\n",
+        "\n",
+        "    if loan_period>0:\n",
+        "        t=12/loan_period\n",
+        "    else:                         #occasionally, the last repayment occured in the month of issuance\n",
+        "        t=12\n",
+        "    \n",
+        "    #we calculate both compounded returns and simple returns\n",
+        "    compounded_nar = (1 + (net_interest-net_charge_offs) / row['funded_amnt_inv'])**t -1 \n",
+        "    simple_nar = t*(net_interest-net_charge_offs)/row['funded_amnt_inv']\n",
+        "\n",
+        "    compounded_nar_li.append(compounded_nar)\n",
+        "    simple_nar_li.append(simple_nar)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "dea43a42-e849-88c0-40eb-5f8d282f50e0"
+      },
+      "outputs": [],
+      "source": [
+        "data['simple_nar'] = simple_nar_li\n",
+        "data['compounded_nar'] =  compounded_nar_li\n",
+        "data = data[data['compounded_nar'].notnull()]\n",
+        "data['simple_nar']"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "b52a8b92-e1cf-f921-5d4a-8ef91a844506"
+      },
+      "source": [
+        "### Return Analysis"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "9e181fc4-426d-6189-d01d-49257f9187bf"
+      },
+      "outputs": [],
+      "source": [
+        "#plot distribution of annualized return\n",
+        "sns.distplot(data['simple_nar'])"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "b4ee1a20-87e9-7d39-344d-bfef446e4d3f"
+      },
+      "outputs": [],
+      "source": [
+        "grade_group = data.groupby('grade')\n",
+        "grade_group.mean()['simple_nar'].plot(kind='bar',figsize=(8,6))\n",
+        "plt.title('average return grouped by loan grade')"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "4080fa5f-268f-19ea-9bc7-88be025d4869"
+      },
+      "outputs": [],
+      "source": [
+        "grade_group.mean()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "f2e25dd7-5523-5268-1273-ef9440e0d9f4"
+      },
+      "outputs": [],
+      "source": [
+        ""
+      ]
+    }
+  ],
+  "metadata": {
+    "_change_revision": 0,
+    "_is_fork": false,
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.5.2"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

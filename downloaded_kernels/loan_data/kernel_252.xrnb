@@ -1,0 +1,71 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "4abfbd19-6269-4beb-f3f5-ca882394e05e"
+      },
+      "source": [
+        "Some things that I have done with the Leading Club data"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "af7fa000-f88f-fe2c-3206-cb71ba4da03f"
+      },
+      "source": [
+        "library(ggplot2) # Data visualization\n",
+        "library(readr) # CSV file I/O, e.g. the read_csv function\n",
+        "library(qpcR)\n",
+        "library(DAAG)\n",
+        "library(car)\n",
+        "library(leaps)\n",
+        "\n",
+        "system(\"ls ../input\")\n",
+        "loan <- read.csv(\"loan.csv\")\n",
+        "# Any results you write to the current directory are saved as output."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "ecd4b352-eb35-0cae-efd4-9da382946d48"
+      },
+      "outputs": [],
+      "source": [
+        "loan <- read.csv(\"../input/loan.csv\")\n",
+        "head(loan, n = 5)\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "b9a57865-bfca-4258-e803-df9932a34207"
+      },
+      "outputs": [],
+      "source": ""
+    }
+  ],
+  "metadata": {
+    "_change_revision": 0,
+    "_is_fork": false,
+    "kernelspec": {
+      "display_name": "R",
+      "language": "R",
+      "name": "ir"
+    },
+    "language_info": {
+      "codemirror_mode": "r",
+      "file_extension": ".r",
+      "mimetype": "text/x-r-source",
+      "name": "R",
+      "pygments_lexer": "r",
+      "version": "3.3.1"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

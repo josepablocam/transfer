@@ -1,0 +1,155 @@
+{
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.6.0"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "cells": [
+    {
+      "cell_type": "code",
+      "execution_count": 1,
+      "metadata": {
+        "_cell_guid": "3f232200-a717-a975-f513-ed6be09e85c1",
+        "_active": false
+      },
+      "outputs": [],
+      "source": "# This Python 3 environment comes with many helpful analytics libraries installed\n# It is defined by the kaggle/python docker image: https://github.com/kaggle/docker-python\n# For example, here's several helpful packages to load in \n\nimport numpy as np # linear algebra\nimport pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)\nimport matplotlib.pyplot as plt\nimport seaborn as sns \nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.linear_model import LinearRegression\nfrom sklearn.linear_model import Ridge\nfrom sklearn.linear_model import Lasso\nfrom sklearn.metrics import r2_score\n# Input data files are available in the \"../input/\" directory.\n# For example, running this (by clicking run or pressing Shift+Enter) will list the files in the input directory\n\nfrom subprocess import check_output\nprint(check_output([\"ls\", \"../input\"]).decode(\"utf8\"))\n\n# Any results you write to the current directory are saved as output.",
+      "execution_state": "idle"
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 2,
+      "metadata": {
+        "_cell_guid": "501b6523-77b3-2b48-b64e-6bcdcca7a431",
+        "_active": false
+      },
+      "outputs": [],
+      "source": "data=pd.read_csv(\"../input/kc_house_data.csv\")\ndata.head()",
+      "execution_state": "idle"
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 3,
+      "metadata": {
+        "_cell_guid": "ca99b826-aeec-482e-0084-d9406f72c06e",
+        "_active": false
+      },
+      "outputs": [],
+      "source": "data.info()",
+      "execution_state": "idle"
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 4,
+      "metadata": {
+        "_cell_guid": "3f6175d2-289a-d5b5-d5eb-9c2d5ce60342",
+        "_active": false
+      },
+      "outputs": [],
+      "source": "data.describe()",
+      "execution_state": "idle"
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 5,
+      "metadata": {
+        "_cell_guid": "829139eb-0bd9-c812-3aca-7d8d5063a78e",
+        "_active": false
+      },
+      "outputs": [],
+      "source": "data[\"date\"]=pd.to_datetime(data[\"date\"])\ndata.head()",
+      "execution_state": "idle"
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 6,
+      "metadata": {
+        "_cell_guid": "0cc4d166-a39e-87be-bdbb-d9f60b5516c3",
+        "_active": false
+      },
+      "outputs": [],
+      "source": "y=data[\"price\"]\nX=data.drop([\"price\",\"date\"],axis=1)\n#d=X[\"date\"]\n#X1=X.drop([\"date\",\"id\"],axis=1)\n#X1.shape",
+      "execution_state": "idle"
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "bb534362-cdf4-8fb5-7505-48ac621ec109",
+        "_active": true
+      },
+      "source": "from sklearn_pandas import DataFrameMapper\n\nmapper = DataFrameMapper([(X1.columns, StandardScaler())])\nscaled_features = mapper.fit_transform(X1.copy(),18 )\nX_new = pd.DataFrame(scaled_features, index=X1.index, columns=X1.columns)\nX_new.head()\nX_new[\"date\"]=d\nX_new.head()",
+      "outputs": []
+    },
+    {
+      "metadata": {
+        "_cell_guid": "a984d966-fbf7-50a9-6cfe-26bc0ac6291a",
+        "_active": false,
+        "collapsed": false
+      },
+      "source": "cm = np.corrcoef(df[cols].values.T)\nsns.set(font_scale=1.5)\nhm = sns.heatmap(cm,\ncbar=True,\nannot=True,\nsquare=True,\nfmt='.2f',\nannot_kws={'size': 15},\nyticklabels=cols,\nxticklabels=cols)\nplt.show()",
+      "execution_count": null,
+      "cell_type": "code",
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 7,
+      "metadata": {
+        "_cell_guid": "22e4bbd2-c043-6ec8-2322-4784b79397a5",
+        "_active": false
+      },
+      "outputs": [],
+      "source": "X_t, X_test, y_t, y_test = train_test_split(X, y, test_size=0.2, random_state=42)\nX_t.shape",
+      "execution_state": "idle"
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 8,
+      "metadata": {
+        "_cell_guid": "b696169d-c92c-6916-f41c-f4b5e18e146b",
+        "_active": false
+      },
+      "outputs": [],
+      "source": "X_train, X_cv, y_train, y_cv = train_test_split(X_t, y_t, test_size=0.2, random_state=42)\nX_train.shape",
+      "execution_state": "idle"
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 9,
+      "metadata": {
+        "_cell_guid": "18643e47-134b-422c-a35d-4fac91ddd905",
+        "_active": false
+      },
+      "outputs": [],
+      "source": "model=LinearRegression(normalize=True)\nmodel.fit(X_train,y_train)\npred=model.predict(X_cv)\n\nrscore=r2_score(y_cv,pred)\nrscore",
+      "execution_state": "idle"
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 10,
+      "metadata": {
+        "_cell_guid": "21bb1da1-1503-3426-210f-ca44776d3824",
+        "_active": false
+      },
+      "outputs": [],
+      "source": null,
+      "execution_state": "idle"
+    }
+  ]
+}

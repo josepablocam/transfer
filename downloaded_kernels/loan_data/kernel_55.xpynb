@@ -1,0 +1,546 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "4b264299-c598-2062-9833-206839e48f1e"
+      },
+      "source": [
+        "## Predict loan default \n",
+        "The object of this notebook is to apply 5 different classification methods to predict loan default. For each classificifier, tune the parameters using grid search via cross validation. Evaluate them with ROC AUC metric and select the optimal model accordingly."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "7dac7a6d-9d53-0e63-2b8b-b71e209c022b",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "62687f4f-427f-54bb-a8fb-743ac793f7d0"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "b1f2a7a2-9dd1-05dc-1877-f05e6a3b3a82"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "0745d77c-8a1f-3f6f-52b0-ff7b80849623"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "aab15318-6de3-6edf-084c-0971892f9a1f"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "94ce284d-460b-7b4e-67bd-9fbf41ea3fb2"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "db5b8e89-bf62-a674-7b7b-272bb829f3fa"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "a6cb305a-b981-bc1d-cb35-fb90a962730c"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "e25cb154-3a09-26f8-320c-1464a80a84e6"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "e9677230-e0c1-6dc2-904e-a4087e5eabb0"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "2568e2cb-c8e5-90a5-a1bb-f646c6c31392"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "25e88f09-0f97-fc93-1de3-06058f0ecfcd",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "e294faa7-4ec5-cebf-2806-f487e465c255"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "4002079f-adcd-c270-a7d2-0b47b8cdc269"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "b9d4b2db-0756-39bb-7df4-b2a8f60d3ad6"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "e2c4c540-9fb5-4dfb-3800-ae343cca6860",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "7b86879b-2bad-68ce-5e17-79ba4a31c1ac"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "0f009885-527d-b15c-2b9f-becd775169b9"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "02f9c11b-5e12-9e9a-32f4-a61795c8e2d3",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "34306cdc-e383-dd4e-b210-634121e8cda4"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "0ae0df7f-d0ab-42e5-54ee-532ff8f27c79",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "b365e3cc-681e-0c01-7638-7027a832186f"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "e5b90bf2-13c2-78c4-d663-8a2168914a88"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "e187f203-e8cc-4f11-6e66-85f01d9a6388"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "fcfe6418-8e86-2a5d-f59f-4a149c5e9da0"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "13b7e7d1-2623-c1b6-b3a3-33a267c4be53"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "7900787c-d165-c5cc-d26d-3ddc76d33a65"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "4d4e77d6-4a21-5296-da57-6f92f3d0fb19"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "64d76083-04a0-2345-38fb-ebff6c4a88a0"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "d59391c2-fbae-acc9-2674-b31d94a173a2"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "0f9a0f01-b7ba-0d8f-5201-e570f5d1c7ad"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "a91d3713-d27d-774e-80af-494b6f0796a4"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "7ed53569-9971-64fa-11f7-4bf81cbe5a0e"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "bcee1107-fee9-fab3-903e-7f2fb5558e3f"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "e236278e-1c44-7ef0-5b2b-71e581881ebe"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "b1a8415f-1da8-7ada-0556-8f076c771552"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "85c4c787-46e4-e49c-44c2-4acbd4b686e3"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "b35d984e-8de2-aec1-1a79-807a1df62036"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "c9b4a060-35b9-53d2-09fb-09efa90c6b2c"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "e6326970-2169-8496-61f6-1402fb7733b5"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "322d625c-adb2-3e59-3ef9-0e129450ac65"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "235ddc3d-491c-df83-b8b7-e10178b8920e"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "3ba7663e-6ff7-cfda-33fe-0f2c0be91acb"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "16bdd99a-5fa1-53a0-063a-da3b12012931"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "99514c3a-d343-1b7d-614a-409c6b734b0c"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "f552e258-75ad-82df-4ce0-0dd17111ed9c"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "bcd703e8-0d9c-f557-c2da-cfcb42b92051"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "efb4b576-0ca6-f6ac-7de2-90f3202ad22b",
+        "collapsed": true
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "84dbaea0-2662-364c-152e-657aa691255e"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "375c46b4-8af1-49b4-dbc4-151d74c288d7"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "0c7f4b75-b4d2-c5c5-aac8-075eae4db60e"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "79fc4078-c9c5-960f-45cb-53a637d4509e"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "f1396e1e-a9a3-815b-bdf0-139777c2c278"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "8e8c435c-0712-ee66-c438-5508525bb86b"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "f015b8f1-4bec-d980-ed11-f11a967e304f"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "d9b2efcf-d5cd-8db7-545d-4d482a6901c9"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "454f92f5-2e69-2eaf-70cd-063be7f5bc7c"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "b8e48c5d-098e-1b0b-048d-236fb4264cad"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "a9b9e2f5-355a-2253-c6f0-0fcfbc770849"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "b1c88aab-9120-3f9c-c0fc-e78ad07818d4"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "_cell_guid": "749c47d7-c14d-41a4-cf3f-328be025be52"
+      },
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "da3027c8-0f07-2da9-7b79-7faf7d86844b"
+      },
+      "outputs": [],
+      "source": ""
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "_cell_guid": "5450fee1-a822-4f35-ed1e-eb0a925ab7c9"
+      },
+      "outputs": [],
+      "source": ""
+    }
+  ],
+  "metadata": {
+    "_change_revision": 0,
+    "_is_fork": false,
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.6.0"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}
