@@ -1,0 +1,3 @@
+loan_data:https://www.kaggle.com/wendykan/lending-club-loan-data/kernels
+house_sales:https://www.kaggle.com/harlfoxem/housesalesprediction/kernels
+university_rankings:https://www.kaggle.com/mylesoneill/world-university-rankings/kernels
