@@ -58,3 +58,19 @@ do
     rm "${d}.zip"
     popd
 done
+
+
+# create a requirements.txt file with necessary installs
+# for docker
+all_scripts=""
+for d in ${DATASETS}
+do
+    runner_dir="${KERNELS_RUNNER_FOLDER}/program_data/${d}"
+    scripts_dir="${runner_dir}/scripts/"
+    all_scripts+=" "
+    all_scripts+=$(ls ${scripts_dir}/*.py)
+done
+
+python -m transfer.collect_requirements \
+  --input ${all_scripts} \
+  --filter > "${KERNELS_RUNNER_FOLDER}/requirements.txt"
