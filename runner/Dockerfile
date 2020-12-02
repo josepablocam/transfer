@@ -18,6 +18,8 @@ RUN ln -s $(which python3.7) /usr/bin/python3 --force
 RUN ln -s $(which pip3) /usr/bin/pip
 RUN pip install -U pip
 RUN apt-get install -y git
+# needed for ipython to work properly
+RUN apt-get install python3-tk
 
 # packages needed for kaggle scripts
 ADD requirements.txt requirements.txt
@@ -32,6 +34,10 @@ RUN pip install -e python-pl
 ADD transfer.zip transfer.zip
 RUN unzip transfer.zip -d transfer
 RUN pip install -e transfer
+
+# make sure can run matplotlib "headless"
+# i.e. no $DISPLAY set
+RUN echo "backend: Agg" > ~/.config/matplotlib/matplotlibrc
 
 # copy in data and source for script to execute
 # top-level directory with [projectx/[scripts, input]]

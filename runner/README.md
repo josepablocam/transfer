@@ -80,13 +80,13 @@ otherwise you can just build the docker container.
 
 ```
 python schedule_jobs.py \
-    cleaning \
-    program_data/loan_data/scripts \
-    program_data/loan_data/results \
-    program_data/loan_data/results/ \
+    --docker_image cleaning \
+    --scripts program_data/loan_data/scripts/*.py \
+    --host_output_dir program_data/loan_data/results \
+    --docker_output_dir program_data/loan_data/results/ \
     --mem_limit 20GB \
     --timeout 2h \
-    --max_jobs 10
+    --max_jobs 2
 ```
 
 Note that if you have already built the VM with all the data needed, and docker has been built accordingly, then
