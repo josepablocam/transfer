@@ -31,7 +31,10 @@ You can prepare this directory structure by running
 bash prepare_kaggle.sh
 ```
 
-for the datasets we provide.
+for the datasets we provide. This will also generate a `requirements.txt`
+for the docker build (note we already include such a file,
+but you can overwrite
+it for your own set of scripts.)
 
 5. Build the vagrant VM, used to sandbox the Kaggle scripts
     ```
@@ -62,6 +65,10 @@ tends to solve the timeout.
 Note that you do not need to run the `make` command here using `sudo`, as `make build_vagrant` has already
 added the default user (`vagrant`) to the `docker` group.
 So all `docker` commands can run without `sudo`.
+
+
+Note that you only need to build the VM if you want to true isolation,
+otherwise you can just build the docker container.
 
 9. You can now schedule jobs to running by using the command below
     and modifying script locations etc as desired.
