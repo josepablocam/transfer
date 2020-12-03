@@ -1,5 +1,16 @@
 # Setup to run Kaggle scripts on Rhino group server (rhino.csail.mit.edu)
 
+We provide some utilities to build a vagrant-based VM (for isolation)
+and Docker container (for convenience). We suggest using
+the VM, but note that scripts execute more slowly there due to
+expected overhead.
+
+Instructions assume our group's machine, but they should
+be easily adaptable to your own.
+
+
+## Setting up a VM
+
 1. Install Vagrant
     ```
     sudo apt-get install vagrant
@@ -44,13 +55,33 @@ it for your own set of scripts.)
     ```
     longjob --renew 1d vagrant up
     ```
+    This step is specific to our group's machine, so feel free to skip.
+
 7. Connect to the VM
     ```
     vagrant ssh
     ```
-8. Build docker inside the VM
+
+Note that you only need to build the VM if you want to true isolation,
+otherwise you can just build the docker container.  
+
+## Building Docker container
+You can run this from within your VM, if you built one, or on
+the original host machine
+
+1. Run
+
+`bash prepare_kaggle.sh`
+
+
+This prepares the expected folder structure, validates which kernels we
+stand a reasonable chance of running, and produces a requirements.txt
+file with any missing packages that the docker build should try
+to install to run kernels.
+
+2. Build docker
     ```
-    cd transfer-cleaning/runner; make build_docker
+    cd runner; make build_docker
     ```
 
 Occasionally `make build_docker`may result in the following error:
@@ -62,21 +93,15 @@ Get https://registry-1.docker.io/v2/: net/http: TLS handshake timeout
 If so, I recommend just running `make build_docker` again, and that
 tends to solve the timeout.
 
-Note that you do not need to run the `make` command here using `sudo`, as `make build_vagrant` has already
-added the default user (`vagrant`) to the `docker` group.
-So all `docker` commands can run without `sudo`.
 
-
-Note that you only need to build the VM if you want to true isolation,
-otherwise you can just build the docker container.
-
-9. You can now schedule jobs to running by using the command below
-    and modifying script locations etc as desired.
-    The actual scheduling is done with
-    task-spooler. Timeout is
-    implemented with the `timeout` command.
-    The memory limit is handed directly by the
-    docker container that executes each job.
+You can now schedule jobs to running by using the command below
+and modifying script locations etc as desired.
+The actual scheduling is done with
+`task-spooler` (which you will need to install if not available
+on your system already). Timeout is
+implemented with the `timeout` command.
+The memory limit is handed directly by the
+docker container that executes each job.
 
 ```
 python schedule_jobs.py \
@@ -100,6 +125,20 @@ tsp -S <num>
 
 or by passing in the `--max_jobs` flag to `schedule_jobs.py` as done above.
 
+
+To run the kernels from our datasets, you can just run
+
+```
+bash run_kaggle.sh
+```
+
+from the `runner/` folder.
+
+
+After you have executed your desired scripts, the corresponding outputs
+will be in `program_data/<dataset>/results`. You may want to
+`sudo chown -R $(USER) program_data/<dataset>/results` as they will be written
+using root user. You can then zip these up and download/move around at your convenience.
 
 # Known Issues
 

@@ -209,6 +209,13 @@ Once the script runs, you can follow the previous portions of the demo
 to interact with `transfer`.
 
 
+# Extracting functions from our datasets
+Please see the README.md in `runner/` which discusses how to build
+an (isolated) environment for executing the third party Kaggle scripts from
+which we extract functions.
+
+
+
 # FAQ
 * I'm having issues with query results not returning their corresponding code, etc.
   - `neo4j` can be a bit annoying some times, particularly because we are using
