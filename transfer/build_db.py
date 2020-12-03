@@ -619,16 +619,24 @@ def main(args):
     functions_files = args.function_files
     graph_files = args.graph_files
 
-    if len(functions_files) != len(graph_files):
-        raise Exception('Must provide same number of input and graph files')
-
     db = FunctionDatabase()
     db.startup()
 
-    for funs_file, graph_file in zip(functions_files, graph_files):
-        assert funs_file.split('_')[:-1] == graph_file.split(
-            '_'
-        )[:-1], 'Mismatched files'
+    # make sure we align files
+    name_to_functions = {
+        f.replace("_functions.pkl", ""): f
+        for f in functions_files if f.endswith("functions.pkl")
+    }
+
+    name_to_graphs = {
+        f.replace("_graph.pkl", ""): f
+        for f in graph_files if f.endswith("graph.pkl")
+    }
+
+    for kernel_name, funs_file in name_to_functions.items():
+        if kernel_name not in name_to_graphs:
+            continue
+        graph_file = name_to_graphs[kernel_name]
         print('Populating database with functions from {}'.format(funs_file))
         print('Using graph file:{}'.format(graph_file))
         # functions we extracted

@@ -11,14 +11,9 @@ function check_transfer_conda_env {
 function activate_transfer_conda_env {
     if command -v conda
     then
-        if [[ -f ~/miniconda3/etc/profile.d/conda.sh ]]
-        then
-            source ~/miniconda3/etc/profile.d/conda.sh
-        else
-            # assume we're on rhino
-            source "/raid/$(whoami)/miniconda3/etc/profile.d/conda.sh"
-        fi
-      conda activate ${CONDA_TRANSFER_ENV}
+       config_path=$(realpath "$(dirname $(which conda))/../etc/profile.d")
+       source "${config_path}/conda.sh"
+       conda activate ${CONDA_TRANSFER_ENV}
     fi
 }
 
