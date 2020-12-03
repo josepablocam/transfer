@@ -126,7 +126,8 @@ tsp -S <num>
 or by passing in the `--max_jobs` flag to `schedule_jobs.py` as done above.
 
 
-To run the kernels from our datasets, you can just run
+### Reproduce our datasets
+After you build the VM/docker as desired, you can run our kernels/datasets by executing
 
 ```
 bash run_kaggle.sh

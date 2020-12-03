@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+source ../setup.sh
 
 if [[ $(hostname) == "boruca" ]]
 then
@@ -12,4 +13,5 @@ else
 fi
 
 
-docker build --network=host -t cleaning .
+# user --network=host otherwise some installs hang
+docker build --network=host -t ${DOCKER_RUNNER_IMAGE} .
