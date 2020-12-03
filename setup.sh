@@ -3,6 +3,7 @@ export DOWNLOAD_KERNELS_FOLDER="downloaded_kernels/"
 export KERNELS_RUNNER_FOLDER="runner/"
 export S3_BUCKET="https://transfer-snippets.s3.us-east-2.amazonaws.com"
 export CONDA_TRANSFER_ENV="transfer-env"
+export DOCKER_RUNNER_IMAGE="cleaning"
 
 function check_transfer_conda_env {
   echo $(conda env list | grep ${CONDA_TRANSFER_ENV} | wc -l)

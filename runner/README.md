@@ -101,6 +101,17 @@ tsp -S <num>
 or by passing in the `--max_jobs` flag to `schedule_jobs.py` as done above.
 
 
+# Reproduce our datasets
+After you build the VM/docker as desired, you can run our kernels/datasets by executing
+
+```
+bash run_kaggle.sh
+```
+
+This will set off the appropriate jobs using `task-spooler`.
+
+
+
 # Known Issues
 
 * It seems that on occasion, `vagrant` can fail when building and not actually include docker. If this happens, I suggest removing the box (`vagrant destroy`), cleaning up, and calling `make build_vagrant` again. That seems to solve the issue in all cases I've encountered.
