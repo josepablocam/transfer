@@ -191,6 +191,35 @@ has intermediate steps/variables created by `transfer` during analysis/extractio
 while the source code printed through `db.get_code` does some string replacement
 to remove these (since they reduce readability).
 
+# Transfer in IPython
+If you use IPython (or Jupyter), you can load the transfer magics extension
+by running
+
+```
+%load_ext transfer.magic
+```
+
+You can then use the magic
+
+```
+%tquery <query terms> [result position]
+```
+to produce a new cell with the resulting snippets source code.
+
+Similarly
+```
+%%tquery
+<query terms>
+...
+[result position]
+```
+
+If no `result_position` is provided, we assume you want the top result.
+
+
+`transfer.magic` loads the `sample_db.pkl` created at the root of the project
+by running `bash demo.sh`.
+
 # Extracting your own functions
 You can extract functions from your own set of scripts (rather than our
 pre-extracted ones) and create a database. To do so, you can run the script

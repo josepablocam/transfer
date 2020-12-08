@@ -39,19 +39,6 @@ class TransferMagics(Magics):
         super().__init__(shell)
         self.db = db
 
-    # @line_magic
-    # def tquery(self, line):
-    #     print("Full access to the main IPython object:", self.shell)
-    #     print(
-    #         "Variables in the user namespace:",
-    #         list(self.shell.user_ns.keys())
-    #     )
-    #     query = line.split()
-    #     n = 2
-    #     query_results = self.db.query(query)[:n]
-    #     code_results = [self.db.get_code(r) for r in query_results]
-    #     return code_results
-
     @line_cell_magic
     def tquery(self, line, cell=None):
         if cell is None:
@@ -63,6 +50,7 @@ class TransferMagics(Magics):
         possible_result_ix = query[-1]
         try:
             result_ix = int(possible_result_ix)
+            query = query[:-1]
         except ValueError:
             result_ix = 1
 
@@ -86,10 +74,14 @@ class TransferMagics(Magics):
             print("No snippets available")
             return
 
-        result_ix = min(result_ix, num_avail)
+        if result_ix < 1 or result_ix > num_avail:
+            # invalid indices map to top result
+            result_ix = 1
+
         query_result = query_results[result_ix - 1]
 
-        code = self.db.get_code(query_result).replace("\t", "  ")
+        code = self.db.get_code(query_result)
+        code = code.replace("\t", ' ' * 4)
         self.shell.set_next_input(
             '# query={}, Snippet={}/{} \n{}'.format(
                 query, result_ix, num_avail, code
