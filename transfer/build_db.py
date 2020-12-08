@@ -380,6 +380,8 @@ class FunctionDatabase(object):
         encoded_code = TfidfVectorizer().fit_transform(code)
         # correlation matrix
         corr_mat = np.corrcoef(encoded_code.todense())
+        # clamped at zero (need to take sqrt in spectral clustering)
+        corr_mat[corr_mat < 0.0] = 0.0
         # spectral clusterign
         clusters = SpectralClustering(
             n_clusters=n_clusters,
