@@ -24,7 +24,8 @@ be easily adaptable to your own.
 4. Make sure that any data you want to run on is stored in
    `transfer/runner/program_data`.
    The directory structure assumed is:
-   ```
+
+```
 program_data
 └── <project_name>
     ├── input
