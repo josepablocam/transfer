@@ -4,6 +4,7 @@ from collections import Counter
 import os
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import seaborn as sns
 import scipy
@@ -269,14 +270,37 @@ def create_paired_df(df, index=None, columns=None, values=None):
 
 def stat_results_to_string(results):
     msg = ""
-    for task, (res, is_significant) in results.items():
+    for task, res_tuple in results.items():
+        if len(res_tuple) == 2:
+            res, is_significant = res_tuple
+            effect_size = np.nan
+        elif len(res_tuple) == 3:
+            res, is_significant, effect_size = res_tuple
+        else:
+            raise ValueError("Invalid result len")
         msg += "Task {}\n".format(task)
         msg += "{}\n".format(res)
-        msg += "significant={}\n\n".format(is_significant)
+        msg += "significant={}\n".format(is_significant)
+        msg += "effect size={}\n".format(effect_size)
+        msg += "\n"
     return msg
 
 
-def task_level_wilcoxon_test(qdf, alpha=0.05):
+def estimated_wilcoxon_effect_size(paired_task, x, y):
+    # https://en.wikipedia.org/wiki/Wilcoxon_signed-rank_test
+    # see effect size section
+    diff = (paired_task[x] - paired_task[y]).values
+    absdiff = np.abs(diff)
+    is_nz = absdiff != 0
+    absdiff = absdiff[is_nz]
+    diff = diff[is_nz]
+    ranks = scipy.stats.rankdata(absdiff)
+    W = np.sum(np.sign(diff) * ranks)
+    S = np.sum(np.arange(1, len(ranks) + 1))
+    return W / S
+
+
+def task_level_wilcoxon_test(qdf, x, y, alpha=0.05):
     paired = create_paired_df(qdf)
     results = {}
     tasks = qdf.task.unique()
@@ -284,14 +308,15 @@ def task_level_wilcoxon_test(qdf, alpha=0.05):
     for task in tasks:
         paired_task = paired[paired["task"] == task]
         task_result = scipy.stats.wilcoxon(
-            paired_task["Control"].values.astype(float),
-            paired_task["Treatment"].values.astype(float),
+            paired_task[x].values.astype(float),
+            paired_task[y].values.astype(float),
             # more appropriate for discrete/ordinal data
             # since zero diff can happen more often
             zero_method="pratt",
         )
         is_significant = task_result.pvalue < (alpha / num_tasks)
-        results[task] = (task_result, is_significant)
+        effect_size = estimated_wilcoxon_effect_size(paired_task, x, y)
+        results[task] = (task_result, is_significant, effect_size)
     stat_res = stat_results_to_string(results)
     return stat_res
 
@@ -310,13 +335,9 @@ class SignedTest(object):
         return str(self)
 
 
-def task_level_signed_test(qdf, alpha=0.05):
+def task_level_signed_test(qdf, x, y, alpha=0.05):
     paired = create_paired_df(qdf)
-    n = len(get_likert_ordered())
-    # just shift so that best is 7 and worst is 0
-    paired["Treatment"] = n - paired["Treatment"]
-    paired["Control"] = n - paired["Control"]
-    paired["diff"] = paired["Treatment"] - paired["Control"]
+    paired["diff"] = paired[x] - paired[y]
     results = {}
     tasks = qdf.task.unique()
     num_tasks = len(tasks)
@@ -366,7 +387,7 @@ def num_of_relevant_fragments(arms_df):
     plt.tight_layout()
     g.tight_layout()
 
-    stat_res = task_level_wilcoxon_test(qdf)
+    stat_res = task_level_wilcoxon_test(qdf, "Treatment", "Control")
     return cts_df, g, stat_res
 
 
@@ -400,7 +421,7 @@ def rank_best_fragment(arms_df):
     qdf = qdf.copy()
     qdf["value"] = qdf["value"].map(lambda x: int(x[-1]))
 
-    stat_res = task_level_wilcoxon_test(qdf)
+    stat_res = task_level_wilcoxon_test(qdf, "Control", "Treatment")
     return cts_df, g, stat_res
 
 
@@ -433,11 +454,13 @@ def access_helps(arms_df):
     qdf = qdf.copy()
     # map likert to ordinal
     likert = get_likert_ordered()
-    qdf["value"] = qdf["value"].map(lambda x: likert.index(x))
+    n = len(likert)
+    # just shift so that best is 7 and worst is 0
+    qdf["value"] = qdf["value"].map(lambda x: n - likert.index(x))
     stat_res = "Task Level Wilcoxon Signed Rank Test\n"
-    stat_res += task_level_wilcoxon_test(qdf)
+    stat_res += task_level_wilcoxon_test(qdf, "Treatment", "Control")
     stat_res += "\n\n Task Level Signed Test\n"
-    stat_res += task_level_signed_test(qdf)
+    stat_res += task_level_signed_test(qdf, "Treatment", "Control")
     return cts_df, g, stat_res
 
 
