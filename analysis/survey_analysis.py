@@ -216,9 +216,12 @@ def task_relevance(rel_df):
     cts_df = rel_df.groupby(["task", "value"]).size().to_frame(name="ct")
     cts_df = cts_df.reset_index()
     cts_df = create_full_table(cts_df, likert_table(), ["task"])
+    cts_df["value"] = cts_df["value"].map(
+        lambda x: "L{}".format(get_likert_ordered().index(x))
+    )
+    possible = ["L{}".format(i) for i in range(0, len(get_likert_ordered()))]
     g = sns.FacetGrid(data=cts_df, col="task")
-    g.map(sns.barplot, "value", "ct", order=get_likert_ordered())
-    g.set_xticklabels(rotation=90)
+    g.map(sns.barplot, "value", "ct", order=possible)
     g.set_xlabels("Likert Scale")
     g.set_ylabels("Count")
     g.add_legend()
@@ -430,14 +433,21 @@ def access_helps(arms_df):
     cts_df = qdf.groupby(["task", "arm", "value"]).size().to_frame(name="ct")
     cts_df = cts_df.reset_index()
     cts_df = create_full_table(cts_df, likert_table(), ["task", "arm"])
-    g = sns.FacetGrid(data=cts_df, col="task")
+
+    plot_cts_df = cts_df.copy()
+    plot_cts_df["value"] = plot_cts_df["value"].map(
+        lambda x: "L{}".format(get_likert_ordered().index(x))
+    )
+    possible = ["L{}".format(i) for i in range(0, len(get_likert_ordered()))]
+
+    g = sns.FacetGrid(data=plot_cts_df, col="task")
     g.map(
         sns.barplot,
         "value",
         "ct",
         "arm",
         dodge=True,
-        order=get_likert_ordered(),
+        order=possible,
         hue_order=["Control", "Treatment"],
         palette={
             "Control": "Orange",
@@ -456,6 +466,8 @@ def access_helps(arms_df):
     likert = get_likert_ordered()
     n = len(likert)
     # just shift so that best is 7 and worst is 0
+    # just for purposes of test...makes more sense so that positive
+    # diff is a better rank
     qdf["value"] = qdf["value"].map(lambda x: n - likert.index(x))
     stat_res = "Task Level Wilcoxon Signed Rank Test\n"
     stat_res += task_level_wilcoxon_test(qdf, "Treatment", "Control")
