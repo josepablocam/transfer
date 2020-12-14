@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 from argparse import ArgumentParser
+from collections import Counter
 import os
 
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 import scipy
+import statsmodels.stats.descriptivestats
 
 
 def get_task_id(df):
@@ -16,12 +18,25 @@ def get_question_num(df):
     return df["question"].map(lambda x: int(x.split("_")[2].replace("q", "")))
 
 
-def prepare_data(df):
+def pass_validation(df):
+    correct_answer = "Scales column named col1"
+    ok = df["validation_question"].map(lambda x: x.strip() == correct_answer)
+    n = df.shape[0]
+    print("{} / {} passed the validation question".format(ok.sum(), n))
+    df = df[ok].reset_index(drop=True)
+    return df
+
+
+def prepare_data(df, check_validation=True):
     property_map = dict(df.iloc[0])
     responses_df = df.iloc[2:].copy()
     responses_df["survey_id"] = list(range(0, responses_df.shape[0]))
     responses_df["StartDate"] = pd.to_datetime(responses_df["StartDate"])
     responses_df["EndDate"] = pd.to_datetime(responses_df["EndDate"])
+
+    if check_validation:
+        responses_df = pass_validation(responses_df)
+
     wide_df = responses_df.copy()
 
     question_cols = [
@@ -85,6 +100,27 @@ def fragments_table(num_fragments=5):
     return pd.Series(fragments).to_frame(name="value")
 
 
+def get_ordered_year_buckets():
+    return ["0 - 1", "1 - 3", "3 - 5", "5+"]
+
+
+def years_experience_table():
+    years = get_ordered_year_buckets()
+    return pd.Series(years).to_frame(name="value")
+
+
+def get_tools_ordered():
+    return [
+        "Python", "Pandas (Python library)", "SQL", "Julia", "R", "Matlab",
+        "SAS", "Stata"
+    ]
+
+
+def tools_table():
+    tools = get_tools_ordered()
+    return pd.Series(tools).to_frame(name="value")
+
+
 def create_full_table(df1, df2, df1_cols, fillna_value=0.0):
     product = df1[df1_cols].assign(key=1).merge(
         df2.assign(key=1), on="key"
@@ -97,6 +133,82 @@ def create_full_table(df1, df2, df1_cols, fillna_value=0.0):
     if fillna_value is not None:
         product = product.fillna(fillna_value)
     return product
+
+
+def get_intro_question(intro_df, name):
+    name_to_id = {
+        "programming_experience": "intro_q0",
+        "data_analysis_experience": "intro_q1",
+        "tools": "intro_q2",
+    }
+    return intro_df[intro_df["question"] == name_to_id[name]].copy()
+
+
+def years_programming_experience(intro_df):
+    qdf = get_intro_question(intro_df, "programming_experience")
+    cts_df = qdf.groupby(["value"]).size().to_frame(name="ct")
+    cts_df = cts_df.reset_index()
+    cts_df = pd.merge(years_experience_table(), cts_df, how="left", on="value")
+    cts_df["ct"] = cts_df["ct"].fillna(0.0)
+    fig, ax = plt.subplots(1)
+    sns.barplot(
+        data=cts_df,
+        x="value",
+        y="ct",
+        order=get_ordered_year_buckets(),
+        ax=ax,
+        color="blue",
+    )
+    ax.set_xlabel("Years of Programming Experience")
+    ax.set_ylabel("Participants")
+    plt.tight_layout()
+    return cts_df, ax
+
+
+def years_data_analysis_experience(intro_df):
+    qdf = get_intro_question(intro_df, "data_analysis_experience")
+    cts_df = qdf.groupby(["value"]).size().to_frame(name="ct")
+    cts_df = cts_df.reset_index()
+    cts_df = pd.merge(years_experience_table(), cts_df, how="left", on="value")
+    cts_df["ct"] = cts_df["ct"].fillna(0.0)
+    fig, ax = plt.subplots(1)
+    sns.barplot(
+        data=cts_df,
+        x="value",
+        y="ct",
+        order=get_ordered_year_buckets(),
+        ax=ax,
+        color="blue",
+    )
+    ax.set_xlabel("Years of Data Analysis Experience")
+    ax.set_ylabel("Participants")
+    plt.tight_layout()
+    return cts_df, ax
+
+
+def tool_experience(intro_df):
+    qdf = get_intro_question(intro_df, "tools")
+    qdf = qdf["value"].map(lambda x: x.split(","))
+    answers = [e for grp in qdf.tolist() for e in grp]
+    cts_df = pd.DataFrame(
+        list(Counter(answers).items()), columns=["value", "ct"]
+    )
+    cts_df = pd.merge(tools_table(), cts_df, how="left", on="value")
+    cts_df["ct"] = cts_df["ct"].fillna(0.0)
+    fig, ax = plt.subplots(1)
+    sns.barplot(
+        data=cts_df,
+        x="value",
+        y="ct",
+        order=get_tools_ordered(),
+        ax=ax,
+        color="blue",
+    )
+    ax.set_xlabel("Tools")
+    ax.set_ylabel("Participants")
+    plt.xticks(rotation="vertical")
+    plt.tight_layout()
+    return cts_df, ax
 
 
 def task_relevance(rel_df):
@@ -123,6 +235,20 @@ def get_question(arms_df, name):
     return arms_df[arms_df["question_num"] == name_to_id[name]].copy()
 
 
+def single_or_error(vs):
+    try:
+        n = len(vs)
+        # ok on strings...
+        if isinstance(vs, str):
+            return vs
+        if n > 1:
+            raise ValueError("Should have single answer, no aggregation")
+        else:
+            return vs
+    except TypeError:
+        return vs
+
+
 def create_paired_df(df, index=None, columns=None, values=None):
     if index is None:
         index = ["survey_id", "task", "question_num"]
@@ -130,7 +256,13 @@ def create_paired_df(df, index=None, columns=None, values=None):
         columns = ["arm"]
     if values is None:
         values = "value"
-    pdf = pd.pivot_table(df, index=index, columns=columns, values=values)
+    pdf = pd.pivot_table(
+        df,
+        index=index,
+        columns=columns,
+        values=values,
+        aggfunc=single_or_error,
+    )
     pdf = pdf.reset_index()
     return pdf
 
@@ -153,8 +285,48 @@ def task_level_wilcoxon_test(qdf, alpha=0.05):
         paired_task = paired[paired["task"] == task]
         task_result = scipy.stats.wilcoxon(
             paired_task["Control"].values.astype(float),
-            paired_task["Treatment"].values.astype(float)
+            paired_task["Treatment"].values.astype(float),
+            # more appropriate for discrete/ordinal data
+            # since zero diff can happen more often
+            zero_method="pratt",
         )
+        is_significant = task_result.pvalue < (alpha / num_tasks)
+        results[task] = (task_result, is_significant)
+    stat_res = stat_results_to_string(results)
+    return stat_res
+
+
+class SignedTest(object):
+    def __init__(self, stat, pvalue):
+        self.stat = stat
+        self.pvalue = pvalue
+
+    def __str__(self):
+        return "SignedTestResult(statistic={}, pvalue={})".format(
+            self.stat, self.pvalue
+        )
+
+    def __repr__(self):
+        return str(self)
+
+
+def task_level_signed_test(qdf, alpha=0.05):
+    paired = create_paired_df(qdf)
+    n = len(get_likert_ordered())
+    # just shift so that best is 7 and worst is 0
+    paired["Treatment"] = n - paired["Treatment"]
+    paired["Control"] = n - paired["Control"]
+    paired["diff"] = paired["Treatment"] - paired["Control"]
+    results = {}
+    tasks = qdf.task.unique()
+    num_tasks = len(tasks)
+    for task in tasks:
+        paired_task = paired[paired["task"] == task]
+        task_result = statsmodels.stats.descriptivestats.sign_test(
+            paired_task["diff"],
+            mu0=0,
+        )
+        task_result = SignedTest(*task_result)
         is_significant = task_result.pvalue < (alpha / num_tasks)
         results[task] = (task_result, is_significant)
     stat_res = stat_results_to_string(results)
@@ -262,7 +434,10 @@ def access_helps(arms_df):
     # map likert to ordinal
     likert = get_likert_ordered()
     qdf["value"] = qdf["value"].map(lambda x: likert.index(x))
-    stat_res = task_level_wilcoxon_test(qdf)
+    stat_res = "Task Level Wilcoxon Signed Rank Test\n"
+    stat_res += task_level_wilcoxon_test(qdf)
+    stat_res += "\n\n Task Level Signed Test\n"
+    stat_res += task_level_signed_test(qdf)
     return cts_df, g, stat_res
 
 
@@ -280,6 +455,11 @@ def get_args():
         required=True,
         help="Output directory",
     )
+    parser.add_argument(
+        "--skip_validation",
+        action="store_true",
+        help="Skip the validation question (keep all answers)"
+    )
     return parser.parse_args()
 
 
@@ -288,9 +468,33 @@ def main():
     if not os.path.exists(args.output_dir):
         print("Creating", args.output_dir)
         os.makedirs(args.output_dir)
-    raw_df = pd.read_csv(args.input)
+    raw_df = pd.read_csv(args.input)[:-1]
 
-    info, wide, (intro_df, relevance_df, arms_df) = prepare_data(raw_df)
+    info, wide, (intro_df, relevance_df, arms_df) = prepare_data(
+        raw_df,
+        check_validation=not args.skip_validation,
+    )
+
+    # intro questions
+    prog_years_cts, prog_years_graph = years_programming_experience(intro_df)
+    prog_years_cts.to_csv(
+        os.path.join(args.output_dir, "prog_years.csv"), index=False
+    )
+    prog_years_graph.get_figure().savefig(
+        os.path.join(args.output_dir, "prog_years.pdf")
+    )
+
+    data_years_cts, data_years_graph = years_data_analysis_experience(intro_df)
+    data_years_cts.to_csv(
+        os.path.join(args.output_dir, "data_years.csv"), index=False
+    )
+    data_years_graph.get_figure().savefig(
+        os.path.join(args.output_dir, "data_years.pdf")
+    )
+
+    tool_cts, tool_graph = tool_experience(intro_df)
+    tool_cts.to_csv(os.path.join(args.output_dir, "tools.csv"), index=False)
+    tool_graph.get_figure().savefig(os.path.join(args.output_dir, "tools.pdf"))
 
     # is task relevant
     rel_cts, rel_graph = task_relevance(relevance_df)
