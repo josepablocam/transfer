@@ -476,6 +476,21 @@ def access_helps(arms_df):
     return cts_df, g, stat_res
 
 
+def time_spent(wide):
+    time_col = [c for c in wide.columns if c.startswith("Duration")]
+    assert len(time_col) == 1
+    time_df = wide[time_col]
+    time_df = time_df.rename(columns={time_col[0]: "seconds"})
+    time_df["seconds"] = time_df["seconds"].astype(float)
+    time_df["minutes"] = time_df["seconds"] / 60.
+    fig, ax = plt.subplots(1)
+    time_df.hist("minutes", ax=ax)
+    ax.set_xlabel("Minutes")
+    ax.set_ylabel("Participants")
+    print("Median completion time: {}".format(time_df["minutes"].median()))
+    return time_df, ax
+
+
 def get_args():
     parser = ArgumentParser(description="Survey analysis")
     parser.add_argument(
@@ -505,7 +520,7 @@ def main():
         os.makedirs(args.output_dir)
     raw_df = pd.read_csv(args.input)[:-1]
 
-    info, wide, (intro_df, relevance_df, arms_df) = prepare_data(
+    info, wide_df, (intro_df, relevance_df, arms_df) = prepare_data(
         raw_df,
         check_validation=not args.skip_validation,
     )
@@ -530,6 +545,10 @@ def main():
     tool_cts, tool_graph = tool_experience(intro_df)
     tool_cts.to_csv(os.path.join(args.output_dir, "tools.csv"), index=False)
     tool_graph.get_figure().savefig(os.path.join(args.output_dir, "tools.pdf"))
+
+    time_df, time_graph = time_spent(wide_df)
+    time_df.to_csv(os.path.join(args.output_dir, "time.csv"), index=False)
+    time_graph.get_figure().savefig(os.path.join(args.output_dir, "time.pdf"))
 
     # is task relevant
     rel_cts, rel_graph = task_relevance(relevance_df)
