@@ -454,7 +454,6 @@ def access_helps(arms_df):
             "Treatment": "Blue"
         },
     )
-    g.set_xticklabels(rotation=90)
     g.set_xlabels("Likert Scale")
     g.set_ylabels("Count")
     g.add_legend()
