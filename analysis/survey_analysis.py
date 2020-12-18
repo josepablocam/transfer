@@ -35,6 +35,13 @@ def prepare_data(df, check_validation=True):
     responses_df["StartDate"] = pd.to_datetime(responses_df["StartDate"])
     responses_df["EndDate"] = pd.to_datetime(responses_df["EndDate"])
 
+    # remove invalid answers (i.e. previews etc)
+    responses_df = responses_df[responses_df["Status"] == "IP Address"]
+    # make sure answered everything
+    last_qs = ["d1_t3_q2_treat", "d1_t3_q2_cont"]
+    completed = ~responses_df[last_qs].isnull().any(axis=1)
+    responses_df = responses_df[completed]
+
     if check_validation:
         responses_df = pass_validation(responses_df)
 
@@ -96,8 +103,10 @@ def get_fragments_ordered(num_fragments=5):
     return fragments
 
 
-def fragments_table(num_fragments=5):
+def fragments_table(num_fragments=5, extra=None):
     fragments = get_fragments_ordered()
+    if extra is not None:
+        fragments += list(extra)
     return pd.Series(fragments).to_frame(name="value")
 
 
@@ -122,6 +131,18 @@ def tools_table():
     return pd.Series(tools).to_frame(name="value")
 
 
+def get_proficiency_ordered():
+    return [
+        "No knowledge", "Fundamental awareness", "Novice", "Intermediate",
+        "Advanced", "Expert"
+    ]
+
+
+def proficiency_table():
+    prof = get_proficiency_ordered()
+    return pd.Series(prof).to_frame(name="value")
+
+
 def create_full_table(df1, df2, df1_cols, fillna_value=0.0):
     product = df1[df1_cols].assign(key=1).merge(
         df2.assign(key=1), on="key"
@@ -141,6 +162,7 @@ def get_intro_question(intro_df, name):
         "programming_experience": "intro_q0",
         "data_analysis_experience": "intro_q1",
         "tools": "intro_q2",
+        "pandas": "intro_q3",
     }
     return intro_df[intro_df["question"] == name_to_id[name]].copy()
 
@@ -206,6 +228,31 @@ def tool_experience(intro_df):
         color="blue",
     )
     ax.set_xlabel("Tools")
+    ax.set_ylabel("Participants")
+    plt.xticks(rotation="vertical")
+    plt.tight_layout()
+    return cts_df, ax
+
+
+def pandas_proficiency(intro_df):
+    qdf = get_intro_question(intro_df, "pandas")
+    qdf = qdf["value"].map(lambda x: x.split(","))
+    answers = [e for grp in qdf.tolist() for e in grp]
+    cts_df = pd.DataFrame(
+        list(Counter(answers).items()), columns=["value", "ct"]
+    )
+    cts_df = pd.merge(proficiency_table(), cts_df, how="left", on="value")
+    cts_df["ct"] = cts_df["ct"].fillna(0.0)
+    fig, ax = plt.subplots(1)
+    sns.barplot(
+        data=cts_df,
+        x="value",
+        y="ct",
+        order=get_proficiency_ordered(),
+        ax=ax,
+        color="blue",
+    )
+    ax.set_xlabel("Proficiency")
     ax.set_ylabel("Participants")
     plt.xticks(rotation="vertical")
     plt.tight_layout()
@@ -398,9 +445,14 @@ def rank_best_fragment(arms_df):
     qdf = get_question(arms_df, "rank")
     cts_df = qdf.groupby(["task", "arm", "value"]).size().to_frame(name="ct")
     cts_df = cts_df.reset_index()
-    cts_df = create_full_table(cts_df, fragments_table(), ["task", "arm"])
-    cts_df["value"] = cts_df["value"].map(lambda x: "F{}".format(x[-1]))
+    cts_df = create_full_table(
+        cts_df, fragments_table(extra=["None"]), ["task", "arm"]
+    )
+    cts_df["value"] = cts_df["value"].map(
+        lambda x: "F{}".format(x[-1]) if x != "None" else "None"
+    )
     ordered_labels = ["F{}".format(x[-1]) for x in get_fragments_ordered()]
+    ordered_labels = ordered_labels + ["None"]
     g = sns.FacetGrid(data=cts_df, col="task")
     g.map(
         sns.barplot,
@@ -422,8 +474,11 @@ def rank_best_fragment(arms_df):
     g.tight_layout()
 
     qdf = qdf.copy()
-    qdf["value"] = qdf["value"].map(lambda x: int(x[-1]))
-
+    # "None" is mapped to maximum rank + 1
+    rank_none = 5
+    qdf["value"] = qdf["value"].map(
+        lambda x: int(x[-1]) if x != "None" else rank_none
+    )
     stat_res = task_level_wilcoxon_test(qdf, "Control", "Treatment")
     return cts_df, g, stat_res
 
@@ -517,7 +572,7 @@ def main():
     if not os.path.exists(args.output_dir):
         print("Creating", args.output_dir)
         os.makedirs(args.output_dir)
-    raw_df = pd.read_csv(args.input)[:-1]
+    raw_df = pd.read_csv(args.input)
 
     info, wide_df, (intro_df, relevance_df, arms_df) = prepare_data(
         raw_df,
@@ -544,6 +599,12 @@ def main():
     tool_cts, tool_graph = tool_experience(intro_df)
     tool_cts.to_csv(os.path.join(args.output_dir, "tools.csv"), index=False)
     tool_graph.get_figure().savefig(os.path.join(args.output_dir, "tools.pdf"))
+
+    pandas_cts, pandas_graph = pandas_proficiency(intro_df)
+    pandas_cts.to_csv(os.path.join(args.output_dir, "pandas.csv"), index=False)
+    pandas_graph.get_figure().savefig(
+        os.path.join(args.output_dir, "pandas.pdf")
+    )
 
     time_df, time_graph = time_spent(wide_df)
     time_df.to_csv(os.path.join(args.output_dir, "time.csv"), index=False)

@@ -3,7 +3,7 @@ from IPython.core.magic import (
     magics_class,
     line_magic,
     cell_magic,
-    line_cell_magic,
+        line_cell_magic,
 )
 
 import pickle

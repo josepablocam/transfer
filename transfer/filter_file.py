@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 
 # some lines need to be filtered out of scripts for them to work
 def contains_inline(_line):
-    # bad matplotlib setting in jupyter that fails in ipython console
+    #  bad matplotlib setting in jupyter that fails in ipython console
     # get_ipython().magic('matplotlib inline')
     return 'inline' in _line
 
