@@ -28,7 +28,17 @@ def pass_validation(df):
     return df
 
 
-def prepare_data(df, check_validation=True):
+def approved_prolific(df, prolific_meta):
+    approved_pro = prolific_meta[prolific_meta["status"] == "APPROVED"]
+    approved_ids = approved_pro["participant_id"].values
+    approved = df["prolific_id"].isin(approved_ids)
+    n = df.shape[0]
+    print("{} / {} approved prolific ids".format(approved.sum(), n))
+    df = df[approved].reset_index(drop=True)
+    return df
+
+
+def prepare_data(df, check_validation=True, prolific_meta=None):
     property_map = dict(df.iloc[0])
     responses_df = df.iloc[2:].copy()
     responses_df["survey_id"] = list(range(0, responses_df.shape[0]))
@@ -44,6 +54,9 @@ def prepare_data(df, check_validation=True):
 
     if check_validation:
         responses_df = pass_validation(responses_df)
+
+    if prolific_meta is not None:
+        responses_df = approved_prolific(responses_df, prolific_meta)
 
     wide_df = responses_df.copy()
 
@@ -98,6 +111,13 @@ def likert_table():
     return pd.Series(likert).to_frame(name="value")
 
 
+def is_likert_better_or_equal(values, likert_threshold):
+    likert = get_likert_ordered()
+    likert_ixs = values.map(lambda x: likert.index(x)).values
+    threshold_ix = likert.index(likert_threshold)
+    return likert_ixs <= threshold_ix
+
+
 def get_fragments_ordered(num_fragments=5):
     fragments = ["Fragment {}".format(i) for i in range(num_fragments)]
     return fragments
@@ -122,7 +142,7 @@ def years_experience_table():
 def get_tools_ordered():
     return [
         "Python", "Pandas (Python library)", "SQL", "Julia", "R", "Matlab",
-        "SAS", "Stata"
+        "SAS", "Stata", "Shell tools (e.g. sed, awk)"
     ]
 
 
@@ -144,7 +164,8 @@ def proficiency_table():
 
 
 def create_full_table(df1, df2, df1_cols, fillna_value=0.0):
-    product = df1[df1_cols].assign(key=1).merge(
+    df1_unique = df1[df1_cols].drop_duplicates()
+    product = df1_unique.assign(key=1).merge(
         df2.assign(key=1), on="key"
     ).drop(
         "key", axis=1
@@ -211,6 +232,8 @@ def years_data_analysis_experience(intro_df):
 
 def tool_experience(intro_df):
     qdf = get_intro_question(intro_df, "tools")
+    # remove nan (no tools)
+    qdf = qdf[~pd.isnull(qdf["value"])]
     qdf = qdf["value"].map(lambda x: x.split(","))
     answers = [e for grp in qdf.tolist() for e in grp]
     cts_df = pd.DataFrame(
@@ -236,8 +259,9 @@ def tool_experience(intro_df):
 
 def pandas_proficiency(intro_df):
     qdf = get_intro_question(intro_df, "pandas")
-    qdf = qdf["value"].map(lambda x: x.split(","))
-    answers = [e for grp in qdf.tolist() for e in grp]
+    # remove missing (old version)
+    qdf = qdf[~pd.isnull(qdf["value"])]
+    answers = qdf["value"].values.tolist()
     cts_df = pd.DataFrame(
         list(Counter(answers).items()), columns=["value", "ct"]
     )
@@ -260,6 +284,15 @@ def pandas_proficiency(intro_df):
 
 
 def task_relevance(rel_df):
+    # quick summary
+    print("Task Relevance")
+    rel_df = rel_df.copy()
+    rel_df["at_least_agree"] = is_likert_better_or_equal(
+        rel_df["value"],
+        "Somewhat agree",
+    )
+    print(rel_df.groupby(["task"])[["at_least_agree"]].mean())
+
     cts_df = rel_df.groupby(["task", "value"]).size().to_frame(name="ct")
     cts_df = cts_df.reset_index()
     cts_df = create_full_table(cts_df, likert_table(), ["task"])
@@ -357,15 +390,20 @@ def task_level_wilcoxon_test(qdf, x, y, alpha=0.05):
     num_tasks = len(tasks)
     for task in tasks:
         paired_task = paired[paired["task"] == task]
-        task_result = scipy.stats.wilcoxon(
-            paired_task[x].values.astype(float),
-            paired_task[y].values.astype(float),
-            # more appropriate for discrete/ordinal data
-            # since zero diff can happen more often
-            zero_method="pratt",
-        )
-        is_significant = task_result.pvalue < (alpha / num_tasks)
-        effect_size = estimated_wilcoxon_effect_size(paired_task, x, y)
+        try:
+            task_result = scipy.stats.wilcoxon(
+                paired_task[x].values.astype(float),
+                paired_task[y].values.astype(float),
+                # more appropriate for discrete/ordinal data
+                # since zero diff can happen more often
+                zero_method="pratt",
+            )
+            is_significant = task_result.pvalue < (alpha / num_tasks)
+            effect_size = estimated_wilcoxon_effect_size(paired_task, x, y)
+        except Exception as err:
+            task_result = None
+            is_significant = False
+            effect_size = None
         results[task] = (task_result, is_significant, effect_size)
     stat_res = stat_results_to_string(results)
     return stat_res
@@ -410,6 +448,9 @@ def num_of_relevant_fragments(arms_df):
     qdf["value"] = qdf["value"].map(
         lambda x: 0 if pd.isnull(x) else len(x.split(","))
     )
+    print("Number of relevant fragments")
+    print(qdf.groupby(["task", "arm"])[["value"]].mean())
+
     cts_df = qdf.groupby(["task", "arm", "value"]).size().to_frame(name="ct")
     cts_df = cts_df.reset_index()
     num_frags = len(get_fragments_ordered())
@@ -479,16 +520,27 @@ def rank_best_fragment(arms_df):
     qdf["value"] = qdf["value"].map(
         lambda x: int(x[-1]) if x != "None" else rank_none
     )
+    print("Best rank")
+    print(qdf.groupby(["task", "arm"])[["value"]].mean())
+
     stat_res = task_level_wilcoxon_test(qdf, "Control", "Treatment")
     return cts_df, g, stat_res
 
 
 def access_helps(arms_df):
     qdf = get_question(arms_df, "access")
+    qdf = qdf.copy()
+    print("Access helps")
+    qdf = qdf.copy()
+    qdf["at_least_agree"] = is_likert_better_or_equal(
+        qdf["value"],
+        "Somewhat agree",
+    )
+    print(qdf.groupby(["task", "arm"])[["at_least_agree"]].mean())
+
     cts_df = qdf.groupby(["task", "arm", "value"]).size().to_frame(name="ct")
     cts_df = cts_df.reset_index()
     cts_df = create_full_table(cts_df, likert_table(), ["task", "arm"])
-
     plot_cts_df = cts_df.copy()
     plot_cts_df["value"] = plot_cts_df["value"].map(
         lambda x: "L{}".format(get_likert_ordered().index(x))
@@ -564,6 +616,11 @@ def get_args():
         action="store_true",
         help="Skip the validation question (keep all answers)"
     )
+    parser.add_argument(
+        "--prolific_meta",
+        type=str,
+        help="Path to prolific population meta csv",
+    )
     return parser.parse_args()
 
 
@@ -574,9 +631,14 @@ def main():
         os.makedirs(args.output_dir)
     raw_df = pd.read_csv(args.input)
 
+    prolific_meta = None
+    if args.prolific_meta is not None:
+        prolific_meta = pd.read_csv(args.prolific_meta)
+
     info, wide_df, (intro_df, relevance_df, arms_df) = prepare_data(
         raw_df,
         check_validation=not args.skip_validation,
+        prolific_meta=prolific_meta
     )
 
     # intro questions
