@@ -38,7 +38,29 @@ def approved_prolific(df, prolific_meta):
     return df
 
 
-def prepare_data(df, check_validation=True, prolific_meta=None):
+def sat_min_time(df, minimum_time_minutes):
+    time_col = [c for c in df.columns if c.startswith("Duration")]
+    assert len(time_col) == 1
+    time_col = time_col[0]
+    seconds = df[time_col].astype(float)
+    minutes = seconds / 60.0
+    enough_time = minutes >= minimum_time_minutes
+    n = df.shape[0]
+    print(
+        "{} / {} passed minimum time of {}".format(
+            enough_time.sum(), n, minimum_time_minutes
+        )
+    )
+    df = df[enough_time].reset_index(drop=True)
+    return df
+
+
+def prepare_data(
+    df,
+    check_validation=True,
+    prolific_meta=None,
+    minimum_time_minutes=None,
+):
     property_map = dict(df.iloc[0])
     responses_df = df.iloc[2:].copy()
     responses_df["survey_id"] = list(range(0, responses_df.shape[0]))
@@ -57,6 +79,9 @@ def prepare_data(df, check_validation=True, prolific_meta=None):
 
     if prolific_meta is not None:
         responses_df = approved_prolific(responses_df, prolific_meta)
+
+    if minimum_time_minutes is not None:
+        responses_df = sat_min_time(responses_df, minimum_time_minutes)
 
     wide_df = responses_df.copy()
 
@@ -621,6 +646,11 @@ def get_args():
         type=str,
         help="Path to prolific population meta csv",
     )
+    parser.add_argument(
+        "--minimum_time_minutes",
+        type=int,
+        help="Minimum number of time to be a valid participant",
+    )
     return parser.parse_args()
 
 
@@ -638,7 +668,8 @@ def main():
     info, wide_df, (intro_df, relevance_df, arms_df) = prepare_data(
         raw_df,
         check_validation=not args.skip_validation,
-        prolific_meta=prolific_meta
+        prolific_meta=prolific_meta,
+        minimum_time_minutes=args.minimum_time_minutes,
     )
 
     # intro questions
