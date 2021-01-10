@@ -4,6 +4,10 @@ from collections import Counter
 import os
 
 import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
+matplotlib.rcParams.update({'font.size': 14})
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -55,6 +59,54 @@ def sat_min_time(df, minimum_time_minutes):
     return df
 
 
+def relevant_list_to_num(vs):
+    return vs.map(lambda x: 0 if pd.isnull(x) else len(x.split(",")))
+
+
+def get_max_rank():
+    return 5
+
+
+def rank_to_num(vs):
+    max_rank = get_max_rank()
+    return vs.map(lambda x: max_rank if x == "None" else int(x[-1]))
+
+
+def only_valid_answers(df):
+    # if you state there is at least one
+    # relevant fragment, then the ranking
+    # when asked to choose rank of best snippet
+    # *cannot* be None
+
+    # number relevant snippets
+    num_q = "_q0"
+    # rank of best snippet
+    rank_q = "_q1"
+    tasks = ["d1_t1", "d1_t2", "d1_t3"]
+    groups = ["_treat", "_cont"]
+
+    df = df.copy()
+    df["is_valid"] = True
+    for t in tasks:
+        for g in groups:
+            num = t + num_q + g
+            rank = t + rank_q + g
+            num_values = relevant_list_to_num(df[num])
+            rank_values = rank_to_num(df[rank])
+            # some listed as relevant, but then rank of best is None
+            bad = (num_values > 0) & (rank_values == get_max_rank())
+            # none listed as relevant, but then rank of best is not None
+            bad |= ((num_values == 0) & (rank_values != get_max_rank()))
+            df["is_valid"] = df["is_valid"] & ~bad
+
+    n = df.shape[0]
+    print("{} / {} passed consistency check".format(df["is_valid"].sum(), n))
+    df = df[df["is_valid"]]
+    df = df.drop(columns=["is_valid"])
+    df = df.reset_index(drop=True)
+    return df
+
+
 def prepare_data(
     df,
     check_validation=True,
@@ -83,6 +135,7 @@ def prepare_data(
     if minimum_time_minutes is not None:
         responses_df = sat_min_time(responses_df, minimum_time_minutes)
 
+    responses_df = only_valid_answers(responses_df)
     wide_df = responses_df.copy()
 
     question_cols = [
@@ -259,25 +312,34 @@ def tool_experience(intro_df):
     qdf = get_intro_question(intro_df, "tools")
     # remove nan (no tools)
     qdf = qdf[~pd.isnull(qdf["value"])]
+    qdf["value"] = qdf["value"].map(lambda x: x.replace("(e.g. sed, awk)", ""))
     qdf = qdf["value"].map(lambda x: x.split(","))
     answers = [e for grp in qdf.tolist() for e in grp]
     cts_df = pd.DataFrame(
         list(Counter(answers).items()), columns=["value", "ct"]
     )
-    cts_df = pd.merge(tools_table(), cts_df, how="left", on="value")
-    cts_df["ct"] = cts_df["ct"].fillna(0.0)
+    # only show non-zero tools, too much clutter otherwise
+    cts_df = cts_df.sort_values("ct")
+    cts_df["value"] = cts_df["value"].map(
+        lambda x: "Pandas" if x.startswith("Pandas") else x.strip()
+    )
+    cts_df["value"] = cts_df["value"].map(
+        lambda x: "Shell" if x.startswith("Shell") else x.strip()
+    )
+    tools = cts_df["value"].values.tolist()
+
     fig, ax = plt.subplots(1)
     sns.barplot(
         data=cts_df,
         x="value",
         y="ct",
-        order=get_tools_ordered(),
+        order=tools,
         ax=ax,
         color="blue",
     )
     ax.set_xlabel("Tools")
     ax.set_ylabel("Participants")
-    plt.xticks(rotation="vertical")
+    # plt.xticks(rotation="vertical")
     plt.tight_layout()
     return cts_df, ax
 
@@ -312,11 +374,13 @@ def task_relevance(rel_df):
     # quick summary
     print("Task Relevance")
     rel_df = rel_df.copy()
-    rel_df["at_least_agree"] = is_likert_better_or_equal(
+    rel_df["at_least_somewhat_agree"] = is_likert_better_or_equal(
         rel_df["value"],
         "Somewhat agree",
     )
-    print(rel_df.groupby(["task"])[["at_least_agree"]].mean())
+    summary_df = rel_df.groupby(["task"])[["at_least_somewhat_agree"]].mean()
+    summary_df = summary_df.reset_index()
+    print(summary_df)
 
     cts_df = rel_df.groupby(["task", "value"]).size().to_frame(name="ct")
     cts_df = cts_df.reset_index()
@@ -332,7 +396,7 @@ def task_relevance(rel_df):
     g.add_legend()
     plt.tight_layout()
     g.tight_layout()
-    return cts_df, g
+    return cts_df, g, summary_df
 
 
 def get_question(arms_df, name):
@@ -470,11 +534,20 @@ def task_level_signed_test(qdf, x, y, alpha=0.05):
 def num_of_relevant_fragments(arms_df):
     qdf = get_question(arms_df, "number")
     # number
-    qdf["value"] = qdf["value"].map(
-        lambda x: 0 if pd.isnull(x) else len(x.split(","))
-    )
-    print("Number of relevant fragments")
-    print(qdf.groupby(["task", "arm"])[["value"]].mean())
+    qdf["value"] = relevant_list_to_num(qdf["value"])
+
+    summary_df = qdf.groupby(["task", "arm"])[["value"]].mean()
+    summary_df = summary_df.reset_index()
+    summary_df["stat"] = "avg. # relevant fragments"
+
+    qdf["at_least_one"] = qdf["value"] > 0
+    summary_df2 = qdf.groupby(["task", "arm"])[["at_least_one"]].mean()
+    summary_df2 = summary_df2.reset_index()
+    summary_df2["stat"] = "% at least one relevant"
+    summary_df2 = summary_df2.rename(columns={"at_least_one": "value"})
+
+    summary_df = pd.concat([summary_df, summary_df2], axis=0)
+    summary_df = summary_df[["task", "arm", "stat", "value"]]
 
     cts_df = qdf.groupby(["task", "arm", "value"]).size().to_frame(name="ct")
     cts_df = cts_df.reset_index()
@@ -497,14 +570,20 @@ def num_of_relevant_fragments(arms_df):
             "Treatment": "Blue"
         },
     )
-    g.set_xlabels("Number marked as relevant")
+    g.set_xlabels("Number relevant")
     g.set_ylabels("Count")
-    g.add_legend()
-    plt.tight_layout()
+    g.add_legend(
+        bbox_to_anchor=(0., 1.00),
+        loc='lower left',
+        ncol=2,
+        borderaxespad=0.
+    )
+    # g.add_legend(bbox_to_anchor=loc="lower center", ncol=2)
+    # plt.tight_layout()
     g.tight_layout()
 
     stat_res = task_level_wilcoxon_test(qdf, "Treatment", "Control")
-    return cts_df, g, stat_res
+    return cts_df, g, stat_res, summary_df
 
 
 def rank_best_fragment(arms_df):
@@ -535,16 +614,18 @@ def rank_best_fragment(arms_df):
     )
     g.set_xlabels("Fragment")
     g.set_ylabels("Count")
-    g.add_legend()
+    g.add_legend(
+        bbox_to_anchor=(0., 1.00),
+        loc='lower left',
+        ncol=2,
+        borderaxespad=0.
+    )
     plt.tight_layout()
     g.tight_layout()
 
     qdf = qdf.copy()
     # "None" is mapped to maximum rank + 1
-    rank_none = 5
-    qdf["value"] = qdf["value"].map(
-        lambda x: int(x[-1]) if x != "None" else rank_none
-    )
+    qdf["value"] = rank_to_num(qdf["value"])
     print("Best rank")
     print(qdf.groupby(["task", "arm"])[["value"]].mean())
 
@@ -557,11 +638,13 @@ def access_helps(arms_df):
     qdf = qdf.copy()
     print("Access helps")
     qdf = qdf.copy()
-    qdf["at_least_agree"] = is_likert_better_or_equal(
+    qdf["at_least_somewhat_agree"] = is_likert_better_or_equal(
         qdf["value"],
         "Somewhat agree",
     )
-    print(qdf.groupby(["task", "arm"])[["at_least_agree"]].mean())
+    summary_df = qdf.groupby(["task",
+                              "arm"])[["at_least_somewhat_agree"]].mean()
+    summary_df = summary_df.reset_index()
 
     cts_df = qdf.groupby(["task", "arm", "value"]).size().to_frame(name="ct")
     cts_df = cts_df.reset_index()
@@ -588,7 +671,12 @@ def access_helps(arms_df):
     )
     g.set_xlabels("Likert Scale")
     g.set_ylabels("Count")
-    g.add_legend()
+    g.add_legend(
+        bbox_to_anchor=(0., 1.00),
+        loc='lower left',
+        ncol=2,
+        borderaxespad=0.
+    )
     plt.tight_layout()
     g.tight_layout()
 
@@ -604,7 +692,7 @@ def access_helps(arms_df):
     stat_res += task_level_wilcoxon_test(qdf, "Treatment", "Control")
     stat_res += "\n\n Task Level Signed Test\n"
     stat_res += task_level_signed_test(qdf, "Treatment", "Control")
-    return cts_df, g, stat_res
+    return cts_df, g, stat_res, summary_df
 
 
 def time_spent(wide):
@@ -620,6 +708,12 @@ def time_spent(wide):
     ax.set_ylabel("Participants")
     print("Median completion time: {}".format(time_df["minutes"].median()))
     return time_df, ax
+
+
+def clean_for_latex(df):
+    df = df.copy()
+    df.columns = [c.replace("_", " ").capitalize() for c in df.columns]
+    return df
 
 
 def get_args():
@@ -704,14 +798,21 @@ def main():
     time_graph.get_figure().savefig(os.path.join(args.output_dir, "time.pdf"))
 
     # is task relevant
-    rel_cts, rel_graph = task_relevance(relevance_df)
+    rel_cts, rel_graph, rel_summary = task_relevance(relevance_df)
     rel_cts.to_csv(
         os.path.join(args.output_dir, "task_relevance.csv"), index=False
     )
     rel_graph.savefig(os.path.join(args.output_dir, "task_relevance.pdf"))
+    clean_for_latex(rel_summary).to_latex(
+        os.path.join(args.output_dir, "task_relevance_summary.tex"),
+        index=False,
+        float_format="%.2f",
+    )
 
     # how many relevant fragments per task
-    num_cts, num_graph, num_stat = num_of_relevant_fragments(arms_df)
+    num_cts, num_graph, num_stat, num_summary = num_of_relevant_fragments(
+        arms_df
+    )
     num_cts.to_csv(
         os.path.join(args.output_dir, "number_relevant_fragments.csv"),
         index=False
@@ -722,6 +823,11 @@ def main():
     with open(os.path.join(args.output_dir, "number_relevant_fragments.stat"),
               "w") as fout:
         fout.write(num_stat)
+    clean_for_latex(num_summary).to_latex(
+        os.path.join(args.output_dir, "number_relevant_fragments_summary.tex"),
+        index=False,
+        float_format="%.2f",
+    )
 
     # which fragment is the best
     rank_cts, rank_graph, rank_stat = rank_best_fragment(arms_df)
@@ -733,13 +839,20 @@ def main():
         fout.write(rank_stat)
 
     # does having access to treatment help?
-    access_cts, access_graph, access_stat = access_helps(arms_df)
+    access_cts, access_graph, access_stat, access_summary = access_helps(
+        arms_df
+    )
     access_cts.to_csv(
         os.path.join(args.output_dir, "access_helps.csv"), index=False
     )
     access_graph.savefig(os.path.join(args.output_dir, "access_helps.pdf"))
     with open(os.path.join(args.output_dir, "access_helps.stat"), "w") as fout:
         fout.write(access_stat)
+    clean_for_latex(access_summary).to_latex(
+        os.path.join(args.output_dir, "access_helps_summary.tex"),
+        index=False,
+        float_format="%.2f",
+    )
 
 
 if __name__ == "__main__":
