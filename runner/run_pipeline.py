@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 import os
 import subprocess
 import sys
+import time
 
 from transfer.utils import build_script_paths
 
@@ -115,6 +116,16 @@ def lift_donations(donations_path, script_path, functions_path):
     return subprocess.call(cmd)
 
 
+def record_time(script_path, start_time, output_dir):
+    total_time = time.time() - start_time
+
+    script_name = script_path.replace("/", "_")
+    script_name = os.path.splitext(script_name)[0]
+    time_file = os.path.join(output_dir, script_name, "_time.txt")
+    with open(time_file, "w") as fout:
+        fout.write("{}:{}".format(script_path, total_time))
+
+
 def cleanup(script_path):
     script_dir = os.path.dirname(script_path)
     instr_script = os.path.join(script_dir, "_instrumented.py")
@@ -149,12 +160,16 @@ def main(args):
     memory_refinement = str(args.memory_refinement)
     tracer_log = args.log
 
+    start_time = time.time()
+
     filter_file(script_path)
 
     # only execute plain after the filtering...otherwise guaranteed to fail
     # for a lot of scripts...
     if args.plain:
         return_plain = run_plain(timeout, script_path, output_dir)
+        if args.time:
+            record_time(script_path, start_time, output_dir)
         sys.exit(return_plain)
 
     rewrite(script_path, lifted_path)
@@ -177,6 +192,9 @@ def main(args):
 
     lift_donations(donations_path, script_path, functions_path)
     exit_with_error_if_file_missing(functions_path)
+
+    if args.time:
+        record_time(script_path, start_time, output_dir)
 
     cleanup(script_path)
 
@@ -214,6 +232,12 @@ if __name__ == '__main__':
         '--plain',
         action='store_true',
         help='Run program as plain ipython (with timeout) and store stdout'
+    )
+    parser.add_argument(
+        "-t",
+        "--time",
+        action="store_true",
+        help="Save execution time of pipeline",
     )
     args = parser.parse_args()
     print(args)
