@@ -13,11 +13,10 @@ do
 python schedule_jobs.py \
     --docker_image ${DOCKER_RUNNER_IMAGE} \
     --scripts program_data/${d}/scripts/kernel_*.py \
-    --host_output_dir program_data/${d}/plain-results \
-    --docker_output_dir program_data/${d}/plain-results/ \
+    --host_output_dir program_data/${d}/results \
+    --docker_output_dir program_data/${d}/results/ \
     --mem_limit ${MEM_LIMIT} \
     --timeout ${TIMEOUT} \
     --max_jobs ${MAX_JOBS} \
-    --plain \
     --time
 done

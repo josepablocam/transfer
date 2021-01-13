@@ -6,7 +6,7 @@ import tempfile
 
 
 def build_docker_command(docker_image, timeout, script_path, host_output_dir,
-                         docker_output_dir, mem_limit, keep, plain):
+                         docker_output_dir, mem_limit, keep, plain, time):
     # to be able to mount volumes, must use absolute path
     host_output_dir = os.path.abspath(host_output_dir)
     # TODO: we should probably fix this
@@ -21,6 +21,8 @@ def build_docker_command(docker_image, timeout, script_path, host_output_dir,
     docker_command += [docker_image, timeout, script_path, docker_output_dir]
     if plain:
         docker_command += ['--plain']
+    if time:
+        docker_command += ['--time']
     return docker_command
 
 
@@ -46,6 +48,7 @@ def create_job_commands(
         mem_limit,
         keep,
         plain,
+        time,
 ):
     # and remove any scripts we already lifted etc
     scripts = [s for s in scripts if not s.endswith("lifted.py")]
@@ -60,6 +63,7 @@ def create_job_commands(
             mem_limit,
             keep,
             plain,
+            time,
         )
         cmd = " ".join(cmd)
         commands.append(cmd)
@@ -68,15 +72,9 @@ def create_job_commands(
 
 def main(args):
     commands = create_job_commands(
-        args.docker_image,
-        args.scripts,
-        args.host_output_dir,
-        args.docker_output_dir,
-        args.timeout,
-        args.mem_limit,
-        args.keep,
-        args.plain,
-    )
+        args.docker_image, args.scripts, args.host_output_dir,
+        args.docker_output_dir, args.timeout, args.mem_limit, args.keep,
+        args.plain, args.time)
     set_max_jobs(args.max_jobs)
     for c in commands:
         schedule(c)
@@ -125,6 +123,11 @@ if __name__ == '__main__':
         type=int,
         help="Max number of concurrent jobs in task-spooler",
         default=10,
+    )
+    parser.add_argument(
+        "--time",
+        action="store_true",
+        help="Record execution time for pipeline",
     )
     args = parser.parse_args()
     try:
