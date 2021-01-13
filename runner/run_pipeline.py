@@ -125,6 +125,7 @@ def record_time(script_path, start_time, output_dir):
     print('Recording time to', time_file)
     with open(time_file, "w") as fout:
         fout.write("{}:{}".format(script_path, total_time))
+        fout.write("\n")
 
 
 def cleanup(script_path):
