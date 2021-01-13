@@ -7,7 +7,6 @@ MEM_LIMIT=20GB
 TIMEOUT=2h
 DATASETS="house_sales loan_data university_rankings"
 
-DATASETS="house_sales"
 for d in ${DATASETS}
 do
 python schedule_jobs.py \

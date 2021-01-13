@@ -121,7 +121,7 @@ def record_time(script_path, start_time, output_dir):
 
     script_name = script_path.replace("/", "_")
     script_name = os.path.splitext(script_name)[0]
-    time_file = os.path.join(output_dir, script_name, "_time.txt")
+    time_file = os.path.join(output_dir, script_name + "_time.txt")
     print('Recording time to', time_file)
     with open(time_file, "w") as fout:
         fout.write("{}:{}".format(script_path, total_time))
