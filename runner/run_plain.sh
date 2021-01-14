@@ -5,7 +5,7 @@ source ../setup.sh
 MAX_JOBS=10
 MEM_LIMIT=20GB
 TIMEOUT=2h
-DATASETS="house_sales loan_data university_rankings"
+DATASETS="house_sales loan_data_v2 university_rankings"
 
 for d in ${DATASETS}
 do
