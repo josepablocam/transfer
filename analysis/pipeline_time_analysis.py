@@ -17,10 +17,19 @@ def get_times(path):
         lines = [entry.split(":") for entry in fin.readlines()]
 
     data = [(e[0], float(e[1])) for e in lines]
-    return pd.DataFrame(data, columns=["script", "time"])
+    df = pd.DataFrame(data, columns=["script", "time"])
+    # to match timeout naming convention
+    df["script"] = df["script"].map(lambda x: x.replace("/", "_"))
+    return df
 
 
-def compare_times(plain_paths, full_paths, max_plot=None):
+def compare_times(
+    plain_paths,
+    full_paths,
+    max_plot=None,
+    timedout=None,
+    timeout=None,
+):
     plain_dfs = []
     for p in plain_paths:
         plain_dfs.append(get_times(p))
@@ -30,6 +39,20 @@ def compare_times(plain_paths, full_paths, max_plot=None):
     for p in full_paths:
         full_dfs.append(get_times(p))
     df_full = pd.concat(full_dfs)
+
+    if timedout is not None:
+        print(
+            "Setting time to {} for {} timedout scripts".format(
+                timeout, len(timedout)
+            )
+        )
+        assert timeout > 0
+        assert all(s not in df_full["script"].values for s in timedout)
+        df_timedout = pd.DataFrame(
+            [(s, timeout) for s in timedout],
+            columns=["script", "time"],
+        )
+        df_full = pd.concat([df_full, df_timedout])
 
     df_full = pd.merge(
         df_full,
@@ -100,6 +123,17 @@ def get_args():
         help=
         "If not none, only show points below max for plotting (but report)",
     )
+    parser.add_argument(
+        "--timedout",
+        type=str,
+        nargs="+",
+        help="Scripts that time out when instrumented (set time to max)",
+    )
+    parser.add_argument(
+        "--timeout",
+        type=int,
+        help="Seconds to use as time for timedout",
+    )
     parser.add_argument("--output_dir", type=str, help="Output directory")
     return parser.parse_args()
 
@@ -109,7 +143,13 @@ def main():
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
 
-    summary, ax = compare_times(args.plain, args.full, max_plot=args.max_plot)
+    summary, ax = compare_times(
+        args.plain,
+        args.full,
+        max_plot=args.max_plot,
+        timedout=args.timedout,
+        timeout=args.timeout,
+    )
 
     summary_path = os.path.join(args.output_dir, "time_summary.csv")
     summary.to_csv(summary_path)
