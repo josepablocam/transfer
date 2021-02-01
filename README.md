@@ -23,7 +23,10 @@ All scripts should be run from the project root directory.
 
 The easiest way to install `wranglesearch` is through a docker
 container. Alternatively you can run `bash scripts/install.sh`
+if you don't want to use a container. We detail the container
+steps below.
 
+## Docker
 First, build the container
 
 `docker build . -t wranglesearch`
