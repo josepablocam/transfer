@@ -7,7 +7,7 @@ import nbformat
 import pytest
 import shutil
 
-from transfer import convert_candidates as cc
+from wranglesearch import convert_candidates as cc
 
 def create_dir_with_files(_dir, file_names):
     if not os.path.exists(_dir):

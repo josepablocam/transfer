@@ -14,8 +14,8 @@ import pandas as pd
 from plpy.analyze.dynamic_trace_events import Variable
 import pytest
 
-from transfer.lift_donations import DonatedFunction
-from transfer.utils import build_script_paths
+from wranglesearch.lift_donations import DonatedFunction
+from wranglesearch.utils import build_script_paths
 sys.path.append('../')
 from runner import run_pipeline
 

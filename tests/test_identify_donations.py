@@ -9,7 +9,7 @@ from plpy.rewrite import expr_lifter
 from plpy.analyze import dynamic_tracer, graph_builder
 from plpy.analyze.dynamic_trace_events import Variable
 
-from transfer import identify_donations as _id
+from wranglesearch import identify_donations as _id
 
 
 def construct_dynamic_graph(src):
