@@ -30,10 +30,10 @@ RUN (cat requirements.txt | grep -v "#" | xargs -I {} pip install {}) || true
 RUN git clone https://github.com/josepablocam/python-pl
 RUN pip install -e python-pl
 
-# Transfer analysis tools
-ADD transfer.zip transfer.zip
-RUN unzip transfer.zip -d transfer
-RUN pip install -e transfer
+# wranglesearch analysis tools
+ADD wranglesearch.zip wranglesearch.zip
+RUN unzip wranglesearch.zip -d wranglesearch
+RUN pip install -e wranglesearch
 
 # make sure can run matplotlib "headless"
 # i.e. no $DISPLAY set

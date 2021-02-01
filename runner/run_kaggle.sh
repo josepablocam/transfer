@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-source ../setup.sh
+source ../scripts/setup.sh
 
 
 MAX_JOBS=10

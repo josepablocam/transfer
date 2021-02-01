@@ -22,7 +22,7 @@ be easily adaptable to your own.
 3. Clone the main repository to `/raid/` on Rhino (make sure nothing uses AFS)
 
 4. Make sure that any data you want to run on is stored in
-   `transfer/runner/program_data`.
+   `wranglesearch/runner/program_data`.
    The directory structure assumed is:
 
 ```
@@ -40,7 +40,7 @@ This directory is copied on to the VM and then the Docker container within that.
 You can prepare this directory structure by running
 
 ```
-bash prepare_kaggle.sh
+bash scripts/prepare_kaggle.sh
 ```
 
 for the datasets we provide. This will also generate a `requirements.txt`
@@ -50,7 +50,7 @@ it for your own set of scripts.)
 
 5. Build the vagrant VM, used to sandbox the Kaggle scripts
     ```
-    cd transfer/runner; make build_vagrant; vagrant halt
+    cd wranglesearch/runner; make build_vagrant; vagrant halt
     ```
 6. Start up the VM with `longjob` to remain logged in for a day (change this for longer)
     ```
@@ -72,7 +72,7 @@ the original host machine
 
 1. Run
 
-`bash prepare_kaggle.sh`
+`bash scripts/prepare_kaggle.sh`
 
 
 This prepares the expected folder structure, validates which kernels we
@@ -147,7 +147,7 @@ using root user. You can then zip these up and download/move around at your conv
 * It seems that on occasion, `vagrant` can fail when building and not actually include docker. If this happens, I suggest removing the box (`vagrant destroy`), cleaning up, and calling `make build_vagrant` again. That seems to solve the issue in all cases I've encountered.
 
 * If anything hangs for a long time, I suggest deleting the `.vagrant*`
-folders created in the `transfer-cleaning/runner` folder. You may also want
+folders created in the `wranglesearch/runner` folder. You may also want
 to delete the `/raid/jcamsan/virtualbox_vms` folder as well. Also, kill any
 `vboxmanage` or `vagrant` processes and then try again. I realize this may be
 overkill (no pun intended) but not sure how to fix otherwise.

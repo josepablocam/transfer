@@ -53,12 +53,12 @@ Vagrant.configure(2) do |config|
    apt-get install -y zip
   SHELL
 
-  # copy in folder for transfer stuff/data
-  config.vm.provision "file", source: "./transfer.zip", destination:"$HOME/transfer.zip"
+  # copy in folder for wranglesearch stuff/data
+  config.vm.provision "file", source: "./wranglesearch.zip", destination:"$HOME/wranglesearch.zip"
 
   # unzip and prepare for the docker builder
   config.vm.provision "shell", privileged: false, inline: <<-SHELL
-    unzip ${HOME}/transfer.zip -d ${HOME}/transfer
+    unzip ${HOME}/wranglesearch.zip -d ${HOME}/wranglesearch
   SHELL
 
 

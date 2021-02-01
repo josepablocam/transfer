@@ -4,7 +4,7 @@ import subprocess
 import sys
 import time
 
-from transfer.utils import build_script_paths
+from wranglesearch.utils import build_script_paths
 
 
 def exit_with_error_if_file_missing(file_path):
@@ -55,7 +55,7 @@ def filter_file(script_path):
         'Removing lines that cause failures in IPython3 for {}'.
         format(script_path)
     )
-    cmd = ['python', '-m', 'transfer.filter_file']
+    cmd = ['python', '-m', 'wranglesearch.filter_file']
     cmd += [script_path]
     return subprocess.call(cmd)
 
@@ -100,7 +100,7 @@ def identify_donations(graph_path, donations_path):
             graph_path, donations_path
         )
     )
-    cmd = ['python', '-m', 'transfer.identify_donations']
+    cmd = ['python', '-m', 'wranglesearch.identify_donations']
     cmd += [graph_path, donations_path]
     return subprocess.call(cmd)
 
@@ -111,7 +111,7 @@ def lift_donations(donations_path, script_path, functions_path):
             donations_path, functions_path, script_path
         )
     )
-    cmd = ['python', '-m', 'transfer.lift_donations']
+    cmd = ['python', '-m', 'wranglesearch.lift_donations']
     cmd += [donations_path, script_path, functions_path]
     return subprocess.call(cmd)
 

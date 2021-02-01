@@ -4,11 +4,11 @@ source ../setup.sh
 if [[ $(hostname) == "boruca" ]]
 then
   # building inside vagrant VM
-  cp ${HOME}/transfer.zip transfer.zip
+  cp ${HOME}/wranglesearch.zip wranglesearch.zip
 else
   pushd ../
-  git archive --format=zip -o runner/transfer.zip master
-  zip -r runner/transfer.zip runner/program_data
+  git archive --format=zip -o runner/wranglesearch.zip master
+  zip -r runner/wranglesearch.zip runner/program_data
   popd
 fi
 
