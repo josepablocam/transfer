@@ -6,6 +6,11 @@ create_wranglesearch_conda_env
 activate_wranglesearch_conda_env
 
 # Setup wranglesearch
+# Setup a stub symlinked dictionary
+# to account for old project name
+# in pickeld files
+ln -s wranglesearch transfer
+
 pip install -e .
 
 # Run quick tests

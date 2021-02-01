@@ -38,7 +38,8 @@ neo4j stop
 echo "Deleting neo4j database..."
 rm -rf ${database_path}
 neo4j start
-sleep 10s
+# increase if need for docker...
+sleep 20s
 
 
 # Build database
