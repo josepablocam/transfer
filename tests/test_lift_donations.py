@@ -118,6 +118,7 @@ def from_source_to_functions(src, tempdir):
         memory_refinement=1,
         log=None,
         plain=False,
+        time=False,
     )
     run_pipeline.main(args)
 
