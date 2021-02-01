@@ -126,7 +126,7 @@ def from_source_to_functions(src, tempdir):
     # even after importing DonatedFunction into the module
     hack = """
     import dill
-    from transfer.lift_donations import DonatedFunction
+    from wranglesearch.lift_donations import DonatedFunction
     with open('{0}', 'rb') as f:
         functions = dill.load(f)
     with open('{0}', 'wb') as f:
