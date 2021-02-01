@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -ex
 
-source setup.sh
+source scripts/setup.sh
 
 ANALYSIS_DIR="analysis-results/"
 mkdir -p ${ANALYSIS_DIR}

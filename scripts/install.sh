@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-source setup.sh
+set -e
+
+source scripts/setup.sh
 create_wranglesearch_conda_env
 activate_wranglesearch_conda_env
 

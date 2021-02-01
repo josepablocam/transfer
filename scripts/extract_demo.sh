@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 # Prompt to delete current neo4j database
 read -p "This demo deletes your current neo4j database, are you sure you want to continue? [y/N] " yn
