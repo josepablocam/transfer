@@ -19,8 +19,10 @@ such as defines, uses, calls, or wrangles for (more detail below).
 The snippets are focused on code that modifies an existing column or derives a new column.
 
 # Installation
+All scripts should be run from the project root directory.
+
 The easiest way to install `wranglesearch` is through a docker
-container. Alternatively you can run `bash install.sh`
+container. Alternatively you can run `bash scripts/install.sh`
 
 First, build the container
 
@@ -34,7 +36,7 @@ database.
 You should see a `neo4j` message indicating startup.
 You can now build the demo database by calling
 
-`bash build_demo.sh`
+`bash scripts/build_demo.sh`
 
 You should see prints to stdout indicating what is being
 populated into the database.
@@ -219,21 +221,21 @@ If no `result_position` is provided, we assume you want the top result.
 
 
 `wranglesearch.magic` loads the `sample_db.pkl` created at the root of the project
-by running `bash demo.sh`.
+by running `bash scripts/demo.sh`.
 
 # Extracting your own functions
 You can extract functions from your own set of scripts (rather than our
 pre-extracted ones) and create a database. To do so, you can run the script
 
 ```
-bash extract_demo.sh
+bash scripts/extract_demo.sh
 ```
 
 Note that this will prompt you for confirmation before deleting your current
 neo4j database (if any). Note that this *cannot* be undone, so make sure you
 want to proceed.
 
-You can modify `extract_demo.sh` to point to your own scripts of interest.
+You can modify `scripts/extract_demo.sh` to point to your own scripts of interest.
 
 Once the script runs, you can follow the previous portions of the demo
 to interact with `wranglesearch`.
