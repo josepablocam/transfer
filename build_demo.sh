@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 source setup.sh
-activate_transfer_conda_env
+activate_wranglesearch_conda_env
 
 set -e
 
@@ -42,7 +42,7 @@ sleep 10s
 
 
 # Build database
-python -m transfer.build_db \
+python -m wranglesearch.build_db \
   --function_files program_data/${DATASET}/results/*functions* \
   --graph_files program_data/${DATASET}/results/*graph* \
   --output sample_db.pkl

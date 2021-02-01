@@ -7,7 +7,7 @@ def cleaning_func_0(timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['source'] = 'Times'
 	return times_plot_data
-=============
+#=============
 
 # Function 1
 def cleaning_func_2(shanghaiData):
@@ -18,7 +18,7 @@ def cleaning_func_2(shanghaiData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	shanghai_plot_data['source'] = 'Shanghai'
 	return shanghai_plot_data
-=============
+#=============
 
 # Function 2
 def cleaning_func_4(cwurData):
@@ -29,7 +29,7 @@ def cleaning_func_4(cwurData):
 	cwur_plot_data = cwurData[cwurData.institution.isin(my_university_name)][['world_rank', 'year']]
 	cwur_plot_data['source'] = 'CWUR'
 	return cwur_plot_data
-=============
+#=============
 
 # Function 3
 def cleaning_func_6(timesData):
@@ -40,7 +40,7 @@ def cleaning_func_6(timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	return times_plot_data
-=============
+#=============
 
 # Function 4
 def cleaning_func_7(shanghaiData,timesData):
@@ -53,7 +53,7 @@ def cleaning_func_7(shanghaiData,timesData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	return times_plot_data
-=============
+#=============
 
 # Function 5
 def cleaning_func_9(shanghaiData,timesData):
@@ -64,7 +64,7 @@ def cleaning_func_9(shanghaiData,timesData):
 	# shanghaiData = pd.read_csv('../input/shanghaiData.csv')
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	return shanghaiData[shanghaiData.university_name.isin(my_university_name)]
-=============
+#=============
 
 # Function 6
 def cleaning_func_11(cwurData,shanghaiData,timesData):
@@ -79,7 +79,7 @@ def cleaning_func_11(cwurData,shanghaiData,timesData):
 	cwur_plot_data = cwurData[cwurData.institution.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	return times_plot_data
-=============
+#=============
 
 # Function 7
 def cleaning_func_12(cwurData,shanghaiData,timesData):
@@ -92,7 +92,7 @@ def cleaning_func_12(cwurData,shanghaiData,timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	return cwurData[cwurData.institution.isin(my_university_name)]
-=============
+#=============
 
 # Function 8
 def cleaning_func_16(cwurData,shanghaiData,timesData):
@@ -110,9 +110,18 @@ def cleaning_func_16(cwurData,shanghaiData,timesData):
 	plot_data = times_plot_data.append(shanghai_plot_data).append(cwur_plot_data)
 	plot_data['world_rank'] = plot_data['world_rank'].astype(int)
 	return plot_data
-=============
+#=============
 
 # Function 9
+def cleaning_func_1(timesData):
+	# core cleaning code
+	my_university_name = ['University of Illinois at Urbana-Champaign']
+	import pandas as pd
+	# timesData = pd.read_csv('../input/timesData.csv')
+	return timesData[timesData.university_name.isin(my_university_name)]
+#=============
+
+# Function 10
 def cleaning_func_17(cwurData,shanghaiData,timesData):
 	# core cleaning code
 	my_university_name = ['University of Illinois at Urbana-Champaign']
@@ -124,16 +133,7 @@ def cleaning_func_17(cwurData,shanghaiData,timesData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	cwur_plot_data = cwurData[cwurData.institution.isin(my_university_name)][['world_rank', 'year']]
 	return cwur_plot_data
-=============
-
-# Function 10
-def cleaning_func_1(timesData):
-	# core cleaning code
-	my_university_name = ['University of Illinois at Urbana-Champaign']
-	import pandas as pd
-	# timesData = pd.read_csv('../input/timesData.csv')
-	return timesData[timesData.university_name.isin(my_university_name)]
-=============
+#=============
 
 # Function 11
 def cleaning_func_0(df):
@@ -143,7 +143,7 @@ def cleaning_func_0(df):
 	# df = pd.read_csv('../input/timesData.csv')
 	df['income'] = df['income'].replace('-', np.NaN)
 	return df
-=============
+#=============
 
 # Function 12
 def cleaning_func_0(timesData):
@@ -152,7 +152,7 @@ def cleaning_func_0(timesData):
 	import pandas as pd
 	# timesData = pd.read_csv('../input/timesData.csv')
 	return timesData[timesData.university_name.isin(my_university_name)]
-=============
+#=============
 
 # Function 13
 def cleaning_func_1(timesData):
@@ -163,7 +163,7 @@ def cleaning_func_1(timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['source'] = 'Times'
 	return times_plot_data
-=============
+#=============
 
 # Function 14
 def cleaning_func_2(shanghaiData):
@@ -174,7 +174,7 @@ def cleaning_func_2(shanghaiData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	shanghai_plot_data['source'] = 'Shanghai'
 	return shanghai_plot_data
-=============
+#=============
 
 # Function 15
 def cleaning_func_5(cwurData):
@@ -185,7 +185,7 @@ def cleaning_func_5(cwurData):
 	cwur_plot_data = cwurData[cwurData.institution.isin(my_university_name)][['world_rank', 'year']]
 	cwur_plot_data['source'] = 'CWUR'
 	return cwur_plot_data
-=============
+#=============
 
 # Function 16
 def cleaning_func_6(timesData):
@@ -196,7 +196,7 @@ def cleaning_func_6(timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	return times_plot_data
-=============
+#=============
 
 # Function 17
 def cleaning_func_7(shanghaiData,timesData):
@@ -210,7 +210,7 @@ def cleaning_func_7(shanghaiData,timesData):
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	shanghai_plot_data['world_rank'] = shanghai_plot_data['world_rank'].str.split('-').str[0]
 	return shanghai_plot_data
-=============
+#=============
 
 # Function 18
 def cleaning_func_9(shanghaiData,timesData):
@@ -221,7 +221,7 @@ def cleaning_func_9(shanghaiData,timesData):
 	# shanghaiData = pd.read_csv('../input/shanghaiData.csv')
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	return shanghaiData[shanghaiData.university_name.isin(my_university_name)]
-=============
+#=============
 
 # Function 19
 def cleaning_func_11(cwurData,shanghaiData,timesData):
@@ -237,7 +237,7 @@ def cleaning_func_11(cwurData,shanghaiData,timesData):
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	shanghai_plot_data['world_rank'] = shanghai_plot_data['world_rank'].str.split('-').str[0]
 	return times_plot_data.append(shanghai_plot_data)
-=============
+#=============
 
 # Function 20
 def cleaning_func_12(cwurData,shanghaiData,timesData):
@@ -250,7 +250,7 @@ def cleaning_func_12(cwurData,shanghaiData,timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	return cwurData[cwurData.institution.isin(my_university_name)]
-=============
+#=============
 
 # Function 21
 def cleaning_func_13(cwurData,shanghaiData,timesData):
@@ -264,7 +264,7 @@ def cleaning_func_13(cwurData,shanghaiData,timesData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	cwur_plot_data = cwurData[cwurData.institution.isin(my_university_name)][['world_rank', 'year']]
 	return cwur_plot_data
-=============
+#=============
 
 # Function 22
 def cleaning_func_15(cwurData,shanghaiData,timesData):
@@ -282,7 +282,7 @@ def cleaning_func_15(cwurData,shanghaiData,timesData):
 	plot_data = times_plot_data.append(shanghai_plot_data).append(cwur_plot_data)
 	plot_data['world_rank'] = plot_data['world_rank'].astype(int)
 	return plot_data
-=============
+#=============
 
 # Function 23
 def cleaning_func_0(timesData):
@@ -292,7 +292,7 @@ def cleaning_func_0(timesData):
 	times_plot_data = timesData[timesData.university_name.isin(['University of Texas at Dallas'])][['world_rank', 'year']]
 	times_plot_data['source'] = 'Times'
 	return times_plot_data
-=============
+#=============
 
 # Function 24
 def cleaning_func_1(timesData):
@@ -300,7 +300,7 @@ def cleaning_func_1(timesData):
 	import pandas as pd
 	# timesData = pd.read_csv('../input/timesData.csv')
 	return timesData[timesData.university_name.isin(['University of Texas at Dallas'])]
-=============
+#=============
 
 # Function 25
 def cleaning_func_2(shanghaiData):
@@ -310,7 +310,7 @@ def cleaning_func_2(shanghaiData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(['University of Texas at Dallas'])][['world_rank', 'year']]
 	shanghai_plot_data['source'] = 'Shanghai'
 	return shanghai_plot_data
-=============
+#=============
 
 # Function 26
 def cleaning_func_5(cwurData):
@@ -320,7 +320,7 @@ def cleaning_func_5(cwurData):
 	cwur_plot_data = cwurData[cwurData.institution.isin(['University of Texas at Dallas'])][['world_rank', 'year']]
 	cwur_plot_data['source'] = 'CWUR'
 	return cwur_plot_data
-=============
+#=============
 
 # Function 27
 def cleaning_func_6(timesData):
@@ -330,7 +330,7 @@ def cleaning_func_6(timesData):
 	times_plot_data = timesData[timesData.university_name.isin(['University of Texas at Dallas'])][['world_rank', 'year']]
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	return times_plot_data
-=============
+#=============
 
 # Function 28
 def cleaning_func_8(shanghaiData,timesData):
@@ -342,7 +342,7 @@ def cleaning_func_8(shanghaiData,timesData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(['University of Texas at Dallas'])][['world_rank', 'year']]
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	return times_plot_data
-=============
+#=============
 
 # Function 29
 def cleaning_func_10(shanghaiData,timesData):
@@ -352,7 +352,7 @@ def cleaning_func_10(shanghaiData,timesData):
 	# shanghaiData = pd.read_csv('../input/shanghaiData.csv')
 	times_plot_data = timesData[timesData.university_name.isin(['University of Texas at Dallas'])][['world_rank', 'year']]
 	return shanghaiData[shanghaiData.university_name.isin(['University of Texas at Dallas'])]
-=============
+#=============
 
 # Function 30
 def cleaning_func_12(cwurData,shanghaiData,timesData):
@@ -367,7 +367,7 @@ def cleaning_func_12(cwurData,shanghaiData,timesData):
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	shanghai_plot_data['world_rank'] = shanghai_plot_data['world_rank'].str.split('-').str[0]
 	return times_plot_data.append(shanghai_plot_data)
-=============
+#=============
 
 # Function 31
 def cleaning_func_13(cwurData,shanghaiData,timesData):
@@ -380,7 +380,7 @@ def cleaning_func_13(cwurData,shanghaiData,timesData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(['University of Texas at Dallas'])][['world_rank', 'year']]
 	cwur_plot_data = cwurData[cwurData.institution.isin(['University of Texas at Dallas'])][['world_rank', 'year']]
 	return cwur_plot_data
-=============
+#=============
 
 # Function 32
 def cleaning_func_16(cwurData,shanghaiData,timesData):
@@ -392,7 +392,7 @@ def cleaning_func_16(cwurData,shanghaiData,timesData):
 	times_plot_data = timesData[timesData.university_name.isin(['University of Texas at Dallas'])][['world_rank', 'year']]
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(['University of Texas at Dallas'])][['world_rank', 'year']]
 	return cwurData[cwurData.institution.isin(['University of Texas at Dallas'])]
-=============
+#=============
 
 # Function 33
 def cleaning_func_18(cwurData,shanghaiData,timesData):
@@ -409,7 +409,7 @@ def cleaning_func_18(cwurData,shanghaiData,timesData):
 	plot_data = times_plot_data.append(shanghai_plot_data).append(cwur_plot_data)
 	plot_data['world_rank'] = plot_data['world_rank'].astype(int)
 	return plot_data
-=============
+#=============
 
 # Function 34
 def cleaning_func_0(timesData):
@@ -418,7 +418,7 @@ def cleaning_func_0(timesData):
 	import pandas as pd
 	# timesData = pd.read_csv('../input/timesData.csv')
 	return timesData[timesData.university_name.isin(my_university_name)]
-=============
+#=============
 
 # Function 35
 def cleaning_func_1(timesData):
@@ -429,7 +429,7 @@ def cleaning_func_1(timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['source'] = 'Times'
 	return times_plot_data
-=============
+#=============
 
 # Function 36
 def cleaning_func_3(shanghaiData):
@@ -440,7 +440,7 @@ def cleaning_func_3(shanghaiData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	shanghai_plot_data['source'] = 'Shanghai'
 	return shanghai_plot_data
-=============
+#=============
 
 # Function 37
 def cleaning_func_5(cwurData):
@@ -451,7 +451,7 @@ def cleaning_func_5(cwurData):
 	cwur_plot_data = cwurData[cwurData.institution.isin(my_university_name)][['world_rank', 'year']]
 	cwur_plot_data['source'] = 'CWUR'
 	return cwur_plot_data
-=============
+#=============
 
 # Function 38
 def cleaning_func_6(timesData):
@@ -462,7 +462,7 @@ def cleaning_func_6(timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	return times_plot_data
-=============
+#=============
 
 # Function 39
 def cleaning_func_7(shanghaiData,timesData):
@@ -476,7 +476,7 @@ def cleaning_func_7(shanghaiData,timesData):
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	shanghai_plot_data['world_rank'] = shanghai_plot_data['world_rank'].str.split('-').str[0]
 	return shanghai_plot_data
-=============
+#=============
 
 # Function 40
 def cleaning_func_8(shanghaiData,timesData):
@@ -487,7 +487,7 @@ def cleaning_func_8(shanghaiData,timesData):
 	# shanghaiData = pd.read_csv('../input/shanghaiData.csv')
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	return shanghaiData[shanghaiData.university_name.isin(my_university_name)]
-=============
+#=============
 
 # Function 41
 def cleaning_func_11(cwurData,shanghaiData,timesData):
@@ -503,7 +503,7 @@ def cleaning_func_11(cwurData,shanghaiData,timesData):
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	shanghai_plot_data['world_rank'] = shanghai_plot_data['world_rank'].str.split('-').str[0]
 	return shanghai_plot_data
-=============
+#=============
 
 # Function 42
 def cleaning_func_12(cwurData,shanghaiData,timesData):
@@ -516,7 +516,7 @@ def cleaning_func_12(cwurData,shanghaiData,timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	return cwurData[cwurData.institution.isin(my_university_name)]
-=============
+#=============
 
 # Function 43
 def cleaning_func_15(cwurData,shanghaiData,timesData):
@@ -530,7 +530,7 @@ def cleaning_func_15(cwurData,shanghaiData,timesData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	cwur_plot_data = cwurData[cwurData.institution.isin(my_university_name)][['world_rank', 'year']]
 	return cwur_plot_data
-=============
+#=============
 
 # Function 44
 def cleaning_func_16(cwurData,shanghaiData,timesData):
@@ -548,7 +548,7 @@ def cleaning_func_16(cwurData,shanghaiData,timesData):
 	plot_data = times_plot_data.append(shanghai_plot_data).append(cwur_plot_data)
 	plot_data['world_rank'] = plot_data['world_rank'].astype(int)
 	return plot_data
-=============
+#=============
 
 # Function 45
 def cleaning_func_0(shanghai):
@@ -557,7 +557,7 @@ def cleaning_func_0(shanghai):
 	# shanghai = pd.read_csv('../input/shanghaiData.csv')
 	shanghai.world_rank = [(int(x.split('-')[0]) if (type(x) == str) else x) for x in shanghai.world_rank]
 	return shanghai
-=============
+#=============
 
 # Function 46
 def cleaning_func_0(timesData):
@@ -566,7 +566,7 @@ def cleaning_func_0(timesData):
 	import pandas as pd
 	# timesData = pd.read_csv('../input/timesData.csv')
 	return timesData[timesData.university_name.isin(my_university_name)]
-=============
+#=============
 
 # Function 47
 def cleaning_func_1(timesData):
@@ -577,7 +577,7 @@ def cleaning_func_1(timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['source'] = 'Times'
 	return times_plot_data
-=============
+#=============
 
 # Function 48
 def cleaning_func_3(shanghaiData):
@@ -588,7 +588,7 @@ def cleaning_func_3(shanghaiData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	shanghai_plot_data['source'] = 'Shanghai'
 	return shanghai_plot_data
-=============
+#=============
 
 # Function 49
 def cleaning_func_5(cwurData):
@@ -599,7 +599,7 @@ def cleaning_func_5(cwurData):
 	cwur_plot_data = cwurData[cwurData.institution.isin(my_university_name)][['world_rank', 'year']]
 	cwur_plot_data['source'] = 'CWUR'
 	return cwur_plot_data
-=============
+#=============
 
 # Function 50
 def cleaning_func_6(timesData):
@@ -610,7 +610,7 @@ def cleaning_func_6(timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	return times_plot_data
-=============
+#=============
 
 # Function 51
 def cleaning_func_8(shanghaiData,timesData):
@@ -623,7 +623,7 @@ def cleaning_func_8(shanghaiData,timesData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	return times_plot_data
-=============
+#=============
 
 # Function 52
 def cleaning_func_9(shanghaiData,timesData):
@@ -634,7 +634,7 @@ def cleaning_func_9(shanghaiData,timesData):
 	# shanghaiData = pd.read_csv('../input/shanghaiData.csv')
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	return shanghaiData[shanghaiData.university_name.isin(my_university_name)]
-=============
+#=============
 
 # Function 53
 def cleaning_func_11(cwurData,shanghaiData,timesData):
@@ -648,7 +648,7 @@ def cleaning_func_11(cwurData,shanghaiData,timesData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	cwur_plot_data = cwurData[cwurData.institution.isin(my_university_name)][['world_rank', 'year']]
 	return cwur_plot_data
-=============
+#=============
 
 # Function 54
 def cleaning_func_13(cwurData,shanghaiData,timesData):
@@ -664,7 +664,7 @@ def cleaning_func_13(cwurData,shanghaiData,timesData):
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	shanghai_plot_data['world_rank'] = shanghai_plot_data['world_rank'].str.split('-').str[0]
 	return shanghai_plot_data
-=============
+#=============
 
 # Function 55
 def cleaning_func_14(cwurData,shanghaiData,timesData):
@@ -682,7 +682,7 @@ def cleaning_func_14(cwurData,shanghaiData,timesData):
 	plot_data = times_plot_data.append(shanghai_plot_data).append(cwur_plot_data)
 	plot_data['world_rank'] = plot_data['world_rank'].astype(int)
 	return plot_data
-=============
+#=============
 
 # Function 56
 def cleaning_func_16(cwurData,shanghaiData,timesData):
@@ -695,7 +695,7 @@ def cleaning_func_16(cwurData,shanghaiData,timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	return cwurData[cwurData.institution.isin(my_university_name)]
-=============
+#=============
 
 # Function 57
 def cleaning_func_0(df):
@@ -706,7 +706,7 @@ def cleaning_func_0(df):
 	f = (lambda x: (int(((int(x.split('-')[0]) + int(x.split('-')[1])) / 2)) if (len(str(x).strip()) > 3) else x))
 	odf_cp5['world_rank'] = odf_cp5['world_rank'].str.replace('=', '').map(f).astype('float')
 	return odf_cp5
-=============
+#=============
 
 # Function 58
 def cleaning_func_1(df):
@@ -718,7 +718,7 @@ def cleaning_func_1(df):
 	odf_cp2['num_students'] = odf_cp2['num_students'].str.replace(',', '')
 	odf_cp2['num_students'] = odf_cp2['num_students'].astype(np.float)
 	return odf_cp2
-=============
+#=============
 
 # Function 59
 def cleaning_func_2(df):
@@ -730,7 +730,7 @@ def cleaning_func_2(df):
 	odf_cp1['international_students'] = odf_cp1['international_students'].str.replace('%', '')
 	odf_cp1['international_students'] = odf_cp1['international_students'].astype(np.float)
 	return odf_cp1
-=============
+#=============
 
 # Function 60
 def cleaning_func_3(df):
@@ -740,7 +740,7 @@ def cleaning_func_3(df):
 	# df = pd.read_csv('../input/timesData.csv')
 	odf_cp4 = df.copy()
 	return odf_cp4
-=============
+#=============
 
 # Function 61
 def cleaning_func_4(df):
@@ -752,7 +752,7 @@ def cleaning_func_4(df):
 	odf_cp4 = odf_cp4[(odf_cp4['total_score'].str.len() > 1)]
 	odf_cp4['total_score'] = odf_cp4['total_score'].astype(np.float)
 	return odf_cp4
-=============
+#=============
 
 # Function 62
 def cleaning_func_5(df):
@@ -767,7 +767,7 @@ def cleaning_func_5(df):
 	odf_cp3['female_male_ratio'] = odf_cp3['female_male_ratio'].str[slice(0, 2, None)]
 	odf_cp3['female_male_ratio'] = odf_cp3['female_male_ratio'].astype(np.float)
 	return odf_cp3
-=============
+#=============
 
 # Function 63
 def cleaning_func_7(df):
@@ -780,7 +780,7 @@ def cleaning_func_7(df):
 	odf_cp5['world_rank'] = odf_cp5['world_rank'].str.replace('=', '').map(f).astype('float')
 	odf_cp4 = df.copy()
 	return odf_cp4
-=============
+#=============
 
 # Function 64
 def cleaning_func_9(df):
@@ -797,7 +797,7 @@ def cleaning_func_9(df):
 	f = (lambda x: (int(((int(x.split('-')[0]) + int(x.split('-')[1])) / 2)) if (len(str(x).strip()) > 3) else x))
 	odf_cp4['world_rank'] = odf_cp4['world_rank'].str.replace('=', '').map(f).astype('float')
 	return odf_cp4
-=============
+#=============
 
 # Function 65
 def cleaning_func_0(shanghaiData):
@@ -806,7 +806,7 @@ def cleaning_func_0(shanghaiData):
 	import pandas as pd
 	# shanghaiData = pd.read_csv('../input/shanghaiData.csv')
 	return shanghaiData[shanghaiData.university_name.isin(my_university_name)]
-=============
+#=============
 
 # Function 66
 def cleaning_func_1(shanghaiData):
@@ -817,7 +817,7 @@ def cleaning_func_1(shanghaiData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	shanghai_plot_data['source'] = 'Shanghai'
 	return shanghai_plot_data
-=============
+#=============
 
 # Function 67
 def cleaning_func_2(cwurData):
@@ -828,7 +828,7 @@ def cleaning_func_2(cwurData):
 	cwur_plot_data = cwurData[cwurData.institution.isin(my_university_name)][['world_rank', 'year']]
 	cwur_plot_data['source'] = 'CWUR'
 	return cwur_plot_data
-=============
+#=============
 
 # Function 68
 def cleaning_func_5(timesData):
@@ -839,7 +839,7 @@ def cleaning_func_5(timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['source'] = 'Times'
 	return times_plot_data
-=============
+#=============
 
 # Function 69
 def cleaning_func_6(timesData):
@@ -850,7 +850,7 @@ def cleaning_func_6(timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	return times_plot_data
-=============
+#=============
 
 # Function 70
 def cleaning_func_7(shanghaiData,timesData):
@@ -861,7 +861,7 @@ def cleaning_func_7(shanghaiData,timesData):
 	# shanghaiData = pd.read_csv('../input/shanghaiData.csv')
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	return shanghaiData[shanghaiData.university_name.isin(my_university_name)]
-=============
+#=============
 
 # Function 71
 def cleaning_func_8(shanghaiData,timesData):
@@ -875,7 +875,7 @@ def cleaning_func_8(shanghaiData,timesData):
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	shanghai_plot_data['world_rank'] = shanghai_plot_data['world_rank'].str.split('-').str[0]
 	return shanghai_plot_data
-=============
+#=============
 
 # Function 72
 def cleaning_func_12(cwurData,shanghaiData,timesData):
@@ -891,7 +891,7 @@ def cleaning_func_12(cwurData,shanghaiData,timesData):
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	shanghai_plot_data['world_rank'] = shanghai_plot_data['world_rank'].str.split('-').str[0]
 	return shanghai_plot_data
-=============
+#=============
 
 # Function 73
 def cleaning_func_14(cwurData,shanghaiData,timesData):
@@ -909,7 +909,7 @@ def cleaning_func_14(cwurData,shanghaiData,timesData):
 	plot_data = times_plot_data.append(shanghai_plot_data).append(cwur_plot_data)
 	plot_data['world_rank'] = plot_data['world_rank'].astype(int)
 	return plot_data
-=============
+#=============
 
 # Function 74
 def cleaning_func_16(cwurData,shanghaiData,timesData):
@@ -923,7 +923,7 @@ def cleaning_func_16(cwurData,shanghaiData,timesData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	cwur_plot_data = cwurData[cwurData.institution.isin(my_university_name)][['world_rank', 'year']]
 	return cwur_plot_data
-=============
+#=============
 
 # Function 75
 def cleaning_func_18(cwurData,shanghaiData,timesData):
@@ -936,7 +936,7 @@ def cleaning_func_18(cwurData,shanghaiData,timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	return cwurData[cwurData.institution.isin(my_university_name)]
-=============
+#=============
 
 # Function 76
 def cleaning_func_0(timesData):
@@ -945,7 +945,7 @@ def cleaning_func_0(timesData):
 	import pandas as pd
 	# timesData = pd.read_csv('../input/timesData.csv')
 	return timesData[timesData.university_name.isin(my_university_name)]
-=============
+#=============
 
 # Function 77
 def cleaning_func_1(timesData):
@@ -956,7 +956,7 @@ def cleaning_func_1(timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['source'] = 'Times'
 	return times_plot_data
-=============
+#=============
 
 # Function 78
 def cleaning_func_2(shanghaiData):
@@ -967,7 +967,7 @@ def cleaning_func_2(shanghaiData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	shanghai_plot_data['source'] = 'Shanghai'
 	return shanghai_plot_data
-=============
+#=============
 
 # Function 79
 def cleaning_func_4(cwurData):
@@ -978,7 +978,7 @@ def cleaning_func_4(cwurData):
 	cwur_plot_data = cwurData[cwurData.institution.isin(my_university_name)][['world_rank', 'year']]
 	cwur_plot_data['source'] = 'CWUR'
 	return cwur_plot_data
-=============
+#=============
 
 # Function 80
 def cleaning_func_6(timesData):
@@ -989,7 +989,7 @@ def cleaning_func_6(timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	return times_plot_data
-=============
+#=============
 
 # Function 81
 def cleaning_func_8(shanghaiData,timesData):
@@ -1000,7 +1000,7 @@ def cleaning_func_8(shanghaiData,timesData):
 	# shanghaiData = pd.read_csv('../input/shanghaiData.csv')
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	return shanghaiData[shanghaiData.university_name.isin(my_university_name)]
-=============
+#=============
 
 # Function 82
 def cleaning_func_9(shanghaiData,timesData):
@@ -1014,7 +1014,7 @@ def cleaning_func_9(shanghaiData,timesData):
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	shanghai_plot_data['world_rank'] = shanghai_plot_data['world_rank'].str.split('-').str[0]
 	return shanghai_plot_data
-=============
+#=============
 
 # Function 83
 def cleaning_func_12(cwurData,shanghaiData,timesData):
@@ -1027,7 +1027,7 @@ def cleaning_func_12(cwurData,shanghaiData,timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	return cwurData[cwurData.institution.isin(my_university_name)]
-=============
+#=============
 
 # Function 84
 def cleaning_func_13(cwurData,shanghaiData,timesData):
@@ -1045,7 +1045,7 @@ def cleaning_func_13(cwurData,shanghaiData,timesData):
 	plot_data = times_plot_data.append(shanghai_plot_data).append(cwur_plot_data)
 	plot_data['world_rank'] = plot_data['world_rank'].astype(int)
 	return plot_data
-=============
+#=============
 
 # Function 85
 def cleaning_func_14(cwurData,shanghaiData,timesData):
@@ -1060,7 +1060,7 @@ def cleaning_func_14(cwurData,shanghaiData,timesData):
 	cwur_plot_data = cwurData[cwurData.institution.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	return times_plot_data
-=============
+#=============
 
 # Function 86
 def cleaning_func_18(cwurData,shanghaiData,timesData):
@@ -1074,7 +1074,7 @@ def cleaning_func_18(cwurData,shanghaiData,timesData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	cwur_plot_data = cwurData[cwurData.institution.isin(my_university_name)][['world_rank', 'year']]
 	return cwur_plot_data
-=============
+#=============
 
 # Function 87
 def cleaning_func_0(timesData):
@@ -1085,7 +1085,7 @@ def cleaning_func_0(timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['source'] = 'Times'
 	return times_plot_data
-=============
+#=============
 
 # Function 88
 def cleaning_func_1(timesData):
@@ -1094,7 +1094,7 @@ def cleaning_func_1(timesData):
 	import pandas as pd
 	# timesData = pd.read_csv('../input/timesData.csv')
 	return timesData[timesData.university_name.isin(my_university_name)]
-=============
+#=============
 
 # Function 89
 def cleaning_func_3(shanghaiData):
@@ -1105,7 +1105,7 @@ def cleaning_func_3(shanghaiData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	shanghai_plot_data['source'] = 'Shanghai'
 	return shanghai_plot_data
-=============
+#=============
 
 # Function 90
 def cleaning_func_4(cwurData):
@@ -1116,7 +1116,7 @@ def cleaning_func_4(cwurData):
 	cwur_plot_data = cwurData[cwurData.institution.isin(my_university_name)][['world_rank', 'year']]
 	cwur_plot_data['source'] = 'CWUR'
 	return cwur_plot_data
-=============
+#=============
 
 # Function 91
 def cleaning_func_6(timesData):
@@ -1127,7 +1127,7 @@ def cleaning_func_6(timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	return times_plot_data
-=============
+#=============
 
 # Function 92
 def cleaning_func_7(shanghaiData,timesData):
@@ -1140,7 +1140,7 @@ def cleaning_func_7(shanghaiData,timesData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	return times_plot_data
-=============
+#=============
 
 # Function 93
 def cleaning_func_9(shanghaiData,timesData):
@@ -1151,7 +1151,7 @@ def cleaning_func_9(shanghaiData,timesData):
 	# shanghaiData = pd.read_csv('../input/shanghaiData.csv')
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	return shanghaiData[shanghaiData.university_name.isin(my_university_name)]
-=============
+#=============
 
 # Function 94
 def cleaning_func_11(cwurData,shanghaiData,timesData):
@@ -1167,7 +1167,7 @@ def cleaning_func_11(cwurData,shanghaiData,timesData):
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	shanghai_plot_data['world_rank'] = shanghai_plot_data['world_rank'].str.split('-').str[0]
 	return times_plot_data.append(shanghai_plot_data)
-=============
+#=============
 
 # Function 95
 def cleaning_func_12(cwurData,shanghaiData,timesData):
@@ -1185,7 +1185,7 @@ def cleaning_func_12(cwurData,shanghaiData,timesData):
 	plot_data = times_plot_data.append(shanghai_plot_data).append(cwur_plot_data)
 	plot_data['world_rank'] = plot_data['world_rank'].astype(int)
 	return plot_data
-=============
+#=============
 
 # Function 96
 def cleaning_func_15(cwurData,shanghaiData,timesData):
@@ -1198,7 +1198,7 @@ def cleaning_func_15(cwurData,shanghaiData,timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	return cwurData[cwurData.institution.isin(my_university_name)]
-=============
+#=============
 
 # Function 97
 def cleaning_func_18(cwurData,shanghaiData,timesData):
@@ -1212,7 +1212,7 @@ def cleaning_func_18(cwurData,shanghaiData,timesData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	cwur_plot_data = cwurData[cwurData.institution.isin(my_university_name)][['world_rank', 'year']]
 	return cwur_plot_data
-=============
+#=============
 
 # Function 98
 def cleaning_func_0(timesData):
@@ -1221,7 +1221,7 @@ def cleaning_func_0(timesData):
 	import pandas as pd
 	# timesData = pd.read_csv('../input/timesData.csv')
 	return timesData[timesData.university_name.isin(my_university_name)]
-=============
+#=============
 
 # Function 99
 def cleaning_func_1(timesData):
@@ -1232,7 +1232,7 @@ def cleaning_func_1(timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['source'] = 'Times'
 	return times_plot_data
-=============
+#=============
 
 # Function 100
 def cleaning_func_3(shanghaiData):
@@ -1243,7 +1243,7 @@ def cleaning_func_3(shanghaiData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	shanghai_plot_data['source'] = 'Shanghai'
 	return shanghai_plot_data
-=============
+#=============
 
 # Function 101
 def cleaning_func_4(cwurData):
@@ -1254,7 +1254,7 @@ def cleaning_func_4(cwurData):
 	cwur_plot_data = cwurData[cwurData.institution.isin(my_university_name)][['world_rank', 'year']]
 	cwur_plot_data['source'] = 'CWUR'
 	return cwur_plot_data
-=============
+#=============
 
 # Function 102
 def cleaning_func_6(timesData):
@@ -1265,7 +1265,7 @@ def cleaning_func_6(timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	return times_plot_data
-=============
+#=============
 
 # Function 103
 def cleaning_func_7(shanghaiData,timesData):
@@ -1276,7 +1276,7 @@ def cleaning_func_7(shanghaiData,timesData):
 	# shanghaiData = pd.read_csv('../input/shanghaiData.csv')
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	return shanghaiData[shanghaiData.university_name.isin(my_university_name)]
-=============
+#=============
 
 # Function 104
 def cleaning_func_9(shanghaiData,timesData):
@@ -1290,7 +1290,7 @@ def cleaning_func_9(shanghaiData,timesData):
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	shanghai_plot_data['world_rank'] = shanghai_plot_data['world_rank'].str.split('-').str[0]
 	return shanghai_plot_data
-=============
+#=============
 
 # Function 105
 def cleaning_func_12(cwurData,shanghaiData,timesData):
@@ -1306,7 +1306,7 @@ def cleaning_func_12(cwurData,shanghaiData,timesData):
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	shanghai_plot_data['world_rank'] = shanghai_plot_data['world_rank'].str.split('-').str[0]
 	return times_plot_data.append(shanghai_plot_data)
-=============
+#=============
 
 # Function 106
 def cleaning_func_13(cwurData,shanghaiData,timesData):
@@ -1324,7 +1324,7 @@ def cleaning_func_13(cwurData,shanghaiData,timesData):
 	plot_data = times_plot_data.append(shanghai_plot_data).append(cwur_plot_data)
 	plot_data['world_rank'] = plot_data['world_rank'].astype(int)
 	return plot_data
-=============
+#=============
 
 # Function 107
 def cleaning_func_14(cwurData,shanghaiData,timesData):
@@ -1338,7 +1338,7 @@ def cleaning_func_14(cwurData,shanghaiData,timesData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	cwur_plot_data = cwurData[cwurData.institution.isin(my_university_name)][['world_rank', 'year']]
 	return cwur_plot_data
-=============
+#=============
 
 # Function 108
 def cleaning_func_16(cwurData,shanghaiData,timesData):
@@ -1351,7 +1351,7 @@ def cleaning_func_16(cwurData,shanghaiData,timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	return cwurData[cwurData.institution.isin(my_university_name)]
-=============
+#=============
 
 # Function 109
 def cleaning_func_0(timesData):
@@ -1362,7 +1362,7 @@ def cleaning_func_0(timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['source'] = 'Times'
 	return times_plot_data
-=============
+#=============
 
 # Function 110
 def cleaning_func_1(timesData):
@@ -1371,7 +1371,7 @@ def cleaning_func_1(timesData):
 	import pandas as pd
 	# timesData = pd.read_csv('../input/timesData.csv')
 	return timesData[timesData.university_name.isin(my_university_name)]
-=============
+#=============
 
 # Function 111
 def cleaning_func_2(shanghaiData):
@@ -1382,7 +1382,7 @@ def cleaning_func_2(shanghaiData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	shanghai_plot_data['source'] = 'Shanghai'
 	return shanghai_plot_data
-=============
+#=============
 
 # Function 112
 def cleaning_func_5(cwurData):
@@ -1393,7 +1393,7 @@ def cleaning_func_5(cwurData):
 	cwur_plot_data = cwurData[cwurData.institution.isin(my_university_name)][['world_rank', 'year']]
 	cwur_plot_data['source'] = 'CWUR'
 	return cwur_plot_data
-=============
+#=============
 
 # Function 113
 def cleaning_func_6(timesData):
@@ -1404,7 +1404,7 @@ def cleaning_func_6(timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	return times_plot_data
-=============
+#=============
 
 # Function 114
 def cleaning_func_7(shanghaiData,timesData):
@@ -1417,7 +1417,7 @@ def cleaning_func_7(shanghaiData,timesData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	return times_plot_data
-=============
+#=============
 
 # Function 115
 def cleaning_func_8(shanghaiData,timesData):
@@ -1428,7 +1428,7 @@ def cleaning_func_8(shanghaiData,timesData):
 	# shanghaiData = pd.read_csv('../input/shanghaiData.csv')
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	return shanghaiData[shanghaiData.university_name.isin(my_university_name)]
-=============
+#=============
 
 # Function 116
 def cleaning_func_11(cwurData,shanghaiData,timesData):
@@ -1443,7 +1443,7 @@ def cleaning_func_11(cwurData,shanghaiData,timesData):
 	cwur_plot_data = cwurData[cwurData.institution.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	return times_plot_data
-=============
+#=============
 
 # Function 117
 def cleaning_func_12(cwurData,shanghaiData,timesData):
@@ -1456,7 +1456,7 @@ def cleaning_func_12(cwurData,shanghaiData,timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	return cwurData[cwurData.institution.isin(my_university_name)]
-=============
+#=============
 
 # Function 118
 def cleaning_func_14(cwurData,shanghaiData,timesData):
@@ -1470,7 +1470,7 @@ def cleaning_func_14(cwurData,shanghaiData,timesData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	cwur_plot_data = cwurData[cwurData.institution.isin(my_university_name)][['world_rank', 'year']]
 	return cwur_plot_data
-=============
+#=============
 
 # Function 119
 def cleaning_func_16(cwurData,shanghaiData,timesData):
@@ -1488,7 +1488,7 @@ def cleaning_func_16(cwurData,shanghaiData,timesData):
 	plot_data = times_plot_data.append(shanghai_plot_data).append(cwur_plot_data)
 	plot_data['world_rank'] = plot_data['world_rank'].astype(int)
 	return plot_data
-=============
+#=============
 
 # Function 120
 def cleaning_func_0(df_sac):
@@ -1497,7 +1497,7 @@ def cleaning_func_0(df_sac):
 	# df_sac = pd.read_csv('../input/school_and_country_table.csv')
 	df_sac.columns = ['university_name', 'country']
 	return df_sac
-=============
+#=============
 
 # Function 121
 def cleaning_func_1(df):
@@ -1507,7 +1507,7 @@ def cleaning_func_1(df):
 	a = []
 	df.columns = a
 	return df
-=============
+#=============
 
 # Function 122
 def cleaning_func_2(df,df_cwur,df_sac):
@@ -1517,7 +1517,7 @@ def cleaning_func_2(df,df_cwur,df_sac):
 	# df_sac = pd.read_csv('../input/school_and_country_table.csv')
 	df_cwur = df_cwur.rename(columns={'institution': 'university_name'})
 	return df_cwur
-=============
+#=============
 
 # Function 123
 def cleaning_func_3(df,df_cwur,df_sac):
@@ -1528,7 +1528,7 @@ def cleaning_func_3(df,df_cwur,df_sac):
 	df_cwur = df_cwur.rename(columns={'institution': 'university_name'})
 	df_cwur = df_cwur.merge(df_sac, how='left', on='university_name')
 	return df_cwur
-=============
+#=============
 
 # Function 124
 def cleaning_func_4(df,df_cwur,df_sac):
@@ -1541,7 +1541,7 @@ def cleaning_func_4(df,df_cwur,df_sac):
 	a = []
 	df.columns = a
 	return df
-=============
+#=============
 
 # Function 125
 def cleaning_func_5(df_cwur,df_sac,df_shanghai,df_times):
@@ -1553,7 +1553,7 @@ def cleaning_func_5(df_cwur,df_sac,df_shanghai,df_times):
 	# df_times = pd.read_csv('../input/timesData.csv')
 	df_shanghai = df_shanghai.merge(df_sac, how='left', on='university_name')
 	return df_shanghai
-=============
+#=============
 
 # Function 126
 def cleaning_func_6(df_cwur,df_sac,df_shanghai,df_times):
@@ -1570,7 +1570,7 @@ def cleaning_func_6(df_cwur,df_sac,df_shanghai,df_times):
 	df_full = df_full.merge(df_shanghai, how='outer', on=['university_name', 'year'])
 	df_ranks = df_full[['university_name', 't_country', 'year', 't_world_rank', 'c_world_rank', 's_world_rank']].copy()
 	return df_ranks[(df_ranks.year == 2015)]
-=============
+#=============
 
 # Function 127
 def cleaning_func_7(df_cwur,df_sac,df_shanghai,df_times):
@@ -1601,7 +1601,7 @@ def cleaning_func_7(df_cwur,df_sac,df_shanghai,df_times):
 	df_ranks2015 = df_ranks[(df_ranks.year == 2015)].copy()
 	df_ranks2015['min_rank'] = df_ranks2015.apply(f, axis=1)
 	return df_ranks2015
-=============
+#=============
 
 # Function 128
 def cleaning_func_8(df_cwur,df_sac,df_shanghai,df_times):
@@ -1614,7 +1614,7 @@ def cleaning_func_8(df_cwur,df_sac,df_shanghai,df_times):
 	df_shanghai = df_shanghai.merge(df_sac, how='left', on='university_name')
 	df_cwur = df_cwur.rename(columns={'institution': 'university_name'})
 	return df_cwur
-=============
+#=============
 
 # Function 129
 def cleaning_func_10(df_cwur,df_sac,df_shanghai,df_times):
@@ -1630,7 +1630,7 @@ def cleaning_func_10(df_cwur,df_sac,df_shanghai,df_times):
 	df_full = df_times.merge(df_cwur, how='outer', on=['university_name', 'year'])
 	df_full = df_full.merge(df_shanghai, how='outer', on=['university_name', 'year'])
 	return df_full[['university_name', 't_country', 'year', 't_world_rank', 'c_world_rank', 's_world_rank']]
-=============
+#=============
 
 # Function 130
 def cleaning_func_14(df_cwur,df_sac,df_shanghai,df_times):
@@ -1661,7 +1661,7 @@ def cleaning_func_14(df_cwur,df_sac,df_shanghai,df_times):
 	f = (lambda x: (int(((int(x.split('-')[0]) + int(x.split('-')[1])) / 2)) if (len(str(x).strip()) > 3) else x))
 	df_ranks['s_world_rank'] = df_ranks['s_world_rank'].str.replace('=', '').map(f).astype('float')
 	return df_ranks
-=============
+#=============
 
 # Function 131
 def cleaning_func_17(df_cwur,df_sac,df_shanghai,df_times):
@@ -1681,7 +1681,7 @@ def cleaning_func_17(df_cwur,df_sac,df_shanghai,df_times):
 	df_ranks2015 = df_ranks[(df_ranks.year == 2015)].copy()
 	df_ranks2015['std_dev'] = df_ranks2015.apply((lambda x: np.std([x['s_world_rank'], x['t_world_rank'], x['c_world_rank']])), axis=1)
 	return df_ranks2015
-=============
+#=============
 
 # Function 132
 def cleaning_func_25(df_cwur,df_sac,df_shanghai,df_times):
@@ -1701,7 +1701,7 @@ def cleaning_func_25(df_cwur,df_sac,df_shanghai,df_times):
 	df_ranks2015 = df_ranks[(df_ranks.year == 2015)].copy()
 	df_ranks2015['mean_rank'] = df_ranks2015.apply((lambda x: np.mean([x['s_world_rank'], x['t_world_rank'], x['c_world_rank']]).round()), axis=1)
 	return df_ranks2015
-=============
+#=============
 
 # Function 133
 def cleaning_func_26(df_cwur,df_sac,df_shanghai,df_times):
@@ -1719,7 +1719,7 @@ def cleaning_func_26(df_cwur,df_sac,df_shanghai,df_times):
 	df_ranks = df_full[['university_name', 't_country', 'year', 't_world_rank', 'c_world_rank', 's_world_rank']].copy()
 	df_rankstime = df_ranks[((df_ranks['year'] <= 2015) & (df_ranks['year'] >= 2012))]
 	return df_rankstime.pivot('university_name', 'year', 't_world_rank')
-=============
+#=============
 
 # Function 134
 def cleaning_func_27(df_cwur,df_sac,df_shanghai,df_times):
@@ -1739,7 +1739,7 @@ def cleaning_func_27(df_cwur,df_sac,df_shanghai,df_times):
 	df_tranks = df_rankstime.pivot('university_name', 'year', 't_world_rank').reset_index()
 	df_tranks.columns = ['university_name', '2012', '2013', '2014', '2015']
 	return df_tranks
-=============
+#=============
 
 # Function 135
 def cleaning_func_34(df_cwur,df_sac,df_shanghai,df_times):
@@ -1760,7 +1760,7 @@ def cleaning_func_34(df_cwur,df_sac,df_shanghai,df_times):
 	df_tranks = df_rankstime.pivot('university_name', 'year', 't_world_rank').reset_index()
 	df_tranks['std_dev'] = df_tranks.apply((lambda x: np.std([x['2012'], x['2013'], x['2014'], x['2015']])), axis=1)
 	return df_tranks
-=============
+#=============
 
 # Function 136
 def cleaning_func_40(df_cwur,df_sac,df_shanghai,df_times):
@@ -1781,7 +1781,7 @@ def cleaning_func_40(df_cwur,df_sac,df_shanghai,df_times):
 	df_tranks = df_rankstime.pivot('university_name', 'year', 't_world_rank').reset_index()
 	df_tranks['mean'] = df_tranks.apply((lambda x: np.mean([x['2012'], x['2013'], x['2014'], x['2015']])), axis=1)
 	return df_tranks
-=============
+#=============
 
 # Function 137
 def cleaning_func_0(timesData):
@@ -1790,7 +1790,7 @@ def cleaning_func_0(timesData):
 	import pandas as pd
 	# timesData = pd.read_csv('../input/timesData.csv')
 	return timesData[timesData.university_name.isin(my_university_name)]
-=============
+#=============
 
 # Function 138
 def cleaning_func_1(timesData):
@@ -1801,7 +1801,7 @@ def cleaning_func_1(timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['source'] = 'Times'
 	return times_plot_data
-=============
+#=============
 
 # Function 139
 def cleaning_func_3(shanghaiData):
@@ -1812,7 +1812,7 @@ def cleaning_func_3(shanghaiData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	shanghai_plot_data['source'] = 'Shanghai'
 	return shanghai_plot_data
-=============
+#=============
 
 # Function 140
 def cleaning_func_4(cwurData):
@@ -1823,7 +1823,7 @@ def cleaning_func_4(cwurData):
 	cwur_plot_data = cwurData[cwurData.institution.isin(my_university_name)][['world_rank', 'year']]
 	cwur_plot_data['source'] = 'CWUR'
 	return cwur_plot_data
-=============
+#=============
 
 # Function 141
 def cleaning_func_6(timesData):
@@ -1834,7 +1834,7 @@ def cleaning_func_6(timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	return times_plot_data
-=============
+#=============
 
 # Function 142
 def cleaning_func_8(shanghaiData,timesData):
@@ -1847,7 +1847,7 @@ def cleaning_func_8(shanghaiData,timesData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	return times_plot_data
-=============
+#=============
 
 # Function 143
 def cleaning_func_10(shanghaiData,timesData):
@@ -1858,7 +1858,7 @@ def cleaning_func_10(shanghaiData,timesData):
 	# shanghaiData = pd.read_csv('../input/shanghaiData.csv')
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	return shanghaiData[shanghaiData.university_name.isin(my_university_name)]
-=============
+#=============
 
 # Function 144
 def cleaning_func_13(cwurData,shanghaiData,timesData):
@@ -1874,7 +1874,7 @@ def cleaning_func_13(cwurData,shanghaiData,timesData):
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	shanghai_plot_data['world_rank'] = shanghai_plot_data['world_rank'].str.split('-').str[0]
 	return shanghai_plot_data
-=============
+#=============
 
 # Function 145
 def cleaning_func_14(cwurData,shanghaiData,timesData):
@@ -1888,7 +1888,7 @@ def cleaning_func_14(cwurData,shanghaiData,timesData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	cwur_plot_data = cwurData[cwurData.institution.isin(my_university_name)][['world_rank', 'year']]
 	return cwur_plot_data
-=============
+#=============
 
 # Function 146
 def cleaning_func_15(cwurData,shanghaiData,timesData):
@@ -1901,7 +1901,7 @@ def cleaning_func_15(cwurData,shanghaiData,timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	return cwurData[cwurData.institution.isin(my_university_name)]
-=============
+#=============
 
 # Function 147
 def cleaning_func_18(cwurData,shanghaiData,timesData):
@@ -1919,7 +1919,7 @@ def cleaning_func_18(cwurData,shanghaiData,timesData):
 	plot_data = times_plot_data.append(shanghai_plot_data).append(cwur_plot_data)
 	plot_data['world_rank'] = plot_data['world_rank'].astype(int)
 	return plot_data
-=============
+#=============
 
 # Function 148
 def cleaning_func_0(timesData):
@@ -1930,7 +1930,7 @@ def cleaning_func_0(timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['source'] = 'Times'
 	return times_plot_data
-=============
+#=============
 
 # Function 149
 def cleaning_func_1(timesData):
@@ -1939,7 +1939,7 @@ def cleaning_func_1(timesData):
 	import pandas as pd
 	# timesData = pd.read_csv('../input/timesData.csv')
 	return timesData[timesData.university_name.isin(my_university_name)]
-=============
+#=============
 
 # Function 150
 def cleaning_func_2(shanghaiData):
@@ -1950,7 +1950,7 @@ def cleaning_func_2(shanghaiData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	shanghai_plot_data['source'] = 'Shanghai'
 	return shanghai_plot_data
-=============
+#=============
 
 # Function 151
 def cleaning_func_4(cwurData):
@@ -1961,7 +1961,7 @@ def cleaning_func_4(cwurData):
 	cwur_plot_data = cwurData[cwurData.institution.isin(my_university_name)][['world_rank', 'year']]
 	cwur_plot_data['source'] = 'CWUR'
 	return cwur_plot_data
-=============
+#=============
 
 # Function 152
 def cleaning_func_6(timesData):
@@ -1972,7 +1972,7 @@ def cleaning_func_6(timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	return times_plot_data
-=============
+#=============
 
 # Function 153
 def cleaning_func_7(shanghaiData,timesData):
@@ -1986,7 +1986,7 @@ def cleaning_func_7(shanghaiData,timesData):
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	shanghai_plot_data['world_rank'] = shanghai_plot_data['world_rank'].str.split('-').str[0]
 	return shanghai_plot_data
-=============
+#=============
 
 # Function 154
 def cleaning_func_10(shanghaiData,timesData):
@@ -1997,7 +1997,7 @@ def cleaning_func_10(shanghaiData,timesData):
 	# shanghaiData = pd.read_csv('../input/shanghaiData.csv')
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	return shanghaiData[shanghaiData.university_name.isin(my_university_name)]
-=============
+#=============
 
 # Function 155
 def cleaning_func_11(cwurData,shanghaiData,timesData):
@@ -2010,7 +2010,7 @@ def cleaning_func_11(cwurData,shanghaiData,timesData):
 	times_plot_data = timesData[timesData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	return cwurData[cwurData.institution.isin(my_university_name)]
-=============
+#=============
 
 # Function 156
 def cleaning_func_12(cwurData,shanghaiData,timesData):
@@ -2025,7 +2025,7 @@ def cleaning_func_12(cwurData,shanghaiData,timesData):
 	cwur_plot_data = cwurData[cwurData.institution.isin(my_university_name)][['world_rank', 'year']]
 	times_plot_data['world_rank'] = times_plot_data['world_rank'].str.split('-').str[0]
 	return times_plot_data
-=============
+#=============
 
 # Function 157
 def cleaning_func_16(cwurData,shanghaiData,timesData):
@@ -2039,7 +2039,7 @@ def cleaning_func_16(cwurData,shanghaiData,timesData):
 	shanghai_plot_data = shanghaiData[shanghaiData.university_name.isin(my_university_name)][['world_rank', 'year']]
 	cwur_plot_data = cwurData[cwurData.institution.isin(my_university_name)][['world_rank', 'year']]
 	return cwur_plot_data
-=============
+#=============
 
 # Function 158
 def cleaning_func_18(cwurData,shanghaiData,timesData):
@@ -2057,7 +2057,7 @@ def cleaning_func_18(cwurData,shanghaiData,timesData):
 	plot_data = times_plot_data.append(shanghai_plot_data).append(cwur_plot_data)
 	plot_data['world_rank'] = plot_data['world_rank'].astype(int)
 	return plot_data
-=============
+#=============
 
 # Function 159
 def cleaning_func_0(cwur):
@@ -2068,7 +2068,7 @@ def cleaning_func_0(cwur):
 	cwur = cwur[['university_name', 'score']]
 	cwur.score = pd.to_numeric(cwur.score, errors='coerce')
 	return cwur
-=============
+#=============
 
 # Function 160
 def cleaning_func_2(cwur):
@@ -2079,7 +2079,7 @@ def cleaning_func_2(cwur):
 	cwur = cwur.rename(columns={'institution': 'university_name'})
 	cwur = cwur[['university_name', 'score']]
 	return cwur.groupby('university_name').mean()
-=============
+#=============
 
 # Function 161
 def cleaning_func_4(cwur):
@@ -2092,7 +2092,7 @@ def cleaning_func_4(cwur):
 	cwur = cwur.groupby('university_name').mean().reset_index()
 	cwur.university_name = [re.sub('[^a-zA-Z\\s0-9]+', '', string) for string in cwur.university_name]
 	return cwur
-=============
+#=============
 
 # Function 162
 def cleaning_func_7(cwur):
@@ -2105,7 +2105,7 @@ def cleaning_func_7(cwur):
 	cwur = cwur.groupby('university_name').mean().reset_index()
 	data = cwur
 	return data
-=============
+#=============
 
 # Function 163
 def cleaning_func_9(cwur):
@@ -2126,7 +2126,7 @@ def cleaning_func_9(cwur):
 	data = data.rename(columns={'score': 'score_cwur'})
 	data['mean_score'] = data.apply(calcScore, axis=1)
 	return data
-=============
+#=============
 
 # Function 164
 def cleaning_func_10(cwur):
@@ -2138,7 +2138,7 @@ def cleaning_func_10(cwur):
 	cwur = cwur[['university_name', 'score']]
 	cwur = cwur.groupby('university_name').mean().reset_index()
 	return cwur
-=============
+#=============
 
 # Function 165
 def cleaning_func_12(cwur,shanghai):
@@ -2156,7 +2156,7 @@ def cleaning_func_12(cwur,shanghai):
 	cwur.university_name = [re.sub('[^a-zA-Z\\s0-9]+', '', string) for string in cwur.university_name]
 	shanghai.university_name = [re.sub('[^a-zA-Z\\s0-9]+', '', string) for string in shanghai.university_name]
 	return shanghai
-=============
+#=============
 
 # Function 166
 def cleaning_func_15(cwur,shanghai):
@@ -2171,7 +2171,7 @@ def cleaning_func_15(cwur,shanghai):
 	shanghai = shanghai[['university_name', 'score']]
 	cwur = cwur.groupby('university_name').mean().reset_index()
 	return shanghai.groupby('university_name').mean()
-=============
+#=============
 
 # Function 167
 def cleaning_func_16(cwur,shanghai):
@@ -2184,7 +2184,7 @@ def cleaning_func_16(cwur,shanghai):
 	shanghai = shanghai.rename(columns={'total_score': 'score'})
 	cwur = cwur[['university_name', 'score']]
 	return cwur
-=============
+#=============
 
 # Function 168
 def cleaning_func_26(cwur,shanghai):
@@ -2200,7 +2200,7 @@ def cleaning_func_26(cwur,shanghai):
 	shanghai = shanghai.groupby('university_name').mean().reset_index()
 	data = cwur
 	return data
-=============
+#=============
 
 # Function 169
 def cleaning_func_27(cwur,shanghai):
@@ -2234,7 +2234,7 @@ def cleaning_func_27(cwur,shanghai):
 	data = data.rename(columns={'score': 'score_cwur'})
 	data['score_shanghai'] = data.apply(check_for_uni_shanghai, axis=1)
 	return data
-=============
+#=============
 
 # Function 170
 def cleaning_func_32(cwur,shanghai,times):
@@ -2254,7 +2254,7 @@ def cleaning_func_32(cwur,shanghai,times):
 	shanghai.score = pd.to_numeric(shanghai.score, errors='coerce')
 	times.score = pd.to_numeric(shanghai.score, errors='coerce')
 	return times
-=============
+#=============
 
 # Function 171
 def cleaning_func_33(cwur,shanghai,times):
@@ -2270,7 +2270,7 @@ def cleaning_func_33(cwur,shanghai,times):
 	shanghai = shanghai[['university_name', 'score']]
 	times = times[['university_name', 'score']]
 	return times
-=============
+#=============
 
 # Function 172
 def cleaning_func_37(cwur,shanghai,times):
@@ -2292,7 +2292,7 @@ def cleaning_func_37(cwur,shanghai,times):
 	cwur = cwur.groupby('university_name').mean().reset_index()
 	cwur.score = ((cwur.score - cwur.score.mean()) / cwur.score.std())
 	return cwur
-=============
+#=============
 
 # Function 173
 def cleaning_func_41(cwur,shanghai,times):
@@ -2313,7 +2313,7 @@ def cleaning_func_41(cwur,shanghai,times):
 	times.score = pd.to_numeric(shanghai.score, errors='coerce')
 	cwur = cwur.groupby('university_name').mean().reset_index()
 	return shanghai.groupby('university_name').mean()
-=============
+#=============
 
 # Function 174
 def cleaning_func_46(cwur,shanghai,times):
@@ -2342,7 +2342,7 @@ def cleaning_func_46(cwur,shanghai,times):
 	cwur.university_name = [re.sub('[^a-zA-Z\\s0-9]+', '', string) for string in cwur.university_name]
 	shanghai.university_name = [re.sub('[^a-zA-Z\\s0-9]+', '', string) for string in shanghai.university_name]
 	return shanghai
-=============
+#=============
 
 # Function 175
 def cleaning_func_59(cwur,shanghai,times):
@@ -2369,7 +2369,7 @@ def cleaning_func_59(cwur,shanghai,times):
 	times.score = ((times.score - times.score.mean()) / times.score.std())
 	data = cwur
 	return data
-=============
+#=============
 
 # Function 176
 def cleaning_func_60(cwur,shanghai,times):
@@ -2414,7 +2414,7 @@ def cleaning_func_60(cwur,shanghai,times):
 	data = data.rename(columns={'score': 'score_cwur'})
 	data['score_times'] = data.apply(check_for_uni_times, axis=1)
 	return data
-=============
+#=============
 
 # Function 177
 def cleaning_func_61(cwur,shanghai,times):
@@ -2445,7 +2445,7 @@ def cleaning_func_61(cwur,shanghai,times):
 	times.university_name = [re.sub('[^a-zA-Z\\s0-9]+', '', string) for string in times.university_name]
 	data = cwur
 	return data
-=============
+#=============
 
 # Function 178
 def cleaning_func_62(cwur,shanghai,times):
@@ -2477,7 +2477,7 @@ def cleaning_func_62(cwur,shanghai,times):
 	data = cwur
 	data = data.rename(columns={'score': 'score_cwur'})
 	return data
-=============
+#=============
 
 # Function 179
 def cleaning_func_63(cwur,shanghai,times):
@@ -2529,5 +2529,5 @@ def cleaning_func_63(cwur,shanghai,times):
 	programs = [re.sub('[^a-zA-Z\\s0-9]+', '', string) for string in programs]
 	data['ds_master'] = data['university_name'].apply(check_for_master)
 	return data
-=============
+#=============
 

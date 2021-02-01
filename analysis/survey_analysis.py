@@ -14,6 +14,9 @@ import seaborn as sns
 import scipy
 import statsmodels.stats.descriptivestats
 
+CONTROL = "ws-random"
+TREATMENT = "ws"
+
 
 def get_task_id(df):
     return df["question"].map(lambda x: int(x.split("_")[1].replace("t", "")))
@@ -163,9 +166,9 @@ def prepare_data(
     arms_df["question_num"] = get_question_num(arms_df)
     arms_df["arm"] = arms_df["question"].map(lambda x: x.split("_")[-1]).map({
         "cont":
-        "Control",
+        CONTROL,
         "treat":
-        "Treatment"
+        TREATMENT
     })
 
     return property_map, wide_df, (intro_df, relevance_df, arms_df)
@@ -564,25 +567,22 @@ def num_of_relevant_fragments(arms_df):
         "arm",
         dodge=True,
         order=poss_relevant,
-        hue_order=["Control", "Treatment"],
+        hue_order=[CONTROL, TREATMENT],
         palette={
-            "Control": "Orange",
-            "Treatment": "Blue"
+            CONTROL: "Orange",
+            TREATMENT: "Blue"
         },
     )
     g.set_xlabels("Number relevant")
     g.set_ylabels("Count")
     g.add_legend(
-        bbox_to_anchor=(0., 1.00),
-        loc='lower left',
-        ncol=2,
-        borderaxespad=0.
+        bbox_to_anchor=(0., 1.00), loc='lower left', ncol=2, borderaxespad=0.
     )
     # g.add_legend(bbox_to_anchor=loc="lower center", ncol=2)
     # plt.tight_layout()
     g.tight_layout()
 
-    stat_res = task_level_wilcoxon_test(qdf, "Treatment", "Control")
+    stat_res = task_level_wilcoxon_test(qdf, TREATMENT, CONTROL)
     return cts_df, g, stat_res, summary_df
 
 
@@ -606,19 +606,16 @@ def rank_best_fragment(arms_df):
         "arm",
         dodge=True,
         order=ordered_labels,
-        hue_order=["Control", "Treatment"],
+        hue_order=[CONTROL, TREATMENT],
         palette={
-            "Control": "Orange",
-            "Treatment": "Blue"
+            CONTROL: "Orange",
+            TREATMENT: "Blue"
         },
     )
     g.set_xlabels("Fragment")
     g.set_ylabels("Count")
     g.add_legend(
-        bbox_to_anchor=(0., 1.00),
-        loc='lower left',
-        ncol=2,
-        borderaxespad=0.
+        bbox_to_anchor=(0., 1.00), loc='lower left', ncol=2, borderaxespad=0.
     )
     plt.tight_layout()
     g.tight_layout()
@@ -629,7 +626,7 @@ def rank_best_fragment(arms_df):
     print("Best rank")
     print(qdf.groupby(["task", "arm"])[["value"]].mean())
 
-    stat_res = task_level_wilcoxon_test(qdf, "Control", "Treatment")
+    stat_res = task_level_wilcoxon_test(qdf, CONTROL, TREATMENT)
     return cts_df, g, stat_res
 
 
@@ -663,19 +660,16 @@ def access_helps(arms_df):
         "arm",
         dodge=True,
         order=possible,
-        hue_order=["Control", "Treatment"],
+        hue_order=[CONTROL, TREATMENT],
         palette={
-            "Control": "Orange",
-            "Treatment": "Blue"
+            CONTROL: "Orange",
+            TREATMENT: "Blue"
         },
     )
     g.set_xlabels("Likert Scale")
     g.set_ylabels("Count")
     g.add_legend(
-        bbox_to_anchor=(0., 1.00),
-        loc='lower left',
-        ncol=2,
-        borderaxespad=0.
+        bbox_to_anchor=(0., 1.00), loc='lower left', ncol=2, borderaxespad=0.
     )
     plt.tight_layout()
     g.tight_layout()
@@ -689,9 +683,9 @@ def access_helps(arms_df):
     # diff is a better rank
     qdf["value"] = qdf["value"].map(lambda x: n - likert.index(x))
     stat_res = "Task Level Wilcoxon Signed Rank Test\n"
-    stat_res += task_level_wilcoxon_test(qdf, "Treatment", "Control")
+    stat_res += task_level_wilcoxon_test(qdf, TREATMENT, CONTROL)
     stat_res += "\n\n Task Level Signed Test\n"
-    stat_res += task_level_signed_test(qdf, "Treatment", "Control")
+    stat_res += task_level_signed_test(qdf, TREATMENT, CONTROL)
     return cts_df, g, stat_res, summary_df
 
 

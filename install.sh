@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 source setup.sh
-create_transfer_conda_env
-activate_transfer_conda_env
+create_wranglesearch_conda_env
+activate_wranglesearch_conda_env
 
-# Setup transfer
+# Setup wranglesearch
 pip install -e .
 
 # Run quick tests

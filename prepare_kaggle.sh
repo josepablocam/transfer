@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 source setup.sh
-activate_transfer_conda_env
+activate_wranglesearch_conda_env
 
 FORCE=0
 while [[ "$#" -gt 0 ]]
@@ -32,7 +32,7 @@ do
   mkdir -p ${converted_dir}
   mkdir -p ${parsed_dir}
 
-  python -m transfer.convert_candidates \
+  python -m wranglesearch.convert_candidates \
       ${kernels_dir} \
       --converted_dir ${converted_dir} \
       --parsed_dir ${parsed_dir}
@@ -71,6 +71,6 @@ do
     all_scripts+=$(ls ${scripts_dir}/*.py)
 done
 
-python -m transfer.collect_requirements \
+python -m wranglesearch.collect_requirements \
   --input ${all_scripts} \
   --filter > "${KERNELS_RUNNER_FOLDER}/requirements.txt"

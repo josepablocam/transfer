@@ -1,4 +1,4 @@
-from transfer.build_db import (
+from wranglesearch.build_db import (
     FunctionDatabase,
     NodeTypes,
     RelationshipTypes,

@@ -1,15 +1,14 @@
 from setuptools import setup
 
 setup(
-    name='transfer',
+    name='wranglesearch',
     version='0.1',
-    description=
-    'Transfer database wrangling code by creating a queryable database of snippets',
-    url='https://github.com/josepablocam/transfer-cleaning',
+    description='Mining wrangling functions from Python programs',
+    url='https://github.com/josepablocam/wranglesearch',
     author='Jose Cambronero',
     author_email='jcamsan@mit.edu',
     license='MIT',
-    packages=['transfer'],
+    packages=['wranglsearch'],
     install_requires=[
         'plpy @ https://github.com/josepablocam/python-pl/archive/v0.1.tar.gz',
         'py2neo==3.1.2',

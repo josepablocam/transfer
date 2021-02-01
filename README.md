@@ -1,34 +1,35 @@
-# Transfer
+# wranglesearch
 
-`transfer` is a tool to extract data-wrangling
-code snippets from collections of programs as a way
-of producing executable "documentation" of a database.
-The core idea is: given a set of programs that
-work with a given dataset, we can learn information
-about that dataset by inspecting certain "types"
-of code fragments in those programs. For example,
-we can learn type casts (which provide semantic info
-about a column), we can learn human-readable labels
-for numeric values, we can learn common groupings of
-values, etc.
+`wranglesearch` is a tool to extract data preparation steps from an existing
+collection of programs, modularize them into standalone **wrangling functions**,
+store these in a function database, and serve them to new analysts via a
+term-based query interface.
 
-`transfer` collects such snippets and organizes them
-into a graph database, where nodes are database columns, library functions, or extracted code snippets, and edges are relationships such as defines, uses, calls, or wrangles for (more detail below).
+By mining functions from programs written to analyze the **same** dataset, we
+can learn data preparation operations that are specific to this dataset. For
+example, we can learn type casts (which provide semantic info about a column),
+we can learn human-readable labels for numeric values, we can learn common
+groupings of values, etc.
+
+`wranglesearch` collects such snippets and organizes them into a function
+database, backed by a graph data model, where nodes are database columns,
+library functions, or extracted wrangling functions, and edges are relationships
+such as defines, uses, calls, or wrangles for (more detail below).
 
 The snippets are focused on code that modifies an existing column or derives a new column.
 
 # Installation
-The easiest way to install `transfer` is through a docker
+The easiest way to install `wranglesearch` is through a docker
 container. Alternatively you can run `bash install.sh`
 
 First, build the container
 
-`docker build . -t transfer`
+`docker build . -t wranglesearch`
 
 Next, launch the container and build the demo
 database.
 
-`docker run -it transfer`
+`docker run -it wranglesearch`
 
 You should see a `neo4j` message indicating startup.
 You can now build the demo database by calling
@@ -38,7 +39,7 @@ You can now build the demo database by calling
 You should see prints to stdout indicating what is being
 populated into the database.
 
-You can then interact with `transfer` by launching
+You can then interact with `wranglesearch` by launching
 `python` or `ipython` and running
 
 ```
@@ -49,13 +50,13 @@ db = start()
 which will create a database object by the name `db`.
 
 In the following section, we show how to use this object to
-interact with `transfer`.
+interact with `wranglesearch`.
 
-# Interaction with `transfer`
+# Interaction with `wranglesearch`
 
 We use the `db` object created in the prior section and show some simple usage.
 
-* List all columns (from the dataset) stored in the `transfer` graph.
+* List all columns (from the dataset) stored in the `wranglesearch` graph.
 
 ```
 $ db.columns()
@@ -70,7 +71,7 @@ $ db.functions()
  (a3f2b2c:FUNCTION {name:"pandas.core.series.Series.to_frame"}), ...]
 ```
 
-* List `transfer` code snippets (wrapped in functions)
+* List `wranglesearch` wrangling steps (wrapped in functions)
 
 ```
 $ db.extracted_functions()
@@ -78,7 +79,7 @@ $ db.extracted_functions()
  (c973819:EXTRACTED_FUNCTION {lines_of_code:9,name:"cleaning_func_1_1"}), ...]
 ```
 
-* List `transfer` code snippets that define a column
+* List `wranglesearch` code snippets that define a column
 
 ```
 $ db.defines('loan_status')
@@ -99,7 +100,7 @@ def cleaning_func_2(data):
 	return data
 ```
 
-* List a `transfer` code snippets that use a column (and print its code)
+* List a `wranglesearch` code snippets that use a column (and print its code)
 
 ```
 $ print(db.get_code(db.uses('emp_length')[5]))
@@ -141,7 +142,7 @@ def cleaning_func_22(df):
 ```
 Note that we passed in the python function object `pd.DataFrame.groupby` to the `wrangles_for` call.
 
-* List `transfer` code snippets that make a call to a particular third-party library function.
+* List `wranglesearch` code snippets that make a call to a particular third-party library function.
 
 ```
 $ print(db.get_code(db.calls(pd.DataFrame.fillna)[0]))
@@ -158,7 +159,7 @@ Note that like in `wrangles_for` we pass in the actual python function object to
 
 * Executable code snippets
 
-A goal of `transfer` is that the code snippets produced are executable. So we can try that out as follows:
+A goal of `wranglesearch` is that the code snippets produced are executable. So we can try that out as follows:
 
 
 ```
@@ -187,16 +188,16 @@ $ fn(df.copy())["emp_length_class"].value_counts()
 
 Note that not *every* function is going to execute successfully, but it is certainly
 our goal to have that be the case. Additionally, note that the function executed
-has intermediate steps/variables created by `transfer` during analysis/extraction,
+has intermediate steps/variables created by `wranglesearch` during analysis/extraction,
 while the source code printed through `db.get_code` does some string replacement
 to remove these (since they reduce readability).
 
-# Transfer in IPython
+# wranglesearch in IPython
 If you use IPython (or Jupyter), you can load the transfer magics extension
 by running
 
 ```
-%load_ext transfer.magic
+%load_ext wranglesearch.magic
 ```
 
 You can then use the magic
@@ -217,7 +218,7 @@ Similarly
 If no `result_position` is provided, we assume you want the top result.
 
 
-`transfer.magic` loads the `sample_db.pkl` created at the root of the project
+`wranglesearch.magic` loads the `sample_db.pkl` created at the root of the project
 by running `bash demo.sh`.
 
 # Extracting your own functions
@@ -235,7 +236,7 @@ want to proceed.
 You can modify `extract_demo.sh` to point to your own scripts of interest.
 
 Once the script runs, you can follow the previous portions of the demo
-to interact with `transfer`.
+to interact with `wranglesearch`.
 
 
 # Extracting functions from our datasets

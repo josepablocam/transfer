@@ -258,6 +258,11 @@ class FunctionDatabase(object):
         if not self._has_started_up:
             raise Exception('Must start database by running self.startup()')
         for f in funs:
+            # must have at least one arge to be a wrangling function
+            # so skip if not the case
+            if len(f.formal_arg_vars) == 0:
+                continue
+
             # some functions can be duplicated across programs
             # TODO: should we highlight these somehow? Seems they are useful
             # if multiple programs have them

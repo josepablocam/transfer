@@ -41,7 +41,7 @@ do
 done
 
 # Build database with newly extracted functions
-python -m transfer.build_db \
+python -m wranglesearch.build_db \
   --function_files ${OUTPUT_DIR}/*functions* \
   --graph_files ${OUTPUT_DIR}/*graph* \
   --output ${OUTPUT_DB}
