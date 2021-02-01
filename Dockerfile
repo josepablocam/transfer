@@ -26,10 +26,10 @@ RUN ln -s $(which python3.7) /usr/bin/python3 --force
 RUN ln -s $(which pip3) /usr/bin/pip
 RUN pip install -U pip
 
-ADD . transfer/
-WORKDIR transfer/
+ADD . wranglesearch/
+WORKDIR wranglesearch/
 # install transfer, run tests and
 # download sample data
-RUN bash install.sh
+RUN bash scripts/install.sh
 
 ENTRYPOINT neo4j start && /bin/bash

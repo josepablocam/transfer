@@ -8,7 +8,7 @@ setup(
     author='Jose Cambronero',
     author_email='jcamsan@mit.edu',
     license='MIT',
-    packages=['wranglsearch'],
+    packages=['wranglesearch'],
     install_requires=[
         'plpy @ https://github.com/josepablocam/python-pl/archive/v0.1.tar.gz',
         'py2neo==3.1.2',
