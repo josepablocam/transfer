@@ -9,7 +9,7 @@ activate_wranglesearch_conda_env
 pip install -e .
 
 # Run quick tests
-bash test.sh
+bash scripts/test.sh
 
 # Download pre-collected trace files
 wget "${S3_BUCKET}/program_data.zip"
