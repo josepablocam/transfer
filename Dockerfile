@@ -12,7 +12,7 @@ RUN apt-get install -y vim
 # install neo4j 3.3.4
 RUN wget -O - https://debian.neo4j.com/neotechnology.gpg.key | apt-key add -
 RUN echo 'deb https://debian.neo4j.com stable legacy' | tee /etc/apt/sources.list.d/neo4j.list
-RUN apt-get update
+RUN apt-get -y update
 RUN printf '#!/bin/sh\nexit 0' > /usr/sbin/policy-rc.d
 RUN apt-get install -y neo4j=1:3.3.4
 RUN echo "dbms.security.auth_enabled=false" >> /etc/neo4j/neo4j.conf

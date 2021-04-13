@@ -11,7 +11,7 @@ setup(
     packages=['wranglesearch'],
     install_requires=[
         'plpy @ https://github.com/josepablocam/python-pl/archive/v0.1.tar.gz',
-        'py2neo==3.1.2',
+        'py2neo @ https://github.com/technige/py2neo/archive/refs/tags/py2neo-3.1.2.tar.gz',
         'tabulate==0.8.7',
         'zss==1.2.0',
         'editdistance',
